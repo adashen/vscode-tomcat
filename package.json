@@ -1,0 +1,75 @@
+{
+  "name": "vscode-tomcat",
+  "displayName": "Tomcat",
+  "description": "",
+  "version": "0.0.1",
+  "publisher": "adashen",
+  "engines": {
+    "vscode": "^1.17.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:tomcat.createserver",
+    "onCommand:tomcat.run",
+    "onView:tomcatServerExplorer"
+  ],
+  "main": "./out/src/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tomcat.createserver",
+        "title": "New Tomcat Server"
+      },
+      {
+        "command": "tomcat.run",
+        "title": "Run on Tomcat Server"
+      },
+      {
+        "command": "tomcat.stop",
+        "title": "Stop Tomcat Server"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "tomcatServerExplorer",
+          "name": "Tomcat Servers"
+        }
+      ]
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "tomcat.run",
+          "when": "explorerResourceIsFolder == false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tomcat.stop",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.3",
+    "vscode": "^1.0.0",
+    "mocha": "^2.3.3",
+    "@types/node": "^6.0.40",
+    "@types/mocha": "^2.2.32",
+    "@types/fs-extra": "^4.0.3"
+  },
+  "dependencies": {
+    "fs-extra": "^4.0.2",
+    "vscode-nls": "^2.0.2"
+  }
+}
