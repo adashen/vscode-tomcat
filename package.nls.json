@@ -8,5 +8,6 @@
   "tomcatExt.newserver": "New server...",
   "tomcatExt.cancel": "User canceled",
   "tomcatExt.noserver": "Tomcat server is undefined",
-  "tomcatExt.alreadyexist": "This tomcat server exists in the workspace, abort creation"
+  "tomcatExt.alreadyexist": "This tomcat server exists in the workspace, abort creation",
+  "tomcatExt.noworkspacefolder": "The selected package is not under current workspace"
 }

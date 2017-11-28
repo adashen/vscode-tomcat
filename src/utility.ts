@@ -5,7 +5,8 @@ import * as child_process from "child_process";
 import * as nls from "vscode-nls";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 import * as net from "net";
-import { ProcessExecution } from "vscode";
+import * as fse from "fs-extra";
+import * as path from "path";
 
 export class Utility {
     public static async executeCMD(command: string, args: string[],
@@ -28,13 +29,35 @@ export class Utility {
                 console.log(signal);
                 if (code !== 0) {
                     // tslint:disable-next-line:quotemark
-                    Utility.localize("tomcatExt.commandfailed", 'Command failed with exit code "{0}"', code.toString());
-                    reject (new Error(Utility.localize("tomcatExt.commandfailed", "Command failed with exit code ${0}", code)));
+                    reject (new Error(Utility.localize("tomcatExt.commandfailed", "Command failed with exit code {0}", code)));
                 } else {
                     resolve();
                 }
             });
         });
+    }
+
+    public static isPathEqual(fsPath1: string, fsPath2: string): boolean {
+        const relativePath: string = path.relative(fsPath1, fsPath2);
+        return relativePath === "";
+    }
+
+    public static isSubPath(expectParent: string, expectChild: string): boolean {
+        const relativePath: string = path.relative(expectParent, expectChild);
+        return relativePath !== "" && !relativePath.startsWith("..") && relativePath !== expectChild;
+    }
+
+    public static getWorkspaceFolder(fsPath: string): vscode.WorkspaceFolder | undefined {
+        if (vscode.workspace.workspaceFolders) {
+            const folder: vscode.WorkspaceFolder | undefined = vscode.workspace.workspaceFolders.find(
+                (f: vscode.WorkspaceFolder): boolean => {
+                return Utility.isPathEqual(f.uri.fsPath, fsPath) || Utility.isSubPath(f.uri.fsPath, fsPath);
+            });
+
+            return folder;
+        } else {
+            return undefined;
+        }
     }
 
     public static combineServerNameAndPath(serverName: string, tomcatPath: string): string | undefined {
@@ -55,6 +78,20 @@ export class Utility {
         }
 
         return nameAndPath;
+    }
+
+    public static async deleteFolderRecursive(dir: string): Promise<void> {
+        const exists: boolean = await fse.pathExists(dir);
+        if (exists) {
+            await fse.remove(dir);
+        }
+        return Promise.resolve();
+    }
+
+    public static async cleanAndCreateFolder(dir: string): Promise<void> {
+        await Utility.deleteFolderRecursive(dir);
+        await fse.mkdirs(dir);
+        return Promise.resolve();
     }
 
     public static async getFreePort(): Promise<number> {

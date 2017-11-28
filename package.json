@@ -13,6 +13,9 @@
   "activationEvents": [
     "onCommand:tomcat.createserver",
     "onCommand:tomcat.run",
+    "onCommand:tomcat.debug",
+    "onCommand:tomcat.stop",
+    "onCommand:tomcat.delete",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -29,6 +32,14 @@
       {
         "command": "tomcat.stop",
         "title": "Stop Tomcat Server"
+      },
+      {
+        "command": "tomcat.debug",
+        "title": "Debug on Tomcat Server"
+      },
+      {
+        "command": "tomcat.delete",
+        "title": "Delete Tomcat Server"
       }
     ],
     "views": {
@@ -40,16 +51,30 @@
       ]
     },
     "menus": {
+      "commandPalette": [
+        {
+          "command": "tomcat.debug",
+          "when": "false == true"
+        }
+      ],
       "explorer/context": [
         {
           "command": "tomcat.run",
-          "when": "explorerResourceIsFolder == false"
+          "when": "explorerResourceIsFolder == false && resourceExtname == .war"
+        },
+        {
+          "command": "tomcat.debug",
+          "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         }
       ],
       "view/item/context": [
         {
           "command": "tomcat.stop",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
+        },
+        {
+          "command": "tomcat.delete",
+          "when": "view == tomcatServerExplorer && viewItem != runningserver"
         }
       ]
     }

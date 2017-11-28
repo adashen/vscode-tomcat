@@ -23,6 +23,18 @@ export class Tomcat {
         return this._serverList.find((item) => item.getName() === serverName);
     }
 
+    deleteServer(tomcatServer: TomcatServer): void {
+        const index: number = this._serverList.findIndex((item) => item.getName() === tomcatServer.getName());
+        if (index > -1) {
+            const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
+            if (oldServer.length > 0) {
+                const catalinaBasePath: string = path.join(this._extensionpath, oldServer[0].getName());
+                Utility.deleteFolderRecursive(catalinaBasePath);
+                oldServer[0].dispose();
+            }
+        }
+    }
+
     async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
         const catalinaBasePath: string = path.join(this._extensionpath, serverName);
         const confPath: string = path.join(catalinaBasePath, "conf");
@@ -38,17 +50,17 @@ export class Tomcat {
         let tomcatServer: TomcatServer;
 
         try {
-            await this.cleanAndCreateFolder(catalinaBasePath);
-            await this.cleanAndCreateFolder(confPath);
-            await this.cleanAndCreateFolder(logPath);
-            await this.cleanAndCreateFolder(tempPath);
-            await this.cleanAndCreateFolder(webappsPath);
-            await this.cleanAndCreateFolder(workPath);
+            await Utility.cleanAndCreateFolder(catalinaBasePath);
+            await Utility.cleanAndCreateFolder(confPath);
+            await Utility.cleanAndCreateFolder(logPath);
+            await Utility.cleanAndCreateFolder(tempPath);
+            await Utility.cleanAndCreateFolder(webappsPath);
+            await Utility.cleanAndCreateFolder(workPath);
             await fse.copy(serverConfigSrc, serverConfigTarget);
             await fse.copy(webConfigSrc, webConfigTarget);
 
             tomcatServer = new TomcatServer(serverName, tomcatInstallPath);
-            this._serverList.push(tomcatServer);
+            this.addServer(tomcatServer);
         } catch(e) {
             console.log(e);
             Promise.reject(new Error(e.toString()));
@@ -59,78 +71,21 @@ export class Tomcat {
         if (!serverInfo) {
             return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
         }
-        try {
-            await Utility.executeCMD("java", this.getJavaArgs(serverInfo, false, false), {shell: true}, serverInfo.getOutput());
-            serverInfo.setStarted(false);
-            return Promise.resolve();
-        } catch(err) {
-            serverInfo.setStarted(false);
-            return Promise.reject(new Error(err.toString()));
-        }
+        await serverInfo.stop(this._extensionpath);
     }
 
     async runOnServer(serverInfo: TomcatServer, packagePath: string, debug: boolean = false): Promise<void> {
         if (!serverInfo) {
             return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
         }
-
-        try {
-            let appName: string = path.basename(packagePath);
-            appName = appName.replace(/\.[^/.]+$/, "");
-            const serverName: string = serverInfo.getName();
-            const appPath: string = path.join(this._extensionpath, serverName, "webapps", appName);
-            serverInfo.setStarted(true);
-
-            await this.cleanAndCreateFolder(appPath);
-            await Utility.executeCMD("jar", ["xvf", `${packagePath}`], {cwd: appPath}, serverInfo.getOutput());
-            await Utility.executeCMD("java",
-                this.getJavaArgs(serverInfo, true, debug), {
-                    shell: true
-                }, serverInfo.getOutput());
-
-            serverInfo.setStarted(false);
-            return Promise.resolve();
-        } catch(err) {
-            serverInfo.setStarted(false);
-            return Promise.reject(new Error(err.toString()));
-        }
+        await serverInfo.run(this._extensionpath, packagePath, debug);
     }
 
     getServerSet(): TomcatServer[] {
         return this._serverList;
     }
 
-    private getJavaArgs(serverInfo: TomcatServer, start: boolean, debug: boolean): string[] {
-        const serverName: string = serverInfo.getName();
-        const catalinaBase: string = path.join(this._extensionpath, serverName);
-        const bootStrap: string = path.join(serverInfo.getTomcatPath(), "bin", "bootstrap.jar");
-        const tomcat: string = path.join(serverInfo.getTomcatPath(), "bin", "tomcat-juli.jar");
-        const classPath: string = `${bootStrap};${tomcat}`;
-        const tmdir: string = path.join(catalinaBase, "temp");
-        let args: string[] = [`-classpath "${classPath}"`,
-        `"-Dcatalina.base=${catalinaBase}"`,
-        `"-Dcatalina.home=${serverInfo.getTomcatPath()}"`,
-        `"-Djava.io.tmpdir=${tmdir}"`,
-        "org.apache.catalina.startup.Bootstrap",
-        // tslint:disable-next-line:quotemark
-        '"$@"'];
-
-        if (start) {
-            args.push("start");
-        } else {
-            args.push("stop");
-        }
-
-        // todo: debug
-        return args;
-    }
-
     private addServer(tomcatServer: TomcatServer): void {
-        this.deleteServer(tomcatServer);
-        this._serverList.push(tomcatServer);
-    }
-
-    private deleteServer(tomcatServer: TomcatServer): void {
         const index: number = this._serverList.findIndex((item) => item.getName() === tomcatServer.getName());
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
@@ -138,14 +93,7 @@ export class Tomcat {
                 oldServer[0].dispose();
             }
         }
-    }
-
-    private async deleteFolderRecursive(dir: string): Promise<void> {
-        const exists: boolean = await fse.pathExists(dir);
-        if (exists) {
-            await fse.remove(dir);
-        }
-        return Promise.resolve();
+        this._serverList.push(tomcatServer);
     }
 
     private initServerListSync(): void {
@@ -176,12 +124,6 @@ export class Tomcat {
         } catch (err) {
             console.error(err.toString());
         }
-    }
-
-    private async cleanAndCreateFolder(dir: string): Promise<void> {
-        await this.deleteFolderRecursive(dir);
-        await fse.mkdirs(dir);
-        return Promise.resolve();
     }
 
     dispose(): void {

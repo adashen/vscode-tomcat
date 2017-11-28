@@ -9,5 +9,5 @@ suite("utility tests", () => {
     } catch(error) {
       assert.fail("no eror", "error");
     }
-  });
+  }).timeout(60*1000);
 });

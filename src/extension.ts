@@ -27,7 +27,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
     initCommand(context, outputChannel, tomcat, tree, "tomcat.createserver", createServer);
     initCommand(context, outputChannel, tomcat, tree, "tomcat.run", serverRun);
+    initCommand(context, outputChannel, tomcat, tree, "tomcat.debug", serverDebug);
     initCommand(context, outputChannel, tomcat, tree, "tomcat.stop", serverStop);
+    initCommand(context, outputChannel, tomcat, tree, "tomcat.delete", serverDelete);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel,
@@ -53,26 +55,44 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
 
-async function serverStop(tomcat: Tomcat, tree: TomcatSeverTreeProvider, tomcatItem ?: TomcatServer): Promise<void> {
+async function getTargetServer(tomcat: Tomcat, tomcatItem ?: TomcatServer): Promise<TomcatServer> {
     const ui: VSCodeUI = new VSCodeUI();
-    let server: TomcatServer = undefined;
+    if (tomcatItem) {
+        return tomcatItem;
+    }
 
-    if ( tomcatItem ) {
-        server = tomcatItem;
-    } else {
-        const serverString: string = await selectServer(ui, Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat);
-        if (serverString) {
-            const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
-            if (serverStr) {
-                server = tomcat.getTomcatServer(server[0]);
-            }
+    let server: TomcatServer = undefined;
+    const serverString: string = await selectServer(ui, Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat);
+    if (serverString) {
+        const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
+        if (serverStr) {
+            server = tomcat.getTomcatServer(serverStr[0]);
         }
     }
 
+    if (!server) {
+        return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+    } else {
+        return server;
+    }
+
+}
+
+async function serverStop(tomcat: Tomcat, tree: TomcatSeverTreeProvider, tomcatItem ?: TomcatServer): Promise<void> {
+    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
     }
     return tree._onDidChangeTreeData.fire();
+}
+
+async function serverDelete(tomcat: Tomcat, tree: TomcatSeverTreeProvider, tomcatItem ?: TomcatServer): Promise<void> {
+    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    if (server) {
+        await tomcat.deleteServer(server);
+    }
+    return tree._onDidChangeTreeData.fire();
+
 }
 
 async function createServer(tomcat: Tomcat, tree: TomcatSeverTreeProvider): Promise<string> {
@@ -90,25 +110,12 @@ async function createServer(tomcat: Tomcat, tree: TomcatSeverTreeProvider): Prom
     return `${serverName};${tomcatPath}`;
 }
 
+async function serverDebug(tomcat: Tomcat, tree: TomcatSeverTreeProvider, uri?: vscode.Uri): Promise<void> {
+    await startTomcat(tomcat, tree, true, uri);
+}
+
 async function serverRun(tomcat: Tomcat, tree: TomcatSeverTreeProvider, uri?: vscode.Uri): Promise<void> {
-    const inputPath: vscode.Uri | undefined = uri ? uri: undefined;
-    let ui: VSCodeUI = new VSCodeUI();
-    const packagePath: string = inputPath ? inputPath.fsPath
-        : await selectFile(ui, Utility.localize("tomcatExt.selectwar", "Select war package"));
-    const serverInfo: string = await selectOrCreateServer(ui,
-        Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat, tree);
-    const server: string[] = Utility.parseServerNameAndPath(serverInfo);
-
-    if (!server || !tomcat.getTomcatServer(server[0])) {
-        return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
-    }
-
-    const tomcatServer: TomcatServer = tomcat.getTomcatServer(server[0]);
-    let execute: Promise<void> = tomcat.runOnServer(tomcatServer, packagePath);
-    tree._onDidChangeTreeData.fire();
-    await execute;
-    tree._onDidChangeTreeData.fire();
-    return Promise.resolve();
+    await startTomcat(tomcat, tree, false, uri);
 }
 
 async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
@@ -147,6 +154,27 @@ async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
     const newServer: string = ":new";
     let serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
     return serverPick && serverPick !== newServer ? serverPick: await createServer(tomcat, tree);
+}
+
+async function startTomcat(tomcat: Tomcat, tree: TomcatSeverTreeProvider, debug: boolean, uri?: vscode.Uri): Promise<void> {
+    const inputPath: vscode.Uri | undefined = uri ? uri: undefined;
+    let ui: VSCodeUI = new VSCodeUI();
+    const packagePath: string = inputPath ? inputPath.fsPath
+        : await selectFile(ui, Utility.localize("tomcatExt.selectwar", "Select war package"));
+    const serverInfo: string = await selectOrCreateServer(ui,
+        Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat, tree);
+    const server: string[] = Utility.parseServerNameAndPath(serverInfo);
+
+    if (!server || !tomcat.getTomcatServer(server[0])) {
+        return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+    }
+
+    const tomcatServer: TomcatServer = tomcat.getTomcatServer(server[0]);
+    let execute: Promise<void> = tomcat.runOnServer(tomcatServer, packagePath, debug);
+    tree._onDidChangeTreeData.fire();
+    await execute;
+    tree._onDidChangeTreeData.fire();
+    return Promise.resolve();
 }
 
 function getTempWorkspace(): string {
