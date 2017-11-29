@@ -124,10 +124,11 @@ export class TomcatController {
 
             const args :string[] = this.getJavaArgs(serverInfo, true, port);
             this.setStarted(serverInfo, true);
-            await Utility.executeCMD("java", args, {
+            const p: Promise<void> = Utility.executeCMD("java", args, {
                 shell: true
             }, output);
-
+            vscode.window.setStatusBarMessage(`Running service at http://localhost:8080/${appName}`, p);
+            await p;
             return Promise.resolve();
         } catch(err) {
             this.setStarted(serverInfo, false);
