@@ -100,7 +100,6 @@ export class TomcatController {
         }
 
         try {
-            this.setStarted(serverInfo, true);
             const output: vscode.OutputChannel = this.getOutput(serverInfo);
             await Utility.cleanAndCreateFolder(appPath);
             await Utility.executeCMD("jar", ["xvf", `${packagePath}`], {cwd: appPath}, output);
@@ -124,6 +123,7 @@ export class TomcatController {
             }
 
             const args :string[] = this.getJavaArgs(serverInfo, true, port);
+            this.setStarted(serverInfo, true);
             await Utility.executeCMD("java", args, {
                 shell: true
             }, output);
@@ -146,7 +146,8 @@ export class TomcatController {
         const catalinaBase: string = path.join(this._tomcat.getExtensionPath(), serverName);
         const bootStrap: string = path.join(serverInfo.getTomcatPath(), "bin", "bootstrap.jar");
         const tomcat: string = path.join(serverInfo.getTomcatPath(), "bin", "tomcat-juli.jar");
-        const classPath: string = `${bootStrap};${tomcat}`;
+        const sep: string = path.delimiter;
+        const classPath: string = `${bootStrap}${sep}${tomcat}`;
         const tmdir: string = path.join(catalinaBase, "temp");
         let args: string[] = [`-classpath "${classPath}"`,
         `"-Dcatalina.base=${catalinaBase}"`,
