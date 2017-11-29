@@ -10,6 +10,7 @@ import { workspace } from "vscode";
 import { TomcatSeverTreeProvider, TomcatTreeItem } from "./TomcatServerTree";
 import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatServer } from "./Tomcat/TomcatServer";
+import { TomcatController } from "./Tomcat/TomcatController";
 import { Utility } from "./utility";
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -18,29 +19,30 @@ export function activate(context: vscode.ExtensionContext): void {
         storagePath = getTempWorkspace();
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel("Tomcat");
-    const tomcat: Tomcat = new Tomcat(storagePath);
-    context.subscriptions.push(tomcat);
-    const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(tomcat);
+    const tomcatData: Tomcat = new Tomcat(storagePath);
+    const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(tomcatData);
+    const tomcat: TomcatController = new TomcatController(tomcatData, tree._onDidChangeTreeData);
 
+    context.subscriptions.push(tomcat);
     context.subscriptions.push(tree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider("tomcatServerExplorer", tree));
 
-    initCommand(context, outputChannel, tomcat, tree, "tomcat.createserver", createServer);
-    initCommand(context, outputChannel, tomcat, tree, "tomcat.run", serverRun);
-    initCommand(context, outputChannel, tomcat, tree, "tomcat.debug", serverDebug);
-    initCommand(context, outputChannel, tomcat, tree, "tomcat.stop", serverStop);
-    initCommand(context, outputChannel, tomcat, tree, "tomcat.delete", serverDelete);
+    initCommand(context, outputChannel, tomcat, "tomcat.createserver", createServer);
+    initCommand(context, outputChannel, tomcat, "tomcat.run", serverRun);
+    initCommand(context, outputChannel, tomcat, "tomcat.debug", serverDebug);
+    initCommand(context, outputChannel, tomcat, "tomcat.stop", serverStop);
+    initCommand(context, outputChannel, tomcat,"tomcat.delete", serverDelete);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel,
-    tomcat: Tomcat, tree: TomcatSeverTreeProvider, commandId: string,
-        callback: (tomcat: Tomcat, tree: TomcatSeverTreeProvider, input?: T) => Promise<any>): void {
+    tomcat: TomcatController, commandId: string,
+        callback: (tomcat: TomcatController, input?: T) => Promise<any>): void {
     context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: {}[]) => {
         try {
             if (args.length === 0) {
-                await callback(tomcat, tree);
+                await callback(tomcat);
             } else {
-                await callback(tomcat, tree, <T>args[0]);
+                await callback(tomcat, <T>args[0]);
             }
         } catch (error) {
             output.show();
@@ -55,7 +57,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
 
-async function getTargetServer(tomcat: Tomcat, tomcatItem ?: TomcatServer): Promise<TomcatServer> {
+async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<TomcatServer> {
     const ui: VSCodeUI = new VSCodeUI();
     if (tomcatItem) {
         return tomcatItem;
@@ -75,47 +77,42 @@ async function getTargetServer(tomcat: Tomcat, tomcatItem ?: TomcatServer): Prom
     } else {
         return server;
     }
-
 }
 
-async function serverStop(tomcat: Tomcat, tree: TomcatSeverTreeProvider, tomcatItem ?: TomcatServer): Promise<void> {
+async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
     }
-    return tree._onDidChangeTreeData.fire();
 }
 
-async function serverDelete(tomcat: Tomcat, tree: TomcatSeverTreeProvider, tomcatItem ?: TomcatServer): Promise<void> {
+async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.deleteServer(server);
     }
-    return tree._onDidChangeTreeData.fire();
-
 }
 
-async function createServer(tomcat: Tomcat, tree: TomcatSeverTreeProvider): Promise<string> {
+async function createServer(tomcat: TomcatController): Promise<string> {
     let ui: VSCodeUI = new VSCodeUI();
     const tomcatPath: string = await selectFolder(ui, Utility.localize("tomcatExt.selectinstllpath", "Select Tomcat Installation Path"));
     let serverName: string = path.basename(tomcatPath);
 
-    if (serverName && tomcat.getTomcatServer(serverName)) {
+    if (tomcat.getTomcatServer(serverName)) {
         return Promise.reject(new Error(
             Utility.localize("tomcatExt.alreadyexist", "This tomcat server exists in the workspace, abort creation")));
     }
 
     await tomcat.createTomcatServer(serverName, tomcatPath);
-    tree._onDidChangeTreeData.fire();
     return `${serverName};${tomcatPath}`;
 }
 
-async function serverDebug(tomcat: Tomcat, tree: TomcatSeverTreeProvider, uri?: vscode.Uri): Promise<void> {
-    await startTomcat(tomcat, tree, true, uri);
+async function serverDebug(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
+    await startTomcat(tomcat, true, uri);
 }
 
-async function serverRun(tomcat: Tomcat, tree: TomcatSeverTreeProvider, uri?: vscode.Uri): Promise<void> {
-    await startTomcat(tomcat, tree, false, uri);
+async function serverRun(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
+    await startTomcat(tomcat, false, uri);
 }
 
 async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
@@ -134,7 +131,7 @@ async function selectFolder(ui: VSCodeUI, placeholder: string): Promise<string> 
     return await ui.showFileFolderDialog(false, true);
 }
 
-async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: Tomcat, withNew?: string): Promise<string | undefined> {
+async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
     const serverSet: Array<TomcatServer> = tomcat.getServerSet();
     let serverPick: PickWithData<string> | undefined;
     let serverPicks: PickWithData<string>[] = withNew
@@ -150,30 +147,27 @@ async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: Tomcat, wi
 }
 
 async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
-    tomcat: Tomcat, tree: TomcatSeverTreeProvider): Promise<string> {
+    tomcat: TomcatController): Promise<string> {
     const newServer: string = ":new";
     let serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
-    return serverPick && serverPick !== newServer ? serverPick: await createServer(tomcat, tree);
+    return serverPick && serverPick !== newServer ? serverPick: await createServer(tomcat);
 }
 
-async function startTomcat(tomcat: Tomcat, tree: TomcatSeverTreeProvider, debug: boolean, uri?: vscode.Uri): Promise<void> {
+async function startTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
     const inputPath: vscode.Uri | undefined = uri ? uri: undefined;
     let ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
         : await selectFile(ui, Utility.localize("tomcatExt.selectwar", "Select war package"));
     const serverInfo: string = await selectOrCreateServer(ui,
-        Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat, tree);
+        Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat);
     const server: string[] = Utility.parseServerNameAndPath(serverInfo);
 
     if (!server || !tomcat.getTomcatServer(server[0])) {
         return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
     }
 
-    const tomcatServer: TomcatServer = tomcat.getTomcatServer(server[0]);
-    let execute: Promise<void> = tomcat.runOnServer(tomcatServer, packagePath, debug);
-    tree._onDidChangeTreeData.fire();
+    let execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server[0]), packagePath, debug);
     await execute;
-    tree._onDidChangeTreeData.fire();
     return Promise.resolve();
 }
 
