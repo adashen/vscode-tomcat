@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext): void {
     initCommand(context, outputChannel, tomcat, "tomcat.run", serverRun);
     initCommand(context, outputChannel, tomcat, "tomcat.debug", serverDebug);
     initCommand(context, outputChannel, tomcat, "tomcat.stop", serverStop);
-    initCommand(context, outputChannel, tomcat,"tomcat.delete", serverDelete);
+    initCommand(context, outputChannel, tomcat, "tomcat.delete", serverDelete);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel,

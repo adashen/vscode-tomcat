@@ -6,6 +6,8 @@ import * as path from "path";
 import { Tomcat } from "./Tomcat";
 import { TomcatServer } from "./TomcatServer";
 import * as fse from "fs-extra";
+import { Disposable } from "vscode";
+import opn = require("opn");
 
 export class TomcatController {
     private _outputChannels: Map<string, vscode.OutputChannel>;
@@ -79,7 +81,6 @@ export class TomcatController {
 
         try {
             await Utility.executeCMD("java", this.getJavaArgs(serverInfo, false), {shell: true}, this.getOutput(serverInfo));
-            this.setStarted(serverInfo, false);
             return Promise.resolve();
         } catch(err) {
             return Promise.reject(new Error(err.toString()));
@@ -123,15 +124,12 @@ export class TomcatController {
             }
 
             const args :string[] = this.getJavaArgs(serverInfo, true, port);
-            this.setStarted(serverInfo, true);
             const p: Promise<void> = Utility.executeCMD("java", args, {
                 shell: true
             }, output);
-            vscode.window.setStatusBarMessage(`Running service at http://localhost:8080/${appName}`, p);
-            await p;
+            await this.startTomcat(serverInfo, appName, p);
             return Promise.resolve();
         } catch(err) {
-            this.setStarted(serverInfo, false);
             return Promise.reject(new Error(err.toString()));
         }
     }
@@ -169,6 +167,30 @@ export class TomcatController {
         }
 
         return args;
+    }
+
+    private async startTomcat(serverInfo: TomcatServer, appName: string, p: Promise<void>): Promise<void> {
+        let statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem();
+        statusBar.command = `open.${serverInfo.getName()}`;
+        const serviceuri: string = `http://localhost:8080/${appName}`;
+        statusBar.text = `Open http://localhost:8080/${appName}`;
+        let statusBarCommand: Disposable = vscode.commands.registerCommand(statusBar.command, async (status: any) => {
+            opn(serviceuri);
+        });
+
+        statusBar.show();
+        try {
+            this.setStarted(serverInfo, true);
+            await p;
+            this.setStarted(serverInfo, false);
+            statusBarCommand.dispose();
+            statusBar.dispose();
+        } catch (err) {
+            this.setStarted(serverInfo, false);
+            statusBarCommand.dispose();
+            statusBar.dispose();
+            return Promise.reject(new Error(err.toString()));
+        }
     }
 
     private getChannelName(serverInfo: TomcatServer): string {
