@@ -12,3 +12,6 @@
 ### Debug
 ![Debug](resources/debug.gif)
 
+## Release Notes
+Refer to [CHANGELOG](CHANGELOG.md)
+
