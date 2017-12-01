@@ -134,12 +134,16 @@ async function selectFolder(ui: VSCodeUI, placeholder: string): Promise<string> 
 async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
     const serverSet: Array<TomcatServer> = tomcat.getServerSet();
     let serverPick: PickWithData<string> | undefined;
-    let serverPicks: PickWithData<string>[] = withNew
-        ? [new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server"))] : [];
+    // let serverPicks: PickWithData<string>[] = withNew
+    //     ? [new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server"))] : [];
+    let serverPicks: PickWithData<string>[] = [];
 
     if (serverSet && serverSet.length!== 0) {
         serverPicks = serverPicks.concat(serverSet.map((server: TomcatServer) =>
             new PickWithData(Utility.combineServerNameAndPath(server.getName(), server.getTomcatPath()), server.getName())));
+        if (withNew) {
+            serverPicks.push(new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server")));
+        }
         serverPick = await ui.showQuickPick<string>(serverPicks, placehoder);
     }
 

@@ -124,10 +124,7 @@ export class TomcatController {
             }
 
             const args :string[] = this.getJavaArgs(serverInfo, true, port);
-            const p: Promise<void> = Utility.executeCMD("java", args, {
-                shell: true
-            }, output);
-            await this.startTomcat(serverInfo, appName, p);
+            await this.startTomcat(serverInfo, appName, args, output);
             return Promise.resolve();
         } catch(err) {
             return Promise.reject(new Error(err.toString()));
@@ -169,19 +166,23 @@ export class TomcatController {
         return args;
     }
 
-    private async startTomcat(serverInfo: TomcatServer, appName: string, p: Promise<void>): Promise<void> {
-        let statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem();
-        statusBar.command = `open.${serverInfo.getName()}`;
-        const serviceuri: string = `http://localhost:8080/${appName}`;
-        statusBar.text = `Open http://localhost:8080/${appName}`;
-        let statusBarCommand: Disposable = vscode.commands.registerCommand(statusBar.command, async (status: any) => {
-            opn(serviceuri);
-        });
-
-        statusBar.show();
+    private async startTomcat(serverInfo: TomcatServer, appName: string, args: string[], output: vscode.OutputChannel): Promise<void> {
+        let statusBar: vscode.StatusBarItem = undefined;
+        let statusBarCommand: Disposable = undefined;
         try {
+            statusBar = vscode.window.createStatusBarItem();
+            statusBar.command = `open.${serverInfo.getName()}`;
+            const serviceuri: string = `http://localhost:8080/${appName}`;
+            statusBar.text = `Open http://localhost:8080/${appName}`;
+            statusBarCommand = vscode.commands.registerCommand(statusBar.command, async (status: any) => {
+                opn(serviceuri);
+            });
+
+            statusBar.show();
             this.setStarted(serverInfo, true);
-            await p;
+            await Utility.executeCMD("java", args, {
+                shell: true
+            }, output);
             this.setStarted(serverInfo, false);
             statusBarCommand.dispose();
             statusBar.dispose();

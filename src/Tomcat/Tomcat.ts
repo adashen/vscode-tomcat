@@ -30,6 +30,7 @@ export class Tomcat {
             if (oldServer.length > 0) {
                 const catalinaBasePath: string = path.join(this._extensionpath, oldServer[0].getName());
                 Utility.deleteFolderRecursive(catalinaBasePath);
+                this.saveServerList();
                 return true;
             }
         }
@@ -48,6 +49,7 @@ export class Tomcat {
             this._serverList.splice(index, 1);
         }
         this._serverList.push(tomcatServer);
+        this.saveServerList();
     }
 
     private initServerListSync(): void {
@@ -76,6 +78,15 @@ export class Tomcat {
             const serverFilePath: string = path.join(this._extensionpath, "servers.json");
             fse.outputJsonSync(serverFilePath, this._serverList);
         } catch (err) {
+            console.error(err.toString());
+        }
+    }
+
+    private async saveServerList(): Promise<void> {
+        try {
+            const serverFilePath: string = path.join(this._extensionpath, "servers.json");
+            await fse.outputJson(serverFilePath, this._serverList);
+        } catch(err) {
             console.error(err.toString());
         }
     }
