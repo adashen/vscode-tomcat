@@ -1,5 +1,5 @@
 {
-  "extension.description": "Debug or run your war package in Apache Tomcat",
+  "extension.description": "Debug or run your java war package in Apache Tomcat",
   "tomcatExt.commandfailed": "Command failed with exit code {0}.",
   "tomcatExt.error": "Error {0}.",
   "tomcatExt.selectserver": "Select Tomcat Server",
