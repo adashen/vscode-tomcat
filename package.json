@@ -16,6 +16,10 @@
     "Languages",
     "Other"
   ],
+  "keywords": [
+    "Java",
+    "Tomcat"
+  ],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
     "onCommand:tomcat.createserver",
