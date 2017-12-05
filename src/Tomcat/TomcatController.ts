@@ -41,6 +41,17 @@ export class TomcatController {
         this._onDidChangeTreeData.fire();
     }
 
+    async openConfig(tomcatServer: TomcatServer): Promise<void> {
+        if (!tomcatServer) {
+            throw (new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+        }
+
+        const exist: boolean = await Utility.openFileIfExists(tomcatServer.getServerConfigPath());
+        if (!exist) {
+            throw (new Error(Utility.localize("tomcatExt.noconfig", "The tomcat server is broken. It does not have server.xml")));
+        }
+    }
+
     async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
         const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
         const confPath: string = path.join(catalinaBasePath, "conf");
@@ -65,7 +76,7 @@ export class TomcatController {
             await fse.copy(serverConfigSrc, serverConfigTarget);
             await fse.copy(webConfigSrc, webConfigTarget);
 
-            tomcatServer = new TomcatServer(serverName, tomcatInstallPath);
+            tomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
             this._tomcat.addServer(tomcatServer);
             this._onDidChangeTreeData.fire();
         } catch(e) {
@@ -169,28 +180,43 @@ export class TomcatController {
     private async startTomcat(serverInfo: TomcatServer, appName: string, args: string[], output: vscode.OutputChannel): Promise<void> {
         let statusBar: vscode.StatusBarItem = undefined;
         let statusBarCommand: Disposable = undefined;
+        let serverPort: string = undefined;
         try {
-            statusBar = vscode.window.createStatusBarItem();
-            statusBar.command = `open.${serverInfo.getName()}`;
-            const serviceuri: string = `http://localhost:8080/${appName}`;
-            statusBar.text = `Open http://localhost:8080/${appName}`;
-            statusBarCommand = vscode.commands.registerCommand(statusBar.command, async (status: any) => {
-                opn(serviceuri);
-            });
+            serverPort = await Utility.getServerPort(serverInfo.getServerConfigPath());
+        } catch {
+            output.appendLine("Cannot parse port from server.xml");
+        }
 
-            statusBar.show();
+        try {
+            if (serverPort) {
+                statusBar = vscode.window.createStatusBarItem();
+                statusBar.command = `open.${serverInfo.getName()}`;
+                const serviceuri: string = `http://localhost:${serverPort}/${appName}`;
+                statusBar.text = `Open http://localhost:${serverPort}/${appName}`;
+                statusBarCommand = vscode.commands.registerCommand(statusBar.command, async (status: any) => {
+                    opn(serviceuri);
+                });
+                statusBar.show();
+            }
+
             this.setStarted(serverInfo, true);
             await Utility.executeCMD("java", args, {
                 shell: true
             }, output);
             this.setStarted(serverInfo, false);
-            statusBarCommand.dispose();
-            statusBar.dispose();
+            this.disposeResource(statusBarCommand);
+            this.disposeResource(statusBar);
         } catch (err) {
             this.setStarted(serverInfo, false);
-            statusBarCommand.dispose();
-            statusBar.dispose();
+            this.disposeResource(statusBarCommand);
+            this.disposeResource(statusBar);
             return Promise.reject(new Error(err.toString()));
+        }
+    }
+
+    private disposeResource(resource: Disposable | undefined): void {
+        if (resource) {
+            resource.dispose();
         }
     }
 

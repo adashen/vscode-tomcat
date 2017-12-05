@@ -43,6 +43,10 @@ export class TomcatTreeItem implements vscode.TreeItem {
     public get started(): boolean {
         return this._tomcatServer.isStarted();
     }
+
+    public get serverConfig(): string {
+        return this._tomcatServer.getServerConfigPath();
+    }
 }
 
 export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatServer> {

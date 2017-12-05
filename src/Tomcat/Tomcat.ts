@@ -63,7 +63,7 @@ export class Tomcat {
                     if (objArray && objArray.length > 0) {
                         this._serverList = this._serverList.concat(objArray.map((obj: any) => {
                             console.log(obj);
-                            return new TomcatServer(obj._name, obj._tomcatPath);
+                            return new TomcatServer(obj._name, obj._tomcatPath, this._extensionpath);
                         }));
                     }
                 }

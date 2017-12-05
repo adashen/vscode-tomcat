@@ -7,6 +7,7 @@ import { TomcatServer } from "./Tomcat/TomcatServer";
 import * as net from "net";
 import * as fse from "fs-extra";
 import * as path from "path";
+import * as xml2js from "xml2js";
 
 export class Utility {
     public static async executeCMD(command: string, args: string[],
@@ -112,5 +113,63 @@ export class Utility {
         });
     }
 
+    public static async openFileIfExists(filepath: string): Promise<boolean> {
+        const exists: boolean = await fse.pathExists(filepath);
+        if (exists) {
+            await vscode.window.showTextDocument(vscode.Uri.file(filepath), { preview: false });
+            return Promise.resolve(true);
+        } else {
+            return Promise.resolve(false);
+        }
+    }
+
+    public static async getServerPort(serverXml: string): Promise<string>|undefined {
+        const exists: boolean = await fse.pathExists(serverXml);
+        if (exists) {
+            const xml = await fse.readFile(serverXml, "utf8");
+            const jsonObj: any = await Utility.parseXml(xml);
+            return Utility.getPortFromJson(jsonObj);
+        } else {
+            return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+        }
+    }
+
     public static localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
+
+    private static async parseXml(xml: string): Promise<any> {
+        return new Promise((resolve: (obj: any) => void, reject: (e: Error) => void): void => {
+            xml2js.parseString(xml, { explicitArray: true }, (err, res) => {
+                if (err) {
+                    return reject(new Error(err.toString()));
+                } else {
+                    return resolve(res);
+                }
+            });
+        });
+    }
+
+    private static getPortFromJson(jsonObj: any): string|undefined {
+        try {
+            let server = Utility.getValue(jsonObj, "Server");
+            let services: Array<any> = Utility.getValue(server, "Service");
+            let service = services.find((item) => item.$.name === "Catalina");
+            let connectors = Utility.getValue(service, "Connector");
+            // if protocol is not specified, the default is HTTP/1.1
+            let connector = connectors.find((item) =>
+                (item.$.protocol === undefined || item.$.protocol.toString().startsWith("HTTP/")));
+            return Utility.getValue(connector.$, "port");
+        } catch (err) {
+            return undefined;
+        }
+    }
+
+    private static getValue(jsonObj: any, key: string): any {
+        if (jsonObj) {
+            let value = jsonObj[key];
+            if (value) {
+                return value;
+            }
+        }
+        throw new Error("key does not exist");
+    }
 }

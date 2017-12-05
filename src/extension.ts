@@ -32,6 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
     initCommand(context, outputChannel, tomcat, "tomcat.debug", serverDebug);
     initCommand(context, outputChannel, tomcat, "tomcat.stop", serverStop);
     initCommand(context, outputChannel, tomcat, "tomcat.delete", serverDelete);
+    initCommand(context, outputChannel, tomcat, "tomcat.openconfig", serverOpenConfig);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel,
@@ -90,6 +91,13 @@ async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer
     let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.deleteServer(server);
+    }
+}
+
+async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    if (server) {
+        await tomcat.openConfig(server);
     }
 }
 

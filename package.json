@@ -27,6 +27,7 @@
     "onCommand:tomcat.debug",
     "onCommand:tomcat.stop",
     "onCommand:tomcat.delete",
+    "onCommand:tomcat.openconfig",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -51,6 +52,10 @@
       {
         "command": "tomcat.delete",
         "title": "Delete Tomcat Server"
+      },
+      {
+        "command": "tomcat.openconfig",
+        "title": "Open server.xml"
       }
     ],
     "views": {
@@ -86,6 +91,10 @@
         {
           "command": "tomcat.delete",
           "when": "view == tomcatServerExplorer && viewItem != runningserver"
+        },
+        {
+          "command": "tomcat.openconfig",
+          "when": "view == tomcatServerExplorer"
         }
       ]
     }
@@ -105,11 +114,13 @@
     "@types/node": "7.0.43",
     "@types/mocha": "^2.2.32",
     "@types/fs-extra": "^4.0.3",
-    "@types/opn": "^5.1.0"
+    "@types/opn": "^5.1.0",
+    "@types/xml2js": "^0.4.2"
   },
   "dependencies": {
     "fs-extra": "^4.0.2",
     "vscode-nls": "^2.0.2",
-    "opn": "^5.1.0 "
+    "opn": "^5.1.0 ",
+    "xml2js": "^0.4.19"
   }
 }

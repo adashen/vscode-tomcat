@@ -11,7 +11,7 @@
 * Link Tomcat into workspace
 
 ### Debug
-![Debug](resources/debug.gif)
+![Debug](images/debug.gif)
 
 ## Release Notes
 Refer to [CHANGELOG](CHANGELOG.md)

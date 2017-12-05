@@ -2,6 +2,8 @@
 .vscode-test/**
 out/test/**
 test/**
+testResources/**
+images/**
 src/**
 **/*.map
 .gitignore
