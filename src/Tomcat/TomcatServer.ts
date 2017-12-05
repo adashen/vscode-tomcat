@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-import { Utility } from "../utility";
 import * as path from "path";
+import { Utility } from "../utility";
 
 export class TomcatServer {
     private _name: string;
@@ -9,30 +9,30 @@ export class TomcatServer {
     private _started: boolean;
     private _extensionPath: string;
 
-    constructor(name: string, tomcatPath: string, extensionPath) {
+    constructor(name: string, tomcatPath: string, extensionPath: string) {
         this._name = name.trim();
         this._tomcatPath = tomcatPath.trim();
         this._started = false;
         this._extensionPath = extensionPath.trim();
     }
 
-    setStarted(started: boolean): void {
+    public setStarted(started: boolean): void {
         this._started = started;
     }
 
-    isStarted(): boolean {
+    public isStarted(): boolean {
         return this._started;
     }
 
-    getName(): string {
+    public getName(): string {
         return this._name;
     }
 
-    getTomcatPath(): string {
+    public getTomcatPath(): string {
         return this._tomcatPath;
     }
 
-    getServerConfigPath(): string {
-        return path.join(this._extensionPath, this._name, "conf", "server.xml");
+    public getServerConfigPath(): string {
+        return path.join(this._extensionPath, this._name, 'conf', 'server.xml');
     }
 }

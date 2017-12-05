@@ -1,15 +1,14 @@
-"use strict";
-
-import { TomcatServer } from "./Tomcat/TomcatServer";
-import { Tomcat } from "./Tomcat/Tomcat";
-import * as vscode from "vscode";
+'use strict';
 import * as path from "path";
+import * as vscode from "vscode";
+import { Tomcat } from "./Tomcat/Tomcat";
+import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export class TomcatTreeItem implements vscode.TreeItem {
-    private static readonly SERVER = "tomcatserver";
-    private static readonly RUNNING = "runningserver";
+    private static readonly SERVER: string = 'tomcatserver';
+    private static readonly RUNNING: string = 'runningserver';
     public readonly _tomcatServer: TomcatServer;
-    private _context: vscode.ExtensionContext = undefined;
+    private _context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext, tomcatServer: TomcatServer) {
         this._context = context;
@@ -33,11 +32,11 @@ export class TomcatTreeItem implements vscode.TreeItem {
     }
 
     public get iconPath(): string {
-        let status: string = "stop.svg";
+        let status: string = 'stop.svg';
         if (this.started) {
-            status = "running.svg";
+            status = 'running.svg';
         }
-        return this._context.asAbsolutePath(path.join("resources", status));
+        return this._context.asAbsolutePath(path.join('resources', status));
     }
 
     public get started(): boolean {
@@ -50,10 +49,10 @@ export class TomcatTreeItem implements vscode.TreeItem {
 }
 
 export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatServer> {
-    private _tomcat: Tomcat = undefined;
-    private _context: vscode.ExtensionContext = undefined;
     public _onDidChangeTreeData: vscode.EventEmitter<TomcatServer | undefined> = new vscode.EventEmitter<TomcatServer | undefined>();
     public readonly onDidChangeTreeData: vscode.Event<TomcatServer | undefined> = this._onDidChangeTreeData.event;
+    private _tomcat: Tomcat;
+    private _context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext, tomcat: Tomcat) {
         this._tomcat = tomcat;
@@ -74,5 +73,5 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatSe
     }
 
     // tslint:disable-next-line:no-empty
-    dispose():void {}
+    public dispose() : void {}
 }

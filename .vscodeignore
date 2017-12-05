@@ -8,4 +8,8 @@ src/**
 **/*.map
 .gitignore
 tsconfig.json
+tslint.json
+README.md
 vsc-extension-quickstart.md
+.travis.yml
+*.log

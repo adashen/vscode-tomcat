@@ -1,43 +1,42 @@
-"use strict";
+'use strict';
 
-import * as vscode from "vscode";
 import * as child_process from "child_process";
-import * as path from "path";
-import * as os from "os";
 import * as fse from "fs-extra";
-import { VSCodeUI, PickWithData } from "./VSCodeUI";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 import { workspace } from "vscode";
-import { TomcatSeverTreeProvider, TomcatTreeItem } from "./TomcatServerTree";
 import { Tomcat } from "./Tomcat/Tomcat";
-import { TomcatServer } from "./Tomcat/TomcatServer";
 import { TomcatController } from "./Tomcat/TomcatController";
+import { TomcatServer } from "./Tomcat/TomcatServer";
+import { TomcatSeverTreeProvider, TomcatTreeItem } from "./TomcatServerTree";
 import { Utility } from "./utility";
+import { PickWithData, VSCodeUI } from "./VSCodeUI";
 
 export function activate(context: vscode.ExtensionContext): void {
     let storagePath: string = context.storagePath;
     if (!storagePath) {
         storagePath = getTempWorkspace();
     }
-    const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel("Tomcat");
+    const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
     const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
     const tomcat: TomcatController = new TomcatController(tomcatData, tree._onDidChangeTreeData);
 
     context.subscriptions.push(tomcat);
     context.subscriptions.push(tree);
-    context.subscriptions.push(vscode.window.registerTreeDataProvider("tomcatServerExplorer", tree));
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tree));
 
-    initCommand(context, outputChannel, tomcat, "tomcat.createserver", createServer);
-    initCommand(context, outputChannel, tomcat, "tomcat.run", serverRun);
-    initCommand(context, outputChannel, tomcat, "tomcat.debug", serverDebug);
-    initCommand(context, outputChannel, tomcat, "tomcat.stop", serverStop);
-    initCommand(context, outputChannel, tomcat, "tomcat.delete", serverDelete);
-    initCommand(context, outputChannel, tomcat, "tomcat.openconfig", serverOpenConfig);
+    initCommand(context, outputChannel, tomcat, 'tomcat.createserver', createServer);
+    initCommand(context, outputChannel, tomcat, 'tomcat.run', serverRun);
+    initCommand(context, outputChannel, tomcat, 'tomcat.debug', serverDebug);
+    initCommand(context, outputChannel, tomcat, 'tomcat.stop', serverStop);
+    initCommand(context, outputChannel, tomcat, 'tomcat.delete', serverDelete);
+    initCommand(context, outputChannel, tomcat, 'tomcat.openconfig', serverOpenConfig);
 }
 
-function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel,
-    tomcat: TomcatController, commandId: string,
-        callback: (tomcat: TomcatController, input?: T) => Promise<any>): void {
+function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcat: TomcatController,
+                        commandId: string, callback: (tomcat: TomcatController, input?: T) => Promise<string|void>): void {
     context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: {}[]) => {
         try {
             if (args.length === 0) {
@@ -47,7 +46,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
             }
         } catch (error) {
             output.show();
-            output.appendLine(Utility.localize("tomcatExt.error", "Error: '{0}'", error));
+            output.appendLine(Utility.localize('tomcatExt.error', 'Error: "{0}"', error));
             vscode.window.showErrorMessage(error);
         } finally {
             // todo telemetry;
@@ -64,8 +63,8 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
         return tomcatItem;
     }
 
-    let server: TomcatServer = undefined;
-    const serverString: string = await selectServer(ui, Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat);
+    let server: TomcatServer;
+    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
     if (serverString) {
         const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
         if (serverStr) {
@@ -74,41 +73,41 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     }
 
     if (!server) {
-        return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
     } else {
         return server;
     }
 }
 
 async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
     }
 }
 
 async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.deleteServer(server);
     }
 }
 
 async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    let server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.openConfig(server);
     }
 }
 
 async function createServer(tomcat: TomcatController): Promise<string> {
-    let ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath: string = await selectFolder(ui, Utility.localize("tomcatExt.selectinstllpath", "Select Tomcat Installation Path"));
-    let serverName: string = path.basename(tomcatPath);
+    const ui: VSCodeUI = new VSCodeUI();
+    const tomcatPath: string = await selectFolder(ui, Utility.localize('tomcatExt.selectinstllpath', 'Select Tomcat Installation Path'));
+    const serverName: string = path.basename(tomcatPath);
 
     if (tomcat.getTomcatServer(serverName)) {
         return Promise.reject(new Error(
-            Utility.localize("tomcatExt.alreadyexist", "This tomcat server exists in the workspace, abort creation")));
+            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation')));
     }
 
     await tomcat.createTomcatServer(serverName, tomcatPath);
@@ -124,33 +123,33 @@ async function serverRun(tomcat: TomcatController, uri?: vscode.Uri): Promise<vo
 }
 
 async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
-    const browse: string = ":browse";
+    const browse: string = ':browse';
     let file: PickWithData<string> | undefined;
-    let filePicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize("tomcatExt.browse", "Browse..."))];
+    const filePicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
     file = await ui.showQuickPick(filePicks, placehoder);
     return await ui.showFileFolderDialog(true, false);
 }
 
 async function selectFolder(ui: VSCodeUI, placeholder: string): Promise<string> {
-    const browse: string = ":browse";
+    const browse: string = ':browse';
     let folder: PickWithData<string> | undefined;
-    let folderPicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize("tomcatExt.browse", "Browse..."))];
+    const folderPicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
     folder = await ui.showQuickPick(folderPicks, placeholder);
     return await ui.showFileFolderDialog(false, true);
 }
 
 async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
-    const serverSet: Array<TomcatServer> = tomcat.getServerSet();
+    const serverSet: TomcatServer[] = tomcat.getServerSet();
     let serverPick: PickWithData<string> | undefined;
     // let serverPicks: PickWithData<string>[] = withNew
     //     ? [new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server"))] : [];
     let serverPicks: PickWithData<string>[] = [];
 
-    if (serverSet && serverSet.length!== 0) {
+    if (serverSet && serverSet.length !== 0) {
         serverPicks = serverPicks.concat(serverSet.map((server: TomcatServer) =>
             new PickWithData(Utility.combineServerNameAndPath(server.getName(), server.getTomcatPath()), server.getName())));
         if (withNew) {
-            serverPicks.push(new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server")));
+            serverPicks.push(new PickWithData(withNew, Utility.localize('tomcatExt.newserver', 'New server')));
         }
         serverPick = await ui.showQuickPick<string>(serverPicks, placehoder);
     }
@@ -159,39 +158,41 @@ async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatCont
 }
 
 async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
-    tomcat: TomcatController): Promise<string> {
-    const newServer: string = ":new";
-    let serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
-    return serverPick && serverPick !== newServer ? serverPick: await createServer(tomcat);
+                                    tomcat: TomcatController): Promise<string> {
+    const newServer: string = ':new';
+    const serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
+    return serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
 }
 
 async function startTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
-    const inputPath: vscode.Uri | undefined = uri ? uri: undefined;
-    let ui: VSCodeUI = new VSCodeUI();
+    const inputPath: vscode.Uri | undefined = uri ? uri : undefined;
+    const ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
-        : await selectFile(ui, Utility.localize("tomcatExt.selectwar", "Select war package"));
+        : await selectFile(ui, Utility.localize('tomcatExt.selectwar', 'Select war package'));
     const serverInfo: string = await selectOrCreateServer(ui,
-        Utility.localize("tomcatExt.selectserver", "Select Tomcat Server"), tomcat);
+                                                          Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
+                                                          tomcat);
     const server: string[] = Utility.parseServerNameAndPath(serverInfo);
 
     if (!server || !tomcat.getTomcatServer(server[0])) {
-        return Promise.reject(new Error(Utility.localize("tomcatExt.noserver", "Tomcat server is undefined")));
+        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
     }
 
-    let execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server[0]), packagePath, debug);
+    const execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server[0]), packagePath, debug);
     await execute;
     return Promise.resolve();
 }
 
 function getTempWorkspace(): string {
-    return path.resolve(os.tmpdir(), "vscodetomcat_" + makeRandomHexString(5));
+    return path.resolve(os.tmpdir(), `vscodetomcat_${makeRandomHexString(5)}`);
 }
 
 function makeRandomHexString(length: number): string {
-    let chars: string[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-    let result: string = "";
-    for (let i: number = 0; i < length; i++) {
-        let idx: number = Math.floor(chars.length * Math.random());
+    const chars: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+    let result: string = '';
+    for (let i: number = 0; i < length; i += 1) {
+        // tslint:disable-next-line:insecure-random
+        const idx: number = Math.floor(chars.length * Math.random());
         result += chars[idx];
     }
     return result;
