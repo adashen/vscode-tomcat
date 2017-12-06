@@ -8,3 +8,7 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 * Debug war package on Tomcat server
 * Run war package on Tomcat server
 * Delete the Tomcat server in workspace
+
+## 0.2.0
+### Added
+* Support opening/editoring server.xml of the tomcat instance in workspace from Tomcat Servers Explorer
