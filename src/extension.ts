@@ -10,7 +10,7 @@ import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatController } from "./Tomcat/TomcatController";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 import { TomcatSeverTreeProvider, TomcatTreeItem } from "./TomcatServerTree";
-import { Utility } from "./utility";
+import { Utility } from "./Utility";
 import { PickWithData, VSCodeUI } from "./VSCodeUI";
 
 export function activate(context: vscode.ExtensionContext): void {

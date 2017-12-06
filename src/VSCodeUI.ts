@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Utility } from "./utility";
+import { Utility } from "./Utility";
 
 export class Pick implements vscode.QuickPickItem {
     public readonly description: string;

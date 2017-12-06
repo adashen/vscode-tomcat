@@ -1,7 +1,7 @@
 'use strict';
 
 import * as path from "path";
-import { Utility } from "../utility";
+import { Utility } from "../Utility";
 
 export class TomcatServer {
     private _name: string;
