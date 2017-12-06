@@ -4,7 +4,6 @@ node_js:
 - 'node'
 
 os:
-- linux
 - osx
 
 branches:
@@ -21,6 +20,7 @@ before_install:
 
 install:
 - npm install -g vsce
+- npm install -g typescript
 - npm install
 
 script:
