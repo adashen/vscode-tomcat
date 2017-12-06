@@ -117,25 +117,16 @@ export class TomcatController {
             await Utility.executeCMD('jar', ['xvf', `${packagePath}`], {cwd: appPath}, output);
 
             let port: number | undefined;
+            let workspaceFolder: vscode.WorkspaceFolder | undefined;
             if (debug) {
                 port = await Utility.getFreePort();
-                const config: vscode.DebugConfiguration = {
-                    type: 'java',
-                    name: 'Tomcat Debug (Attach)',
-                    request: 'attach',
-                    hostName: 'localhost',
-                    port: port
-                };
-                const workspaceFolder: vscode.WorkspaceFolder = Utility.getWorkspaceFolder(packagePath);
+                workspaceFolder = Utility.getWorkspaceFolder(packagePath);
                 if (!workspaceFolder) {
                     Promise.reject(new Error(
                         Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace')));
                 }
-                vscode.debug.startDebugging(workspaceFolder, config);
             }
-
-            const args: string[] = this.getJavaArgs(serverInfo, true, port);
-            await this.startTomcat(serverInfo, appName, args, output);
+            await this.startTomcat(serverInfo, appName, output, port, workspaceFolder);
             return Promise.resolve();
         } catch (err) {
             return Promise.reject(new Error(err.toString()));
@@ -180,10 +171,26 @@ export class TomcatController {
         return args;
     }
 
-    private async startTomcat(serverInfo: TomcatServer, appName: string, args: string[], output: vscode.OutputChannel): Promise<void> {
+    private startDebugSession(debugPort ?: number, workspaceFolder ?: vscode.WorkspaceFolder): void {
+        if (debugPort && workspaceFolder) {
+            const config: vscode.DebugConfiguration = {
+                type: 'java',
+                name: 'Tomcat Debug (Attach)',
+                request: 'attach',
+                hostName: 'localhost',
+                port: debugPort
+            };
+            vscode.debug.startDebugging(workspaceFolder, config);
+        }
+    }
+
+    private async startTomcat(serverInfo: TomcatServer, appName: string, output: vscode.OutputChannel,
+                              debugPort ?: number, workspaceFolder?: vscode.WorkspaceFolder): Promise<void> {
         let statusBar: vscode.StatusBarItem;
         let statusBarCommand: vscode.Disposable;
         let serverPort: string;
+        const args: string[] = this.getJavaArgs(serverInfo, true, debugPort);
+
         try {
             serverPort = await Utility.getServerPort(serverInfo.getServerConfigPath());
         } catch {
@@ -205,7 +212,9 @@ export class TomcatController {
             }
 
             this.setStarted(serverInfo, true);
-            await Utility.executeCMD('java', args, { shell: true }, output);
+            const javaProcss: Promise<void> = Utility.executeCMD('java', args, { shell: true }, output);
+            this.startDebugSession(debugPort, workspaceFolder);
+            await javaProcss;
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
