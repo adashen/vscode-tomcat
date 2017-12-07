@@ -12,3 +12,6 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 ## 0.2.0
 ### Added
 * Support opening/editoring server.xml of the tomcat instance in workspace from Tomcat Servers Explorer
+
+## 0.2.1
+* Fix Overview page issue 

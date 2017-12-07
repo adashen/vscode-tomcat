@@ -2,7 +2,7 @@
   "name": "vscode-tomcat",
   "displayName": "Tomcat",
   "description": "%extension.description%",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "adashen",
   "icon": "resources/Tomcat.png",
   "engines": {
