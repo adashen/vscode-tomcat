@@ -11,5 +11,6 @@
   "tomcatExt.noserver": "Tomcat server is undefined",
   "tomcatExt.alreadyexist": "This tomcat server exists in the workspace, abort creation",
   "tomcatExt.noworkspacefolder": "The selected package is not under current workspace",
-  "tomcatExt.noconfig": "The tomcat server is broken. It does not have server.xml"
+  "tomcatExt.noconfig": "The tomcat server is broken. It does not have server.xml",
+  "tomcatExt.open": "Open {0}."
 }
