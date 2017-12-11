@@ -141,7 +141,7 @@ export class TomcatController {
 
     private stopServers(): void {
         const serverList: TomcatServer[] = this._tomcat.getServerSet();
-        serverList.forEach((value: TomcatServer, index: number, array: TomcatServer[]) => {
+        serverList.forEach((value: TomcatServer) => {
             if (value.isStarted()) {
                 this.stopServer(value);
             }
@@ -214,8 +214,7 @@ export class TomcatController {
 
                 // tslint:disable-next-line:no-http-string
                 const serviceuri: string = `http://localhost:${serverPort}/${appName}`;
-                // tslint:disable-next-line:no-multiline-string
-                statusBar.text = `$(browser) Open in browser`;
+                statusBar.text = '$(browser) Open in browser';
                 statusBar.tooltip = Utility.localize('tomcatExt.open', 'Open: "{0}"', serviceuri);
                 statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
                     opn(serviceuri);
