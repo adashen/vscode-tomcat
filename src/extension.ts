@@ -126,7 +126,7 @@ async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
     const browse: string = ':browse';
     let file: PickWithData<string> | undefined;
     const filePicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
-    file = await ui.showQuickPick(filePicks, placehoder);
+    file = await ui.showQuickPick<string>(filePicks, placehoder);
     return await ui.showFileFolderDialog(true, false);
 }
 
@@ -134,7 +134,7 @@ async function selectFolder(ui: VSCodeUI, placeholder: string): Promise<string> 
     const browse: string = ':browse';
     let folder: PickWithData<string> | undefined;
     const folderPicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
-    folder = await ui.showQuickPick(folderPicks, placeholder);
+    folder = await ui.showQuickPick<string>(folderPicks, placeholder);
     return await ui.showFileFolderDialog(false, true);
 }
 
