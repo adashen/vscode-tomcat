@@ -91,7 +91,7 @@
       "view/item/context": [
         {
           "command": "tomcat.start",
-          "when": "view == tomcatServerExplorer && viewItem != runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
         },
         {
           "command": "tomcat.stop",
@@ -99,7 +99,7 @@
         },
         {
           "command": "tomcat.delete",
-          "when": "view == tomcatServerExplorer && viewItem != runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
         },
         {
           "command": "tomcat.openconfig",
