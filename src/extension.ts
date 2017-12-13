@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
     const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
-    const tomcat: TomcatController = new TomcatController(tomcatData, tree._onDidChangeTreeData);
+    const tomcat: TomcatController = new TomcatController(tomcatData, context.extensionPath, tree._onDidChangeTreeData);
 
     context.subscriptions.push(tomcat);
     context.subscriptions.push(tree);

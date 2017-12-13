@@ -13,10 +13,12 @@ export class TomcatController {
     private _outputChannels: Map<string, vscode.OutputChannel>;
     private _onDidChangeTreeData: vscode.EventEmitter<TomcatServer>;
     private _tomcat: Tomcat;
+    private _contextExtensionPath: string;
 
-    constructor(tomcat: Tomcat, onDidChangeTreeData: vscode.EventEmitter<TomcatServer>) {
+    constructor(tomcat: Tomcat, extensionPath: string, onDidChangeTreeData: vscode.EventEmitter<TomcatServer>) {
       this._outputChannels = new Map<string, vscode.OutputChannel>();
       this._onDidChangeTreeData = onDidChangeTreeData;
+      this._contextExtensionPath = extensionPath;
       this._tomcat = tomcat;
     }
 
@@ -65,6 +67,7 @@ export class TomcatController {
         const webConfigSrc: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
         const serverConfigTarget: string = path.join(catalinaBasePath, 'conf', 'server.xml');
         const webConfigTarget: string = path.join(catalinaBasePath, 'conf', 'web.xml');
+        const rootPageTarget: string = path.join(rootAppPath, 'index.jsp');
         let tomcatServer: TomcatServer;
 
         try {
@@ -81,6 +84,8 @@ export class TomcatController {
             tomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
             this._tomcat.addServer(tomcatServer);
             this._onDidChangeTreeData.fire();
+            const indexJSPSrc: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
+            fse.copy(indexJSPSrc, rootPageTarget);
         } catch (e) {
             console.error(e);
             Promise.reject(new Error(e.toString()));
@@ -101,13 +106,6 @@ export class TomcatController {
     }
 
     public async startServer(serverInfo: TomcatServer): Promise<void> {
-        try {
-            await Utility.cleanAndCreateFolder(serverInfo.getRootDeployPath());
-            await this.generateRootJsp(serverInfo);
-        } catch (err) {
-            const output: vscode.OutputChannel = this.getOutput(serverInfo);
-            output.appendLine(`Fail to generate root index.jsp. Because of error: ${err.toString()}`);
-        }
         await this.run(serverInfo);
     }
 
@@ -171,13 +169,6 @@ export class TomcatController {
         await Utility.cleanAndCreateFolder(appPath);
         await Utility.executeCMD('jar', ['xvf', `${packagePath}`], {cwd: appPath}, output);
         return appName;
-    }
-
-    private async generateRootJsp(serverInfo: TomcatServer): Promise<void> {
-        let subDirs: string[] = await Utility.getSubDirs(serverInfo.getWebAppPath());
-        subDirs = subDirs.filter((value: string) => value.toLowerCase() !== 'root');
-        const content: string = Utility.generateRootPageString(subDirs);
-        return await Utility.writeFile(path.join(serverInfo.getRootDeployPath(), 'index.jsp'), content);
     }
 
     private setStarted(serverInfo: TomcatServer, started: boolean): void {

@@ -141,45 +141,7 @@ export namespace Utility {
         return finalHtml;
     }
 
-    export async function writeFile(filePath: string, content: string): Promise<void> {
-        if (await fse.pathExists(filePath)) {
-            await fse.remove(filePath);
-        }
-        await fse.writeFile(filePath, content);
-    }
-
-    export async function getSubDirs(dir: string): Promise<string[]> {
-        const isDir: boolean = await isDirectory(dir);
-        if (!isDir) {
-            return [];
-        }
-
-        return await new Promise((resolve: (obj: string[]) => void, reject: (e: Error) => void): void => {
-            fse.readdir(dir, (err: NodeJS.ErrnoException, files: string[]) => {
-                if (err) {
-                    return reject(new Error(err.toString()));
-                } else {
-                    const subFolders: string[] = files.filter(async (name: string) =>
-                                                                await isDirectory(path.join(dir, name)));
-                    resolve(subFolders);
-                }
-            });
-        });
-    }
-
     export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
-
-    async function isDirectory(filePath: string): Promise<boolean> {
-        return await new Promise((resolve: (obj: boolean) => void, reject: (e: Error) => void): void => {
-            fse.lstat(filePath, (err: NodeJS.ErrnoException, state: fse.Stats) => {
-                if (err) {
-                    return reject(new Error(err.toString()));
-                } else {
-                    return resolve(state.isDirectory());
-                }
-            });
-        });
-    }
 
     async function parseXml(xml: string): Promise<{}> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
