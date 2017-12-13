@@ -130,17 +130,6 @@ export namespace Utility {
         }
     }
 
-    export function generateRootPageString(packages: string[]): string {
-        const htmlPart1: string = '<html><meta charset="UTF-8"><title>Apache Tomcat</title></head><body><p><h3>Deployed Packages</h3><p></p><ul>';
-        const htmlPart2: string = '</ul></body></html>';
-        let finalHtml: string = htmlPart1;
-        packages.forEach((packageName: string) => {
-            finalHtml = finalHtml.concat(`<li><a href="${packageName}">${packageName}</a></li>`);
-        });
-        finalHtml = finalHtml.concat(htmlPart2);
-        return finalHtml;
-    }
-
     export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
     async function parseXml(xml: string): Promise<{}> {
