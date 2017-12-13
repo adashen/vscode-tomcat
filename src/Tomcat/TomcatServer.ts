@@ -35,4 +35,12 @@ export class TomcatServer {
     public getServerConfigPath(): string {
         return path.join(this._extensionPath, this._name, 'conf', 'server.xml');
     }
+
+    public getRootDeployPath(): string {
+        return path.join(this.getWebAppPath(), 'ROOT');
+    }
+
+    public getWebAppPath(): string {
+        return path.join(this._extensionPath, this._name, 'webapps');
+    }
 }

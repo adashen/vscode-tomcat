@@ -58,6 +58,7 @@ export class TomcatController {
         const logPath: string = path.join(catalinaBasePath, 'logs');
         const tempPath: string = path.join(catalinaBasePath, 'temp');
         const webappsPath: string = path.join(catalinaBasePath, 'webapps');
+        const rootAppPath: string = path.join(webappsPath, 'ROOT');
         const workPath: string = path.join(catalinaBasePath, 'work');
 
         const serverConfigSrc: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
@@ -73,6 +74,7 @@ export class TomcatController {
             await Utility.cleanAndCreateFolder(tempPath);
             await Utility.cleanAndCreateFolder(webappsPath);
             await Utility.cleanAndCreateFolder(workPath);
+            await Utility.cleanAndCreateFolder(rootAppPath);
             await fse.copy(serverConfigSrc, serverConfigTarget);
             await fse.copy(webConfigSrc, webConfigTarget);
 
@@ -98,23 +100,42 @@ export class TomcatController {
         }
     }
 
+    public async startServer(serverInfo: TomcatServer): Promise<void> {
+        try {
+            await Utility.cleanAndCreateFolder(serverInfo.getRootDeployPath());
+            await this.generateRootJsp(serverInfo);
+        } catch (err) {
+            const output: vscode.OutputChannel = this.getOutput(serverInfo);
+            output.appendLine(`Fail to generate root index.jsp. Because of error: ${err.toString()}`);
+        }
+        await this.run(serverInfo);
+    }
+
     public async runOnServer(serverInfo: TomcatServer, packagePath: string, debug: boolean = false): Promise<void> {
+        await this.run(serverInfo, packagePath, debug);
+    }
+
+    public dispose(): void {
+        this.stopServers();
+        this._tomcat.saveServerListSync();
+        this._outputChannels.forEach((value: vscode.OutputChannel, key: string) => value.dispose());
+    }
+
+    private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
             return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
         }
 
-        let appName: string = path.basename(packagePath);
-        appName = appName.replace(/\.[^/.]+$/, '');
-        const serverName: string = serverInfo.getName();
-        const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
         if (serverInfo.isStarted()) {
             await this.stopServer(serverInfo);
         }
 
         try {
             const output: vscode.OutputChannel = this.getOutput(serverInfo);
-            await Utility.cleanAndCreateFolder(appPath);
-            await Utility.executeCMD('jar', ['xvf', `${packagePath}`], {cwd: appPath}, output);
+            let appName: string = '';
+            if (packagePath) {
+                appName = await this.deployPackage(serverInfo, packagePath, output);
+            }
 
             let port: number | undefined;
             let workspaceFolder: vscode.WorkspaceFolder | undefined;
@@ -133,12 +154,6 @@ export class TomcatController {
         }
     }
 
-    public dispose(): void {
-        this.stopServers();
-        this._tomcat.saveServerListSync();
-        this._outputChannels.forEach((value: vscode.OutputChannel, key: string) => value.dispose());
-    }
-
     private stopServers(): void {
         const serverList: TomcatServer[] = this._tomcat.getServerSet();
         serverList.forEach((value: TomcatServer) => {
@@ -146,6 +161,23 @@ export class TomcatController {
                 this.stopServer(value);
             }
         });
+    }
+
+    private async deployPackage(serverInfo: TomcatServer, packagePath: string, output: vscode.OutputChannel): Promise<string> {
+        let appName: string = path.basename(packagePath);
+        appName = appName.replace(/\.[^/.]+$/, '');
+        const serverName: string = serverInfo.getName();
+        const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
+        await Utility.cleanAndCreateFolder(appPath);
+        await Utility.executeCMD('jar', ['xvf', `${packagePath}`], {cwd: appPath}, output);
+        return appName;
+    }
+
+    private async generateRootJsp(serverInfo: TomcatServer): Promise<void> {
+        let subDirs: string[] = await Utility.getSubDirs(serverInfo.getWebAppPath());
+        subDirs = subDirs.filter((value: string) => value.toLowerCase() !== 'root');
+        const content: string = Utility.generateRootPageString(subDirs);
+        return await Utility.writeFile(path.join(serverInfo.getRootDeployPath(), 'index.jsp'), content);
     }
 
     private setStarted(serverInfo: TomcatServer, started: boolean): void {
@@ -171,7 +203,7 @@ export class TomcatController {
 
         if (start) {
             if (port) {
-                args = [`-agentlib:jdwp=transport=dt_socket,suspend=y,server=y,address=localhost:${port}`].concat(args);
+                args = [`-agentlib:jdwp=transport=dt_socket,suspend=n,server=y,address=localhost:${port}`].concat(args);
             }
             args.push('start');
         } else {
