@@ -28,6 +28,7 @@
     "onCommand:tomcat.stop",
     "onCommand:tomcat.delete",
     "onCommand:tomcat.openconfig",
+    "onCommand:tomcat.start",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -56,6 +57,10 @@
       {
         "command": "tomcat.openconfig",
         "title": "Open server.xml"
+      },
+      {
+        "command": "tomcat.start",
+        "title": "Start Tomcat Server"
       }
     ],
     "views": {
@@ -85,12 +90,16 @@
       ],
       "view/item/context": [
         {
+          "command": "tomcat.start",
+          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
+        },
+        {
           "command": "tomcat.stop",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
         },
         {
           "command": "tomcat.delete",
-          "when": "view == tomcatServerExplorer && viewItem != runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
         },
         {
           "command": "tomcat.openconfig",

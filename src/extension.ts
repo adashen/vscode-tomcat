@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
     const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
-    const tomcat: TomcatController = new TomcatController(tomcatData, tree._onDidChangeTreeData);
+    const tomcat: TomcatController = new TomcatController(tomcatData, context.extensionPath, tree._onDidChangeTreeData);
 
     context.subscriptions.push(tomcat);
     context.subscriptions.push(tree);
@@ -33,6 +33,7 @@ export function activate(context: vscode.ExtensionContext): void {
     initCommand(context, outputChannel, tomcat, 'tomcat.stop', serverStop);
     initCommand(context, outputChannel, tomcat, 'tomcat.delete', serverDelete);
     initCommand(context, outputChannel, tomcat, 'tomcat.openconfig', serverOpenConfig);
+    initCommand(context, outputChannel, tomcat, 'tomcat.start', serverStart);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcat: TomcatController,
@@ -79,6 +80,13 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     }
 }
 
+async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    if (server) {
+        await tomcat.startServer(server);
+    }
+}
+
 async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
@@ -115,11 +123,11 @@ async function createServer(tomcat: TomcatController): Promise<string> {
 }
 
 async function serverDebug(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await startTomcat(tomcat, true, uri);
+    await runOnTomcat(tomcat, true, uri);
 }
 
 async function serverRun(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await startTomcat(tomcat, false, uri);
+    await runOnTomcat(tomcat, false, uri);
 }
 
 async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
@@ -164,7 +172,7 @@ async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
     return serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
 }
 
-async function startTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
+async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
     const inputPath: vscode.Uri | undefined = uri ? uri : undefined;
     const ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
