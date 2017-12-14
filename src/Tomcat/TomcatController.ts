@@ -1,5 +1,6 @@
 'use strict';
 
+import * as chokidar from "chokidar";
 import * as fse from "fs-extra";
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
@@ -223,7 +224,7 @@ export class TomcatController {
         let statusBarCommand: vscode.Disposable;
         let serverPort: string;
         const args: string[] = this.getJavaArgs(serverInfo, true, debugPort);
-
+        let watcher: chokidar.FSWatcher;
         try {
             serverPort = await Utility.getServerPort(serverInfo.getServerConfigPath());
         } catch {
@@ -246,16 +247,47 @@ export class TomcatController {
             }
 
             this.setStarted(serverInfo, true);
+            watcher = chokidar.watch(serverInfo.getServerConfigPath());
+            const YES_OR_NO_PROMPT: vscode.MessageItem[] = [
+                {
+                    title: 'Yes',
+                    isCloseAffordance: false
+                },
+                {
+                    title: 'No',
+                    isCloseAffordance: true
+                }
+            ];
+
+            watcher.on('change', async () => {
+                const item: vscode.MessageItem = await vscode.window.showInformationMessage(
+                    Utility.localize('tomcatExt.confchanged',
+                                     'server.xml of running {0} has been changed. Would you like to restart it',
+                                     serverInfo.getName()),
+                    ...YES_OR_NO_PROMPT);
+                if (item.title.toLowerCase() === 'yes') {
+                    try {
+                        // restart Tomcat
+                        await this.stopServer(serverInfo);
+                        await this.startTomcat(serverInfo, appName, output, debugPort, workspaceFolder);
+                    } catch (err) {
+                        vscode.window.showErrorMessage(Utility.localize('tomcatExt.restartfail', 'Restart {0} failed', serverInfo.getName()));
+                    }
+                }
+            });
+
             const javaProcss: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...args);
             this.startDebugSession(debugPort, workspaceFolder);
             await javaProcss;
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
+            watcher.close();
         } catch (err) {
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
+            if (watcher) { watcher.close(); }
             return Promise.reject(new Error(err.toString()));
         }
     }

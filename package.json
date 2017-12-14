@@ -125,12 +125,14 @@
     "@types/mocha": "^2.2.32",
     "@types/fs-extra": "^4.0.3",
     "@types/opn": "^5.1.0",
+    "@types/chokidar": "^1.7.4",
     "@types/xml2js": "^0.4.2"
   },
   "dependencies": {
+    "chokidar": "^1.7.0",
     "fs-extra": "^4.0.2",
-    "vscode-nls": "^2.0.2",
     "opn": "^5.1.0 ",
+    "vscode-nls": "^2.0.2",
     "xml2js": "^0.4.19"
   }
 }
