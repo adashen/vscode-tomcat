@@ -12,5 +12,7 @@
   "tomcatExt.alreadyexist": "This tomcat server exists in the workspace, abort creation",
   "tomcatExt.noworkspacefolder": "The selected package is not under current workspace",
   "tomcatExt.noconfig": "The tomcat server is broken. It does not have server.xml",
-  "tomcatExt.open": "Open {0}."
+  "tomcatExt.open": "Open {0}.",
+  "tomcatExt.confchanged": "server.xml of running {0} has been changed. Would you like to restart it?",
+  "tomcatExt.restartfail": "Restart {0} failed"
 }
