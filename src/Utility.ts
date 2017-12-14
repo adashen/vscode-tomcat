@@ -10,8 +10,8 @@ import * as xml2js from "xml2js";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
-    export async function executeCMD(command: string, args: string[],
-                                     options: child_process.SpawnOptions, outputPane: vscode.OutputChannel): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, command: string,
+                                     options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';

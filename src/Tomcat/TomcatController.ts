@@ -98,7 +98,7 @@ export class TomcatController {
         }
 
         try {
-            await Utility.executeCMD('java', this.getJavaArgs(serverInfo, false), {shell: true}, this.getOutput(serverInfo));
+            await Utility.executeCMD(this.getOutput(serverInfo), 'java', {shell: true}, ...this.getJavaArgs(serverInfo, false));
             return Promise.resolve();
         } catch (err) {
             return Promise.reject(new Error(err.toString()));
@@ -167,7 +167,7 @@ export class TomcatController {
         const serverName: string = serverInfo.getName();
         const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
         await Utility.cleanAndCreateFolder(appPath);
-        await Utility.executeCMD('jar', ['xvf', `${packagePath}`], {cwd: appPath}, output);
+        await Utility.executeCMD(output, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
     }
 
@@ -246,7 +246,7 @@ export class TomcatController {
             }
 
             this.setStarted(serverInfo, true);
-            const javaProcss: Promise<void> = Utility.executeCMD('java', args, { shell: true }, output);
+            const javaProcss: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...args);
             this.startDebugSession(debugPort, workspaceFolder);
             await javaProcss;
             this.setStarted(serverInfo, false);
