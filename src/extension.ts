@@ -34,6 +34,7 @@ export function activate(context: vscode.ExtensionContext): void {
     initCommand(context, outputChannel, tomcat, 'tomcat.delete', serverDelete);
     initCommand(context, outputChannel, tomcat, 'tomcat.openconfig', serverOpenConfig);
     initCommand(context, outputChannel, tomcat, 'tomcat.start', serverStart);
+    initCommand(context, outputChannel, tomcat, 'tomcat.open', serverOpen);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcat: TomcatController,
@@ -46,9 +47,13 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
                 await callback(tomcat, <T>args[0]);
             }
         } catch (error) {
+            if (error instanceof Utility.UserCancelError) {
+                return;
+            }
+
             output.show();
             output.appendLine(Utility.localize('tomcatExt.error', 'Error: "{0}"', error));
-            vscode.window.showErrorMessage(error);
+            vscode.window.showErrorMessage(error.toString());
         } finally {
             // todo telemetry;
         }
@@ -91,6 +96,13 @@ async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
+    }
+}
+
+async function serverOpen(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    if (server) {
+        await tomcat.openServer(server);
     }
 }
 

@@ -114,6 +114,11 @@ export class TomcatController {
         await this.run(serverInfo, packagePath, debug);
     }
 
+    public async openServer(serverInfo: TomcatServer): Promise<void> {
+        const serverUri: string = await this.getServerUri(serverInfo);
+        await opn(serverUri);
+    }
+
     public dispose(): void {
         this.stopServers();
         this._tomcat.saveServerListSync();
@@ -218,30 +223,41 @@ export class TomcatController {
         }
     }
 
+    private async getServerUri(serverInfo: TomcatServer, appName?: string): Promise<string> {
+        try {
+            const serverPort: string = await Utility.getServerPort(serverInfo.getServerConfigPath());
+            if (serverPort) {
+                // tslint:disable-next-line:no-http-string
+                return `http://localhost:${serverPort}/${appName ? appName : ''}`;
+            }
+            Promise.reject(new Error('No http port found in server.xml'));
+        } catch (err) {
+            Promise.reject(new Error(err.toString()));
+        }
+
+    }
+
     private async startTomcat(serverInfo: TomcatServer, appName: string, output: vscode.OutputChannel,
                               debugPort ?: number, workspaceFolder?: vscode.WorkspaceFolder): Promise<void> {
         let statusBar: vscode.StatusBarItem;
         let statusBarCommand: vscode.Disposable;
-        let serverPort: string;
+        let serverUri: string;
         const args: string[] = this.getJavaArgs(serverInfo, true, debugPort);
         let watcher: chokidar.FSWatcher;
         try {
-            serverPort = await Utility.getServerPort(serverInfo.getServerConfigPath());
-        } catch {
-            console.error('Cannot parse port from server.xml');
+            serverUri = await this.getServerUri(serverInfo, appName);
+        } catch (err) {
+            console.error(err.toString());
         }
 
         try {
-            if (serverPort) {
+            if (serverUri) {
                 statusBar = vscode.window.createStatusBarItem();
                 statusBar.command = `open.${serverInfo.getName()}`;
-
-                // tslint:disable-next-line:no-http-string
-                const serviceuri: string = `http://localhost:${serverPort}/${appName}`;
-                statusBar.text = '$(browser) Open in browser';
-                statusBar.tooltip = Utility.localize('tomcatExt.open', 'Open: "{0}"', serviceuri);
+                statusBar.text = `$(browser) Open ${appName}`;
+                statusBar.tooltip = Utility.localize('tomcatExt.openapp', 'Open: "{0}"', serverUri);
                 statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
-                    opn(serviceuri);
+                    opn(serverUri);
                 });
                 statusBar.show();
             }

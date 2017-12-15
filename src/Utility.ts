@@ -10,6 +10,12 @@ import * as xml2js from "xml2js";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
+    export class UserCancelError extends Error {
+        constructor(op: string) {
+            super(`${Utility.localize('tomcatExt.cancel', '{0} canceled by user', op)}`);
+        }
+    }
+
     export async function executeCMD(outputPane: vscode.OutputChannel, command: string,
                                      options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {

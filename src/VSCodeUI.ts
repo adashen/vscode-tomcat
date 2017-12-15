@@ -31,7 +31,7 @@ export class VSCodeUI {
         const result: vscode.QuickPickItem | undefined = await vscode.window.showQuickPick(items, options);
 
         if (!result) {
-            throw new Error(Utility.localize('tomcatExt.cancel', 'User canceled'));
+            throw new Utility.UserCancelError(placeHolder);
         } else {
             return result;
         }
@@ -49,7 +49,7 @@ export class VSCodeUI {
         const result: string | undefined = await vscode.window.showInputBox(options);
 
         if (!result) {
-            throw new Error(Utility.localize('tomcatExt.cancel', 'User canceled'));
+            throw new Utility.UserCancelError(placeHolder);
         } else {
             return result;
         }
@@ -67,7 +67,7 @@ export class VSCodeUI {
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
         if (!result || result.length === 0) {
-            throw new Error(Utility.localize('tomcatExt.cancel', 'User canceled'));
+            throw new Utility.UserCancelError('Select File Folder');
         } else {
             return result[0].fsPath;
         }
