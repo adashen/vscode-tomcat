@@ -61,6 +61,10 @@
       {
         "command": "tomcat.start",
         "title": "Start Tomcat Server"
+      },
+      {
+        "command": "tomcat.open",
+        "title": "Open in Browser"
       }
     ],
     "views": {
@@ -73,6 +77,10 @@
     },
     "menus": {
       "commandPalette": [
+        {
+          "command": "tomcat.open",
+          "when": "false == true"
+        },
         {
           "command": "tomcat.debug",
           "when": "false == true"
@@ -95,6 +103,10 @@
         },
         {
           "command": "tomcat.stop",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+        },
+        {
+          "command": "tomcat.open",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
         },
         {
