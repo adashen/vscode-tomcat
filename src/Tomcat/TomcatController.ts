@@ -244,6 +244,7 @@ export class TomcatController {
         let serverUri: string;
         const args: string[] = this.getJavaArgs(serverInfo, true, debugPort);
         let watcher: chokidar.FSWatcher;
+        let needRestart: boolean = false;
         try {
             serverUri = await this.getServerUri(serverInfo, appName);
         } catch (err) {
@@ -283,11 +284,12 @@ export class TomcatController {
                     ...YES_OR_NO_PROMPT);
                 if (item.title.toLowerCase() === 'yes') {
                     try {
-                        // restart Tomcat
+                        // Need restart tomcat
                         await this.stopServer(serverInfo);
-                        await this.startTomcat(serverInfo, appName, output, debugPort, workspaceFolder);
+                        needRestart = true;
                     } catch (err) {
-                        vscode.window.showErrorMessage(Utility.localize('tomcatExt.restartfail', 'Restart {0} failed', serverInfo.getName()));
+                        console.error(err.toString());
+                        vscode.window.showErrorMessage(Utility.localize('tomcatExt.failstop', 'Failed to stop {0}', serverInfo.getName()));
                     }
                 }
             });
@@ -299,6 +301,10 @@ export class TomcatController {
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
             watcher.close();
+            if (needRestart) {
+                needRestart = false;
+                await this.startTomcat(serverInfo, appName, output, debugPort, workspaceFolder);
+            }
         } catch (err) {
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
