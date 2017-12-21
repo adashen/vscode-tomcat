@@ -219,7 +219,7 @@ export class TomcatController {
                 hostName: 'localhost',
                 port: debugPort
             };
-            vscode.debug.startDebugging(workspaceFolder, config);
+            setTimeout(() => vscode.debug.startDebugging(workspaceFolder, config), 500);
         }
     }
 
