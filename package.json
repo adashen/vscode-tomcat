@@ -36,35 +36,43 @@
     "commands": [
       {
         "command": "tomcat.createserver",
-        "title": "New Tomcat Server"
+        "title": "New Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.run",
-        "title": "Run on Tomcat Server"
+        "title": "Deploy to Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.stop",
-        "title": "Stop Tomcat Server"
+        "title": "Stop Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.debug",
-        "title": "Debug on Tomcat Server"
+        "title": "Debug on Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.delete",
-        "title": "Delete Tomcat Server"
+        "title": "Delete Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.openconfig",
-        "title": "Open server.xml"
+        "title": "Open server.xml",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.start",
-        "title": "Start Tomcat Server"
+        "title": "Start Tomcat Server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.open",
-        "title": "Open in Browser"
+        "title": "Open in Browser",
+        "category": "Tomcat"
       }
     ],
     "views": {
