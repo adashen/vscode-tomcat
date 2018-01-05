@@ -41,7 +41,7 @@
       },
       {
         "command": "tomcat.run",
-        "title": "Deploy to Tomcat Server",
+        "title": "Deploy war to Tomcat Server",
         "category": "Tomcat"
       },
       {
@@ -51,7 +51,7 @@
       },
       {
         "command": "tomcat.debug",
-        "title": "Debug on Tomcat Server",
+        "title": "Debug war on Tomcat Server",
         "category": "Tomcat"
       },
       {

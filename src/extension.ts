@@ -122,7 +122,8 @@ async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
 
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath: string = await selectFolder(ui, Utility.localize('tomcatExt.selectinstllpath', 'Select Tomcat Installation Path'));
+    const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'));
+
     const serverName: string = path.basename(tomcatPath);
 
     if (tomcat.getTomcatServer(serverName)) {
@@ -140,22 +141,6 @@ async function serverDebug(tomcat: TomcatController, uri?: vscode.Uri): Promise<
 
 async function serverRun(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
     await runOnTomcat(tomcat, false, uri);
-}
-
-async function selectFile(ui: VSCodeUI, placehoder: string): Promise<string> {
-    const browse: string = ':browse';
-    let file: PickWithData<string> | undefined;
-    const filePicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
-    file = await ui.showQuickPick<string>(filePicks, placehoder);
-    return await ui.showFileFolderDialog(true, false);
-}
-
-async function selectFolder(ui: VSCodeUI, placeholder: string): Promise<string> {
-    const browse: string = ':browse';
-    let folder: PickWithData<string> | undefined;
-    const folderPicks: PickWithData<string>[] = [new PickWithData(browse, Utility.localize('tomcatExt.browse', 'Browse...'))];
-    folder = await ui.showQuickPick<string>(folderPicks, placeholder);
-    return await ui.showFileFolderDialog(false, true);
 }
 
 async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
@@ -188,7 +173,7 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const inputPath: vscode.Uri | undefined = uri ? uri : undefined;
     const ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
-        : await selectFile(ui, Utility.localize('tomcatExt.selectwar', 'Select war package'));
+        : await ui.showFileFolderDialog(true, false, Utility.localize('tomcatExt.selectwar', 'Select war package'));
     const serverInfo: string = await selectOrCreateServer(ui,
                                                           Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
                                                           tomcat);
