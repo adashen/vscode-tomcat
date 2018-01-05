@@ -1,3 +1,5 @@
+'use strict';
+
 import * as vscode from "vscode";
 import { Utility } from "./Utility";
 
@@ -19,8 +21,8 @@ export class PickWithData<T> extends Pick {
 }
 
 export class VSCodeUI {
-    public async showQuickPick<T>(items: PickWithData<T>[] | Thenable<PickWithData<T>[]>
-                                , placeHolder: string, ignoreFocusOut?: boolean): Promise<PickWithData<T>>;
+    public async showQuickPick<T>(items: PickWithData<T>[] | Thenable<PickWithData<T>[]>,
+                                  placeHolder: string, ignoreFocusOut?: boolean): Promise<PickWithData<T>>;
     public async showQuickPick(items: Pick[] | Thenable<Pick[]>, placeHolder: string, ignoreFocusOut?: boolean): Promise<Pick>;
     public async showQuickPick(items: vscode.QuickPickItem[] | Thenable<vscode.QuickPickItem[]>
                              , placeHolder: string, ignoreFocusOut: boolean = false): Promise<vscode.QuickPickItem> {
@@ -55,14 +57,14 @@ export class VSCodeUI {
         }
     }
 
-    public async showFileFolderDialog(file: boolean, dir: boolean): Promise<string> {
+    public async showFileFolderDialog(file: boolean, dir: boolean, label: string = 'Select'): Promise<string> {
         const defaultUri: vscode.Uri | undefined = vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined;
         const options: vscode.OpenDialogOptions = {
             defaultUri: defaultUri,
             canSelectFiles: file,
             canSelectFolders: dir,
             canSelectMany: false,
-            openLabel: 'Select'
+            openLabel: label
         };
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
