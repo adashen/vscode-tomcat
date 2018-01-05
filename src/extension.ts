@@ -122,15 +122,15 @@ async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
 
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath: string = await selectFolder(ui, Utility.localize('tomcatExt.selectinstllpath', 'Select Tomcat Installation Path'));
+    const tomcatPath: string = await selectFolder(ui, Utility.localize('tomcatExt.selectinstallpath', 'Select Tomcat Installation Path'));
     const serverName: string = path.basename(tomcatPath);
 
     if (tomcat.getTomcatServer(serverName)) {
-        return Promise.reject(new Error(
-            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation')));
+        vscode.window.showInformationMessage(
+            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation'));
+    } else {
+        await tomcat.createTomcatServer(serverName, tomcatPath);
     }
-
-    await tomcat.createTomcatServer(serverName, tomcatPath);
     return `${serverName};${tomcatPath}`;
 }
 
@@ -177,8 +177,7 @@ async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatCont
     return serverPick ? serverPick.data : undefined;
 }
 
-async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
-                                    tomcat: TomcatController): Promise<string> {
+async function selectOrCreateServer(ui: VSCodeUI, placeholder: string, tomcat: TomcatController): Promise<string> {
     const newServer: string = ':new';
     const serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
     return serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
@@ -189,9 +188,7 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
         : await selectFile(ui, Utility.localize('tomcatExt.selectwar', 'Select war package'));
-    const serverInfo: string = await selectOrCreateServer(ui,
-                                                          Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
-                                                          tomcat);
+    const serverInfo: string = await selectOrCreateServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
     const server: string[] = Utility.parseServerNameAndPath(serverInfo);
 
     if (!server || !tomcat.getTomcatServer(server[0])) {
