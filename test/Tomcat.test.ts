@@ -12,14 +12,14 @@ suite('Error input', () => {
       await tomcat.stopServer(serverInfo);
       assert.fail('Resolve', 'Reject');
     } catch (error) {
-      assert.equal(error.toString(), `Error: ${Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')}`);
+      assert.equal(error.toString(), `Error: ${Utility.localize('tomcatExt.noserver', 'No tomcat server.')}`);
     }
   });
   test('runOnServer', async () => {
     try {
       await tomcat.runOnServer(serverInfo, '');
     } catch (error) {
-      assert.equal(error.toString(), `Error: ${Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')}`);
+      assert.equal(error.toString(), `Error: ${Utility.localize('tomcatExt.noserver', 'No tomcat server.')}`);
     }
   });
 });

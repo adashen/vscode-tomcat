@@ -33,7 +33,7 @@ export class TomcatController {
 
     public deleteServer(tomcatServer: TomcatServer): void {
         if (!tomcatServer) {
-            throw (new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+            throw (new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
         }
 
         if (this._tomcat.deleteServer(tomcatServer)) {
@@ -46,7 +46,7 @@ export class TomcatController {
 
     public async openConfig(tomcatServer: TomcatServer): Promise<void> {
         if (!tomcatServer) {
-            throw (new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+            throw (new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
         }
 
         const exist: boolean = await Utility.openFileIfExists(tomcatServer.getServerConfigPath());
@@ -95,7 +95,7 @@ export class TomcatController {
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
         }
 
         try {
@@ -127,7 +127,7 @@ export class TomcatController {
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
         }
 
         if (serverInfo.isStarted()) {
