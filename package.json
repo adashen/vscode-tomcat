@@ -107,7 +107,7 @@
       "view/item/context": [
         {
           "command": "tomcat.start",
-          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver"
         },
         {
           "command": "tomcat.stop",
@@ -119,11 +119,15 @@
         },
         {
           "command": "tomcat.delete",
-          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver"
         },
         {
           "command": "tomcat.openconfig",
-          "when": "view == tomcatServerExplorer"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver"
+        },
+        {
+          "command": "tomcat.openconfig",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver"
         }
       ]
     }

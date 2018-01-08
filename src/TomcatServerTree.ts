@@ -5,7 +5,7 @@ import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export class TomcatTreeItem implements vscode.TreeItem {
-    private static readonly SERVER: string = 'tomcatserver';
+    private static readonly IDLE: string = 'idleserver';
     private static readonly RUNNING: string = 'runningserver';
     public readonly _tomcatServer: TomcatServer;
     private _context: vscode.ExtensionContext;
@@ -27,7 +27,7 @@ export class TomcatTreeItem implements vscode.TreeItem {
         if (this._tomcatServer.isStarted()) {
             return TomcatTreeItem.RUNNING;
         } else {
-            return TomcatTreeItem.SERVER;
+            return TomcatTreeItem.IDLE;
         }
     }
 
