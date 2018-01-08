@@ -3,6 +3,7 @@
   "tomcatExt.commandfailed": "Command failed with exit code {0}.",
   "tomcatExt.error": "Error {0}.",
   "tomcatExt.selectserver": "Select Tomcat Server",
+  "tomcatExt.selectdirectory": "Select Tomcat Directory",
   "tomcatExt.selectinstllpath": "Select Tomcat Installation Path",
   "tomcatExt.selectwar": "Select war package",
   "tomcatExt.browse": "Browse...",
