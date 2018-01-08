@@ -22,55 +22,55 @@
   ],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
-    "onCommand:tomcat.createserver",
-    "onCommand:tomcat.run",
-    "onCommand:tomcat.debug",
-    "onCommand:tomcat.stop",
-    "onCommand:tomcat.delete",
-    "onCommand:tomcat.openconfig",
-    "onCommand:tomcat.start",
+    "onCommand:tomcat.server.create",
+    "onCommand:tomcat.war.deploy",
+    "onCommand:tomcat.war.debug",
+    "onCommand:tomcat.server.stop",
+    "onCommand:tomcat.server.delete",
+    "onCommand:tomcat.config.open",
+    "onCommand:tomcat.server.start",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
   "contributes": {
     "commands": [
       {
-        "command": "tomcat.createserver",
+        "command": "tomcat.server.create",
         "title": "New Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.run",
+        "command": "tomcat.war.deploy",
         "title": "Deploy war to Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.stop",
+        "command": "tomcat.server.stop",
         "title": "Stop Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.debug",
+        "command": "tomcat.war.debug",
         "title": "Debug war on Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.delete",
+        "command": "tomcat.server.delete",
         "title": "Delete Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.openconfig",
+        "command": "tomcat.config.open",
         "title": "Open server.xml",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.start",
+        "command": "tomcat.server.start",
         "title": "Start Tomcat Server",
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.open",
+        "command": "tomcat.server.browse",
         "title": "Open in Browser",
         "category": "Tomcat"
       }
@@ -86,47 +86,47 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "tomcat.open",
+          "command": "tomcat.server.browse",
           "when": "false == true"
         },
         {
-          "command": "tomcat.debug",
+          "command": "tomcat.war.debug",
           "when": "false == true"
         }
       ],
       "explorer/context": [
         {
-          "command": "tomcat.run",
+          "command": "tomcat.war.deploy",
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         },
         {
-          "command": "tomcat.debug",
+          "command": "tomcat.war.debug",
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         }
       ],
       "view/item/context": [
         {
-          "command": "tomcat.start",
+          "command": "tomcat.server.start",
           "when": "view == tomcatServerExplorer && viewItem == idleserver"
         },
         {
-          "command": "tomcat.stop",
+          "command": "tomcat.server.stop",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
         },
         {
-          "command": "tomcat.open",
+          "command": "tomcat.server.browse",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
         },
         {
-          "command": "tomcat.delete",
+          "command": "tomcat.server.delete",
           "when": "view == tomcatServerExplorer && viewItem == idleserver"
         },
         {
-          "command": "tomcat.openconfig",
+          "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem == idleserver"
         },
         {
-          "command": "tomcat.openconfig",
+          "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem == runningserver"
         }
       ]
