@@ -63,7 +63,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
 
-async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<TomcatServer> {
+async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer, createIfNotExist ?: boolean): Promise<TomcatServer> {
     const ui: VSCodeUI = new VSCodeUI();
     if (tomcatItem) {
         return tomcatItem;
@@ -77,11 +77,18 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
             server = tomcat.getTomcatServer(serverStr[0]);
         }
     }
+
+    if (!server && createIfNotExist) {
+        const serverInfo: string = await createServer(tomcat);
+        const serverInfoArray: string[] = Utility.parseServerNameAndPath(serverInfo);
+        server = tomcat.getTomcatServer(serverInfoArray[0]);
+    }
+
     return server;
 }
 
 async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
         await tomcat.startServer(server);
     } else {
