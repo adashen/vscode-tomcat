@@ -77,18 +77,15 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
             server = tomcat.getTomcatServer(serverStr[0]);
         }
     }
-
-    if (!server) {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noservertodelete', 'No tomcat server.'));
-    }
-
-    return Promise.resolve(server);
+    return server;
 }
 
 async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.startServer(server);
+    } else {
+        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -96,6 +93,8 @@ async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
+    } else {
+        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -103,6 +102,8 @@ async function serverOpen(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.openServer(server);
+    } else {
+        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -110,6 +111,8 @@ async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.deleteServer(server);
+    } else {
+        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -117,6 +120,8 @@ async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.openConfig(server);
+    } else {
+        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
