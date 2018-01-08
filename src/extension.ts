@@ -70,7 +70,7 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     }
 
     let server: TomcatServer;
-    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
+    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'), tomcat);
     if (serverString) {
         const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
         if (serverStr) {
