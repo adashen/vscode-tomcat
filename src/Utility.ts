@@ -132,7 +132,7 @@ export namespace Utility {
             const jsonObj: {} = await parseXml(xml);
             return getPortFromJson(jsonObj);
         } else {
-            return Promise.reject(new Error(localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+            return Promise.reject(new Error(localize('tomcatExt.noserver', 'No tomcat server.')));
         }
     }
 
