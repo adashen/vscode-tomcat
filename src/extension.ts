@@ -85,7 +85,7 @@ async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer)
     if (server) {
         await tomcat.startServer(server);
     } else {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -94,7 +94,7 @@ async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     if (server) {
         await tomcat.stopServer(server);
     } else {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -103,7 +103,7 @@ async function serverOpen(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     if (server) {
         await tomcat.openServer(server);
     } else {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -112,7 +112,7 @@ async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer
     if (server) {
         await tomcat.deleteServer(server);
     } else {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -121,7 +121,7 @@ async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
     if (server) {
         await tomcat.openConfig(server);
     } else {
-        vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
