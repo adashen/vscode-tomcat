@@ -70,25 +70,22 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     }
 
     let server: TomcatServer;
-    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
+    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'), tomcat);
     if (serverString) {
         const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
         if (serverStr) {
             server = tomcat.getTomcatServer(serverStr[0]);
         }
     }
-
-    if (!server) {
-        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
-    } else {
-        return server;
-    }
+    return server;
 }
 
 async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.startServer(server);
+    } else {
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -96,6 +93,8 @@ async function serverStop(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.stopServer(server);
+    } else {
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -103,6 +102,8 @@ async function serverOpen(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.openServer(server);
+    } else {
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -110,6 +111,8 @@ async function serverDelete(tomcat: TomcatController, tomcatItem ?: TomcatServer
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.deleteServer(server);
+    } else {
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
@@ -117,12 +120,14 @@ async function serverOpenConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         await tomcat.openConfig(server);
+    } else {
+        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
     }
 }
 
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath:string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'));
+    const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'));
 
     const serverName: string = path.basename(tomcatPath);
 
@@ -177,7 +182,7 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const server: string[] = Utility.parseServerNameAndPath(serverInfo);
 
     if (!server || !tomcat.getTomcatServer(server[0])) {
-        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'Tomcat server is undefined')));
+        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
     }
 
     const execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server[0]), packagePath, debug);
