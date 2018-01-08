@@ -80,10 +80,9 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
 
     if (!server) {
         vscode.window.showInformationMessage(Utility.localize('tomcatExt.noservertodelete', 'No tomcat server.'));
-        return null;
     }
 
-    return server;
+    return Promise.resolve(server);
 }
 
 async function serverStart(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
