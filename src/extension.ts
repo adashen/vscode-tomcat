@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
     initCommand(context, outputChannel, tomcat, 'tomcat.server.browse', browseServer);
     initCommand(context, outputChannel, tomcat, 'tomcat.server.stop', stopServer);
     initCommand(context, outputChannel, tomcat, 'tomcat.server.delete', deleteServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.war.deploy', deployWarPackage);
+    initCommand(context, outputChannel, tomcat, 'tomcat.war.run', runWarPackage);
     initCommand(context, outputChannel, tomcat, 'tomcat.war.debug', debugWarPackage);
     initCommand(context, outputChannel, tomcat, 'tomcat.config.open', openServerConfig);
 }
@@ -145,7 +145,7 @@ async function debugWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Prom
     await runOnTomcat(tomcat, true, uri);
 }
 
-async function deployWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
+async function runWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
     await runOnTomcat(tomcat, false, uri);
 }
 

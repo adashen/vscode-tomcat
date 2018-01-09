@@ -23,7 +23,7 @@
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
     "onCommand:tomcat.server.create",
-    "onCommand:tomcat.war.deploy",
+    "onCommand:tomcat.war.run",
     "onCommand:tomcat.war.debug",
     "onCommand:tomcat.server.stop",
     "onCommand:tomcat.server.delete",
@@ -44,8 +44,8 @@
         }
       },
       {
-        "command": "tomcat.war.deploy",
-        "title": "Deploy war to Tomcat Server",
+        "command": "tomcat.war.run",
+        "title": "Run on Tomcat Server",
         "category": "Tomcat"
       },
       {
@@ -55,7 +55,7 @@
       },
       {
         "command": "tomcat.war.debug",
-        "title": "Debug war on Tomcat Server",
+        "title": "Debug on Tomcat Server",
         "category": "Tomcat"
       },
       {
@@ -107,7 +107,7 @@
       ],
       "explorer/context": [
         {
-          "command": "tomcat.war.deploy",
+          "command": "tomcat.war.run",
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         },
         {
