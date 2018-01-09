@@ -129,15 +129,14 @@ async function openServerConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
     const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'));
-
     const serverName: string = path.basename(tomcatPath);
 
     if (tomcat.getTomcatServer(serverName)) {
-        return Promise.reject(new Error(
-            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation')));
+        vscode.window.showInformationMessage(
+            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation'));
+    } else {
+        await tomcat.createTomcatServer(serverName, tomcatPath);
     }
-
-    await tomcat.createTomcatServer(serverName, tomcatPath);
     return serverName;
 }
 
@@ -166,29 +165,27 @@ async function selectServer(ui: VSCodeUI, placeHolder: string, tomcat: TomcatCon
     return serverPick ? serverPick.data : undefined;
 }
 
-async function selectOrCreateServer(ui: VSCodeUI, placeholder: string,
-                                    tomcat: TomcatController): Promise<string> {
-    const newServer: string = ':new';
-    const serverPick: string | undefined = await selectServer(ui, placeholder, tomcat, newServer);
-    return serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
-}
-
 async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
-    const inputPath: vscode.Uri | undefined = uri ? uri : undefined;
     const ui: VSCodeUI = new VSCodeUI();
-    const packagePath: string = inputPath ? inputPath.fsPath
-        : await ui.showFileFolderDialog(true, false, Utility.localize('tomcatExt.selectwar', 'Select war package'));
-    const server: string = await selectOrCreateServer(ui,
-                                                      Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
-                                                      tomcat);
+    const packagePath: string = uri ? uri.fsPath : await ui.showFileFolderDialog(true, false, Utility.localize('tomcatExt.selectwar', 'Select war package'));
+    const originalServerSet: string[] = tomcat.getServerSet().map((s: TomcatServer) => s.getName());
+    const newServer: string = ':new';
+    const serverPick: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat, newServer);
+    const server: string = serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
 
     if (!tomcat.getTomcatServer(server)) {
         return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
     }
+    if (originalServerSet.indexOf(server) >= 0) {
+        const result: string = await vscode.window.showWarningMessage(
+            Utility.localize('tomcatExt.promptcontinueonexistingserver', 'This tomcat server already exists. Would you like to continue operation on this server?'),
+            Utility.localize('tomcatExt.yes', 'Yes'), Utility.localize('tomcatExt.no', 'No'));
+        if (result !== Utility.localize('tomcatExt.yes', 'Yes')) {
+            return;
+        }
+    }
 
-    const execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server), packagePath, debug);
-    await execute;
-    return Promise.resolve();
+    await tomcat.runOnServer(tomcat.getTomcatServer(server), packagePath, debug);
 }
 
 function getTempWorkspace(): string {
