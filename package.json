@@ -37,7 +37,11 @@
       {
         "command": "tomcat.createserver",
         "title": "New Tomcat Server",
-        "category": "Tomcat"
+        "category": "Tomcat",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
+        }
       },
       {
         "command": "tomcat.run",
@@ -84,6 +88,13 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "tomcat.createserver",
+          "when": "view == tomcatServerExplorer",
+          "group": "navigation"
+        }
+      ],
       "commandPalette": [
         {
           "command": "tomcat.open",
@@ -107,27 +118,33 @@
       "view/item/context": [
         {
           "command": "tomcat.start",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@0"
         },
         {
           "command": "tomcat.stop",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@1"
         },
         {
           "command": "tomcat.open",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@2"
+        },
+        {
+          "command": "tomcat.openconfig",
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@3"
+        },
+        {
+          "command": "tomcat.openconfig",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@3"
         },
         {
           "command": "tomcat.delete",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver"
-        },
-        {
-          "command": "tomcat.openconfig",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver"
-        },
-        {
-          "command": "tomcat.openconfig",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@4"
         }
       ]
     }
