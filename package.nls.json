@@ -15,5 +15,8 @@
   "tomcatExt.noconfig": "The tomcat server is broken. It does not have server.xml",
   "tomcatExt.open": "Open {0}.",
   "tomcatExt.confchanged": "server.xml of running {0} has been changed. Would you like to restart it?",
-  "tomcatExt.failstop": "Failed to stop {0}"
+  "tomcatExt.failstop": "Failed to stop {0}",
+  "tomcatExt.promptcontinueonexistingserver": "This tomcat server already exists. Would you like to continue operation on this server?",
+  "tomcatExt.yes": "Yes",
+  "tomcatExt.no": "No"
 }
