@@ -63,25 +63,26 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
 
-async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<TomcatServer> {
+async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer, createIfNotExist ?: boolean): Promise<TomcatServer> {
     const ui: VSCodeUI = new VSCodeUI();
     if (tomcatItem) {
         return tomcatItem;
     }
 
     let server: TomcatServer;
-    const serverString: string = await selectServer(ui, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'), tomcat);
-    if (serverString) {
-        const serverStr: string[] | undefined = Utility.parseServerNameAndPath(serverString);
-        if (serverStr) {
-            server = tomcat.getTomcatServer(serverStr[0]);
-        }
+    let serverName: string = await selectServer(ui, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'), tomcat);
+    server = tomcat.getTomcatServer(serverName);
+
+    if (!server && createIfNotExist) {
+        serverName = await createServer(tomcat);
+        server = tomcat.getTomcatServer(serverName);
     }
+
     return server;
 }
 
 async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
+    const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
         await tomcat.startServer(server);
     } else {
@@ -137,7 +138,7 @@ async function createServer(tomcat: TomcatController): Promise<string> {
     }
 
     await tomcat.createTomcatServer(serverName, tomcatPath);
-    return `${serverName};${tomcatPath}`;
+    return serverName;
 }
 
 async function debugWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
@@ -148,20 +149,18 @@ async function deployWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Pro
     await runOnTomcat(tomcat, false, uri);
 }
 
-async function selectServer(ui: VSCodeUI, placehoder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
+async function selectServer(ui: VSCodeUI, placeHolder: string, tomcat: TomcatController, withNew?: string): Promise<string | undefined> {
     const serverSet: TomcatServer[] = tomcat.getServerSet();
     let serverPick: PickWithData<string> | undefined;
-    // let serverPicks: PickWithData<string>[] = withNew
-    //     ? [new PickWithData(withNew, Utility.localize("tomcatExt.newserver", "New server"))] : [];
     let serverPicks: PickWithData<string>[] = [];
 
     if (serverSet && serverSet.length !== 0) {
         serverPicks = serverPicks.concat(serverSet.map((server: TomcatServer) =>
-            new PickWithData(Utility.combineServerNameAndPath(server.getName(), server.getTomcatPath()), server.getName())));
+            new PickWithData(server.getName(), server.getName())));
         if (withNew) {
             serverPicks.push(new PickWithData(withNew, Utility.localize('tomcatExt.newserver', 'New server')));
         }
-        serverPick = await ui.showQuickPick<string>(serverPicks, placehoder);
+        serverPick = await ui.showQuickPick<string>(serverPicks, placeHolder);
     }
 
     return serverPick ? serverPick.data : undefined;
@@ -179,16 +178,15 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const ui: VSCodeUI = new VSCodeUI();
     const packagePath: string = inputPath ? inputPath.fsPath
         : await ui.showFileFolderDialog(true, false, Utility.localize('tomcatExt.selectwar', 'Select war package'));
-    const serverInfo: string = await selectOrCreateServer(ui,
-                                                          Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
-                                                          tomcat);
-    const server: string[] = Utility.parseServerNameAndPath(serverInfo);
+    const server: string = await selectOrCreateServer(ui,
+                                                      Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'),
+                                                      tomcat);
 
-    if (!server || !tomcat.getTomcatServer(server[0])) {
+    if (!tomcat.getTomcatServer(server)) {
         return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
     }
 
-    const execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server[0]), packagePath, debug);
+    const execute: Promise<void> = tomcat.runOnServer(tomcat.getTomcatServer(server), packagePath, debug);
     await execute;
     return Promise.resolve();
 }
