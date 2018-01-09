@@ -68,13 +68,11 @@ export namespace Utility {
         if (exists) {
             await fse.remove(dir);
         }
-        return Promise.resolve();
     }
 
     export async function cleanAndCreateFolder(dir: string): Promise<void> {
         await deleteFolderRecursive(dir);
         await fse.mkdirs(dir);
-        return Promise.resolve();
     }
 
     export async function getFreePort(): Promise<number> {
@@ -99,20 +97,20 @@ export namespace Utility {
         const exists: boolean = await fse.pathExists(filepath);
         if (exists) {
             await vscode.window.showTextDocument(vscode.Uri.file(filepath), { preview: false });
-            return Promise.resolve(true);
+            return true;
         } else {
-            return Promise.resolve(false);
+            return false;
         }
     }
 
-    export async function getServerPort(serverXml: string): Promise<string>|undefined {
+    export async function getServerPort(serverXml: string): Promise<string> | undefined {
         const exists: boolean = await fse.pathExists(serverXml);
         if (exists) {
             const xml: string = await fse.readFile(serverXml, 'utf8');
             const jsonObj: {} = await parseXml(xml);
             return getPortFromJson(jsonObj);
         } else {
-            return Promise.reject(new Error(localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
     }
 
@@ -130,7 +128,7 @@ export namespace Utility {
         });
     }
 
-    function getPortFromJson(jsonObj: {}): string|undefined {
+    function getPortFromJson(jsonObj: {}): string | undefined {
         try {
             const server: {} = getValue(jsonObj, 'Server');
             const services: {}[] = getValue(server, 'Service');

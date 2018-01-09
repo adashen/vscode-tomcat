@@ -89,20 +89,19 @@ export class TomcatController {
             fse.copy(indexJSPSrc, rootPageTarget);
         } catch (e) {
             console.error(e);
-            Promise.reject(new Error(e.toString()));
+            throw new Error(e.toString());
         }
     }
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
         }
 
         try {
             await Utility.executeCMD(this.getOutput(serverInfo), 'java', {shell: true}, ...this.getJavaArgs(serverInfo, false));
-            return Promise.resolve();
         } catch (err) {
-            return Promise.reject(new Error(err.toString()));
+            throw new Error(err.toString());
         }
     }
 
@@ -127,7 +126,7 @@ export class TomcatController {
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
         }
 
         if (serverInfo.isStarted()) {
@@ -147,14 +146,12 @@ export class TomcatController {
                 port = await Utility.getFreePort();
                 workspaceFolder = Utility.getWorkspaceFolder(packagePath);
                 if (!workspaceFolder) {
-                    Promise.reject(new Error(
-                        Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace')));
+                    throw new Error(Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace'));
                 }
             }
             await this.startTomcat(serverInfo, appName, output, port, workspaceFolder);
-            return Promise.resolve();
         } catch (err) {
-            return Promise.reject(new Error(err.toString()));
+            throw new Error(err.toString());
         }
     }
 
@@ -230,9 +227,9 @@ export class TomcatController {
                 // tslint:disable-next-line:no-http-string
                 return `http://localhost:${serverPort}/${appName ? appName : ''}`;
             }
-            Promise.reject(new Error('No http port found in server.xml'));
+            throw new Error('No http port found in server.xml');
         } catch (err) {
-            Promise.reject(new Error(err.toString()));
+            throw new Error(err.toString());
         }
 
     }
@@ -310,7 +307,7 @@ export class TomcatController {
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
             if (watcher) { watcher.close(); }
-            return Promise.reject(new Error(err.toString()));
+            throw new Error(err.toString());
         }
     }
 
