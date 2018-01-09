@@ -128,7 +128,7 @@ async function openServerConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
 
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'));
+    const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'));
 
     const serverName: string = path.basename(tomcatPath);
 

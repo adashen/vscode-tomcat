@@ -90,7 +90,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "tomcat.createserver",
+          "command": "tomcat.server.create",
           "when": "view == tomcatServerExplorer",
           "group": "navigation"
         }
