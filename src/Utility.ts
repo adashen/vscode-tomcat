@@ -63,26 +63,6 @@ export namespace Utility {
         }
     }
 
-    export function combineServerNameAndPath(serverName: string, tomcatPath: string): string | undefined {
-        if (!serverName || !tomcatPath) {
-            return undefined;
-        }
-
-        return `${serverName};${tomcatPath}`;
-    }
-
-    export function parseServerNameAndPath(serverString: string): string[] | undefined {
-        if (!serverString) {
-            return undefined;
-        }
-        const nameAndPath: string[] = serverString.split(';');
-        if (!nameAndPath || nameAndPath.length !== 2) {
-            return undefined;
-        }
-
-        return nameAndPath;
-    }
-
     export async function deleteFolderRecursive(dir: string): Promise<void> {
         const exists: boolean = await fse.pathExists(dir);
         if (exists) {
