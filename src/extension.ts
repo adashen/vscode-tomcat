@@ -174,12 +174,12 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const newServer: string = ':new';
     const serverPick: string | undefined = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat, newServer);
     const server: string = serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
-    
+
     if (!tomcat.getTomcatServer(server)) {
         return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
     }
-    if (originalServerSet.filter((s: string) => s === server).length > 0) {
-        const result: string | undefined = await vscode.window.showWarningMessage(
+    if (originalServerSet.indexOf(server) >= 0) {
+        const result: string = await vscode.window.showWarningMessage(
             Utility.localize('tomcatExt.promptcontinueonexistingserver', 'This tomcat server already exists. Would you like to continue operation on this server?'),
             Utility.localize('tomcatExt.yes', 'Yes'), Utility.localize('tomcatExt.no', 'No'));
         if (result !== Utility.localize('tomcatExt.yes', 'Yes')) {
