@@ -16,7 +16,7 @@ import { PickWithData, VSCodeUI } from "./VSCodeUI";
 export function activate(context: vscode.ExtensionContext): void {
     let storagePath: string = context.storagePath;
     if (!storagePath) {
-        storagePath = getTempWorkspace();
+        storagePath = path.resolve(os.tmpdir(), `vscodetomcat_${makeRandomHexString(5)}`);
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
@@ -52,7 +52,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
             }
 
             output.show();
-            output.appendLine(Utility.localize('tomcatExt.error', 'Error: "{0}"', error));
+            output.appendLine(Utility.localize('tomcatExt.error', '{0}', error));
             vscode.window.showErrorMessage(error.toString());
         } finally {
             // todo telemetry;
@@ -64,14 +64,13 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 export function deactivate(): void {}
 
 async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatServer, createIfNotExist ?: boolean): Promise<TomcatServer> {
-    const ui: VSCodeUI = new VSCodeUI();
     if (tomcatItem) {
         return tomcatItem;
     }
 
-    let server: TomcatServer;
-    let serverName: string = await selectServer(ui, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'), tomcat);
-    server = tomcat.getTomcatServer(serverName);
+    const ui: VSCodeUI = new VSCodeUI();
+    let serverName: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
+    let server: TomcatServer = tomcat.getTomcatServer(serverName);
 
     if (!server && createIfNotExist) {
         serverName = await createServer(tomcat);
@@ -173,10 +172,7 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     const serverPick: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat, newServer);
     const server: string = serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
 
-    if (!tomcat.getTomcatServer(server)) {
-        return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
-    }
-    if (originalServerSet.indexOf(server) >= 0) {
+    if (serverPick === newServer && originalServerSet.indexOf(server) >= 0) {
         const result: string = await vscode.window.showWarningMessage(
             Utility.localize('tomcatExt.promptcontinueonexistingserver', 'This tomcat server already exists. Would you like to continue operation on this server?'),
             Utility.localize('tomcatExt.yes', 'Yes'), Utility.localize('tomcatExt.no', 'No'));
@@ -186,10 +182,6 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     }
 
     await tomcat.runOnServer(tomcat.getTomcatServer(server), packagePath, debug);
-}
-
-function getTempWorkspace(): string {
-    return path.resolve(os.tmpdir(), `vscodetomcat_${makeRandomHexString(5)}`);
 }
 
 function makeRandomHexString(length: number): string {

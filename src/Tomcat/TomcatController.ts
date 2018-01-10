@@ -71,39 +71,29 @@ export class TomcatController {
         const rootPageTarget: string = path.join(rootAppPath, 'index.jsp');
         let tomcatServer: TomcatServer;
 
-        try {
-            await Utility.cleanAndCreateFolder(catalinaBasePath);
-            await Utility.cleanAndCreateFolder(confPath);
-            await Utility.cleanAndCreateFolder(logPath);
-            await Utility.cleanAndCreateFolder(tempPath);
-            await Utility.cleanAndCreateFolder(webappsPath);
-            await Utility.cleanAndCreateFolder(workPath);
-            await Utility.cleanAndCreateFolder(rootAppPath);
-            await fse.copy(serverConfigSrc, serverConfigTarget);
-            await fse.copy(webConfigSrc, webConfigTarget);
+        await Utility.cleanAndCreateFolder(catalinaBasePath);
+        await Utility.cleanAndCreateFolder(confPath);
+        await Utility.cleanAndCreateFolder(logPath);
+        await Utility.cleanAndCreateFolder(tempPath);
+        await Utility.cleanAndCreateFolder(webappsPath);
+        await Utility.cleanAndCreateFolder(workPath);
+        await Utility.cleanAndCreateFolder(rootAppPath);
+        await fse.copy(serverConfigSrc, serverConfigTarget);
+        await fse.copy(webConfigSrc, webConfigTarget);
 
-            tomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
-            this._tomcat.addServer(tomcatServer);
-            this._onDidChangeTreeData.fire();
-            const indexJSPSrc: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
-            fse.copy(indexJSPSrc, rootPageTarget);
-        } catch (e) {
-            console.error(e);
-            Promise.reject(new Error(e.toString()));
-        }
+        tomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
+        this._tomcat.addServer(tomcatServer);
+        this._onDidChangeTreeData.fire();
+        const indexJSPSrc: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
+        fse.copy(indexJSPSrc, rootPageTarget);
     }
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
         }
 
-        try {
-            await Utility.executeCMD(this.getOutput(serverInfo), 'java', {shell: true}, ...this.getJavaArgs(serverInfo, false));
-            return Promise.resolve();
-        } catch (err) {
-            return Promise.reject(new Error(err.toString()));
-        }
+        await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
     }
 
     public async startServer(serverInfo: TomcatServer): Promise<void> {
@@ -127,35 +117,26 @@ export class TomcatController {
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
-            return Promise.reject(new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
         }
 
         if (serverInfo.isStarted()) {
             await this.stopServer(serverInfo);
         }
 
-        try {
-            const output: vscode.OutputChannel = this.getOutput(serverInfo);
-            let appName: string = '';
-            if (packagePath) {
-                appName = await this.deployPackage(serverInfo, packagePath, output);
-            }
+        const output: vscode.OutputChannel = this.getOutput(serverInfo);
+        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, output) : '';
+        let port: number | undefined;
+        let workspaceFolder: vscode.WorkspaceFolder | undefined;
 
-            let port: number | undefined;
-            let workspaceFolder: vscode.WorkspaceFolder | undefined;
-            if (debug) {
-                port = await Utility.getFreePort();
-                workspaceFolder = Utility.getWorkspaceFolder(packagePath);
-                if (!workspaceFolder) {
-                    Promise.reject(new Error(
-                        Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace')));
-                }
+        if (debug) {
+            port = await Utility.getFreePort();
+            workspaceFolder = Utility.getWorkspaceFolder(packagePath);
+            if (!workspaceFolder) {
+                throw new Error(Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace'));
             }
-            await this.startTomcat(serverInfo, appName, output, port, workspaceFolder);
-            return Promise.resolve();
-        } catch (err) {
-            return Promise.reject(new Error(err.toString()));
         }
+        await this.startTomcat(serverInfo, appName, output, port, workspaceFolder);
     }
 
     private stopServers(): void {
@@ -224,32 +205,22 @@ export class TomcatController {
     }
 
     private async getServerUri(serverInfo: TomcatServer, appName?: string): Promise<string> {
-        try {
-            const serverPort: string = await Utility.getServerPort(serverInfo.getServerConfigPath());
-            if (serverPort) {
-                // tslint:disable-next-line:no-http-string
-                return `http://localhost:${serverPort}/${appName ? appName : ''}`;
-            }
-            Promise.reject(new Error('No http port found in server.xml'));
-        } catch (err) {
-            Promise.reject(new Error(err.toString()));
+        const serverPort: string = await Utility.getServerPort(serverInfo.getServerConfigPath());
+        if (!serverPort) {
+            throw new Error('No http port found in server.xml');
         }
-
+        // tslint:disable-next-line:no-http-string
+        return `http://localhost:${serverPort}/${appName ? appName : ''}`;
     }
 
     private async startTomcat(serverInfo: TomcatServer, appName: string, output: vscode.OutputChannel,
                               debugPort ?: number, workspaceFolder?: vscode.WorkspaceFolder): Promise<void> {
         let statusBar: vscode.StatusBarItem;
         let statusBarCommand: vscode.Disposable;
-        let serverUri: string;
         const args: string[] = this.getJavaArgs(serverInfo, true, debugPort);
         let watcher: chokidar.FSWatcher;
         let needRestart: boolean = false;
-        try {
-            serverUri = await this.getServerUri(serverInfo, appName);
-        } catch (err) {
-            console.error(err.toString());
-        }
+        const serverUri: string = await this.getServerUri(serverInfo, appName);
 
         try {
             if (serverUri) {
@@ -310,7 +281,7 @@ export class TomcatController {
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
             if (watcher) { watcher.close(); }
-            return Promise.reject(new Error(err.toString()));
+            throw new Error(err.toString());
         }
     }
 

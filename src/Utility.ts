@@ -64,17 +64,14 @@ export namespace Utility {
     }
 
     export async function deleteFolderRecursive(dir: string): Promise<void> {
-        const exists: boolean = await fse.pathExists(dir);
-        if (exists) {
+        if (await fse.pathExists(dir)) {
             await fse.remove(dir);
         }
-        return Promise.resolve();
     }
 
     export async function cleanAndCreateFolder(dir: string): Promise<void> {
         await deleteFolderRecursive(dir);
         await fse.mkdirs(dir);
-        return Promise.resolve();
     }
 
     export async function getFreePort(): Promise<number> {
@@ -99,21 +96,19 @@ export namespace Utility {
         const exists: boolean = await fse.pathExists(filepath);
         if (exists) {
             await vscode.window.showTextDocument(vscode.Uri.file(filepath), { preview: false });
-            return Promise.resolve(true);
+            return true;
         } else {
-            return Promise.resolve(false);
+            return false;
         }
     }
 
-    export async function getServerPort(serverXml: string): Promise<string>|undefined {
-        const exists: boolean = await fse.pathExists(serverXml);
-        if (exists) {
-            const xml: string = await fse.readFile(serverXml, 'utf8');
-            const jsonObj: {} = await parseXml(xml);
-            return getPortFromJson(jsonObj);
-        } else {
-            return Promise.reject(new Error(localize('tomcatExt.noserver', 'No tomcat server.')));
+    export async function getServerPort(serverXml: string): Promise<string> | undefined {
+        if (!await fse.pathExists(serverXml)) {
+            throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
+        const xml: string = await fse.readFile(serverXml, 'utf8');
+        const jsonObj: {} = await parseXml(xml);
+        return getPortFromJson(jsonObj);
     }
 
     export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
@@ -130,7 +125,7 @@ export namespace Utility {
         });
     }
 
-    function getPortFromJson(jsonObj: {}): string|undefined {
+    function getPortFromJson(jsonObj: {}): string | undefined {
         try {
             const server: {} = getValue(jsonObj, 'Server');
             const services: {}[] = getValue(server, 'Service');
@@ -147,12 +142,8 @@ export namespace Utility {
 
     // tslint:disable-next-line:no-any
     function getValue(jsonObj: {}, key: string): any {
-        if (jsonObj) {
-            // tslint:disable-next-line:no-any
-            const value: any = jsonObj[key];
-            if (value) {
-                return value;
-            }
+        if (jsonObj && jsonObj[key]) {
+            return jsonObj[key];
         }
         throw new Error('key does not exist');
     }
