@@ -83,6 +83,10 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
 async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
+        if(server.isStarted()) {
+            vscode.window.showInformationMessage('This Tomcat Server is already started.');
+            return;
+        }
         await tomcat.startServer(server);
     } else {
         await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
