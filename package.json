@@ -133,7 +133,7 @@
         },
         {
           "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "when": "view == tomcatServerExplorer",
           "group": "tomcat@4"
         },
         {

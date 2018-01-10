@@ -31,9 +31,17 @@ export class TomcatController {
         return this._tomcat.getServerSet();
     }
 
-    public deleteServer(tomcatServer: TomcatServer): void {
+    public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
         if (!tomcatServer) {
             throw (new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+        }
+
+        if (tomcatServer.isStarted()) {
+            const confirmation: string = await vscode.window.showWarningMessage('This Tomcat Server is running, are you sure you want to delete it?', 'Yes', 'Cancel');
+            if (confirmation !== 'Yes') {
+                return;
+            }
+            await this.stopServer(tomcatServer);
         }
 
         if (this._tomcat.deleteServer(tomcatServer)) {
