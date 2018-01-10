@@ -125,13 +125,10 @@ export class TomcatController {
         }
 
         const output: vscode.OutputChannel = this.getOutput(serverInfo);
-        let appName: string = '';
-        if (packagePath) {
-            appName = await this.deployPackage(serverInfo, packagePath, output);
-        }
-
+        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, output) : '';
         let port: number | undefined;
         let workspaceFolder: vscode.WorkspaceFolder | undefined;
+
         if (debug) {
             port = await Utility.getFreePort();
             workspaceFolder = Utility.getWorkspaceFolder(packagePath);

@@ -64,8 +64,7 @@ export namespace Utility {
     }
 
     export async function deleteFolderRecursive(dir: string): Promise<void> {
-        const exists: boolean = await fse.pathExists(dir);
-        if (exists) {
+        if (await fse.pathExists(dir)) {
             await fse.remove(dir);
         }
     }
@@ -104,14 +103,12 @@ export namespace Utility {
     }
 
     export async function getServerPort(serverXml: string): Promise<string> | undefined {
-        const exists: boolean = await fse.pathExists(serverXml);
-        if (exists) {
-            const xml: string = await fse.readFile(serverXml, 'utf8');
-            const jsonObj: {} = await parseXml(xml);
-            return getPortFromJson(jsonObj);
-        } else {
+        if (!await fse.pathExists(serverXml)) {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
+        const xml: string = await fse.readFile(serverXml, 'utf8');
+        const jsonObj: {} = await parseXml(xml);
+        return getPortFromJson(jsonObj);
     }
 
     export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
@@ -145,12 +142,8 @@ export namespace Utility {
 
     // tslint:disable-next-line:no-any
     function getValue(jsonObj: {}, key: string): any {
-        if (jsonObj) {
-            // tslint:disable-next-line:no-any
-            const value: any = jsonObj[key];
-            if (value) {
-                return value;
-            }
+        if (jsonObj && jsonObj[key]) {
+            return jsonObj[key];
         }
         throw new Error('key does not exist');
     }
