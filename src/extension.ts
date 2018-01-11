@@ -82,11 +82,11 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     return server;
 }
 
-async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+async function startServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
-        if(server.isStarted()) {
-            vscode.window.showInformationMessage('This Tomcat Server is already started.');
+        if (server.isStarted()) {
+            vscode.window.showInformationMessage(DialogMessage.serverRunning);
             return;
         }
         await tomcat.startServer(server);
@@ -95,9 +95,13 @@ async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer)
     }
 }
 
-async function stopServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+async function stopServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
+        if (!server.isStarted()) {
+            vscode.window.showInformationMessage(DialogMessage.serverStopped);
+            return;
+        }
         await tomcat.stopServer(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
