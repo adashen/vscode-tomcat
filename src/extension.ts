@@ -80,10 +80,10 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     return server;
 }
 
-async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+async function startServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
-        if(server.isStarted()) {
+        if (server.isStarted()) {
             vscode.window.showInformationMessage('This Tomcat Server is already started.');
             return;
         }
@@ -93,9 +93,13 @@ async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer)
     }
 }
 
-async function stopServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+async function stopServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
+        if (!server.isStarted()) {
+            vscode.window.showInformationMessage('This Tomcat Server was stopped.');
+            return;
+        }
         await tomcat.stopServer(server);
     } else {
         await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
