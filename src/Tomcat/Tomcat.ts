@@ -29,7 +29,7 @@ export class Tomcat {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (oldServer.length > 0) {
                 const catalinaBasePath: string = path.join(this._extensionpath, oldServer[0].getName());
-                Utility.deleteFolderRecursive(catalinaBasePath);
+                fse.remove(catalinaBasePath);
                 this.saveServerList();
                 return true;
             }

@@ -60,43 +60,32 @@ export class TomcatController {
             throw (new Error(DialogMessage.noServer));
         }
 
-        const exist: boolean = await Utility.openFileIfExists(tomcatServer.getServerConfigPath());
-        if (!exist) {
-            throw (new Error(DialogMessage.noServerConfig));
+        const configFile: string = tomcatServer.getServerConfigPath();
+        if (!fse.pathExistsSync(configFile)) {
+            throw new Error(DialogMessage.noServerConfig);
         }
+        vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
         const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
-        const confPath: string = path.join(catalinaBasePath, 'conf');
-        const logPath: string = path.join(catalinaBasePath, 'logs');
-        const tempPath: string = path.join(catalinaBasePath, 'temp');
-        const webappsPath: string = path.join(catalinaBasePath, 'webapps');
-        const rootAppPath: string = path.join(webappsPath, 'ROOT');
-        const workPath: string = path.join(catalinaBasePath, 'work');
+        const sourceServerConfig: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
+        const sourceWebConfig: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
+        const sourceIndexFile: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
+        await fse.remove(catalinaBasePath);
 
-        const serverConfigSrc: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
-        const webConfigSrc: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
-        const serverConfigTarget: string = path.join(catalinaBasePath, 'conf', 'server.xml');
-        const webConfigTarget: string = path.join(catalinaBasePath, 'conf', 'web.xml');
-        const rootPageTarget: string = path.join(rootAppPath, 'index.jsp');
-        let tomcatServer: TomcatServer;
+        await Promise.all([
+            fse.copy(sourceServerConfig, path.join(catalinaBasePath, 'conf', 'server.xml')),
+            fse.copy(sourceWebConfig, path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(sourceIndexFile, path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
+            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'work'))
+        ]);
 
-        await Utility.cleanAndCreateFolder(catalinaBasePath);
-        await Utility.cleanAndCreateFolder(confPath);
-        await Utility.cleanAndCreateFolder(logPath);
-        await Utility.cleanAndCreateFolder(tempPath);
-        await Utility.cleanAndCreateFolder(webappsPath);
-        await Utility.cleanAndCreateFolder(workPath);
-        await Utility.cleanAndCreateFolder(rootAppPath);
-        await fse.copy(serverConfigSrc, serverConfigTarget);
-        await fse.copy(webConfigSrc, webConfigTarget);
-
-        tomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
         this._tomcat.addServer(tomcatServer);
         this._onDidChangeTreeData.fire();
-        const indexJSPSrc: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
-        fse.copy(indexJSPSrc, rootPageTarget);
     }
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
@@ -160,11 +149,12 @@ export class TomcatController {
     }
 
     private async deployPackage(serverInfo: TomcatServer, packagePath: string, output: vscode.OutputChannel): Promise<string> {
-        let appName: string = path.basename(packagePath);
-        appName = appName.replace(/\.[^/.]+$/, '');
+        const appName: string = path.basename(packagePath).replace(/\.[^/.]+$/, '');
         const serverName: string = serverInfo.getName();
         const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
-        await Utility.cleanAndCreateFolder(appPath);
+
+        await fse.remove(appPath);
+        await fse.mkdirs(appPath);
         await Utility.executeCMD(output, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
     }
