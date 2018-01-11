@@ -5,14 +5,15 @@ import * as fse from "fs-extra";
 import * as net from "net";
 import * as path from "path";
 import * as vscode from "vscode";
-import * as nls from "vscode-nls";
 import * as xml2js from "xml2js";
+import { DialogMessage } from "./DialogMessage";
+import { localize } from './localize';
 import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
     export class UserCancelError extends Error {
         constructor(op: string) {
-            super(`${Utility.localize('tomcatExt.cancel', '{0} canceled by user', op)}`);
+            super(localize('tomcatExt.cancel', '{0} was canceled by user', op));
         }
     }
 
@@ -110,8 +111,6 @@ export namespace Utility {
         const jsonObj: {} = await parseXml(xml);
         return getPortFromJson(jsonObj);
     }
-
-    export const localize: nls.LocalizeFunc = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
     async function parseXml(xml: string): Promise<{}> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
