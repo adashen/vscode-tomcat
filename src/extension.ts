@@ -5,7 +5,9 @@ import * as fse from "fs-extra";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { workspace } from "vscode";
+import { MessageItem } from "vscode";
+import { DialogMessage } from "./DialogMessage";
+import { localize } from './localize';
 import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatController } from "./Tomcat/TomcatController";
 import { TomcatServer } from "./Tomcat/TomcatServer";
@@ -52,7 +54,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
             }
 
             output.show();
-            output.appendLine(Utility.localize('tomcatExt.error', '{0}', error));
+            output.appendLine(localize('tomcatExt.error', '{0}', error));
             vscode.window.showErrorMessage(error.toString());
         } finally {
             // todo telemetry;
@@ -69,7 +71,7 @@ async function getTargetServer(tomcat: TomcatController, tomcatItem ?: TomcatSer
     }
 
     const ui: VSCodeUI = new VSCodeUI();
-    let serverName: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat);
+    let serverName: string = await selectServer(ui, DialogMessage.selectServer, tomcat);
     let server: TomcatServer = tomcat.getTomcatServer(serverName);
 
     if (!server && createIfNotExist) {
@@ -89,7 +91,7 @@ async function startServer(tomcat: TomcatController, tomcatItem ?: TomcatServer)
         }
         await tomcat.startServer(server);
     } else {
-        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
@@ -98,7 +100,7 @@ async function stopServer(tomcat: TomcatController, tomcatItem ?: TomcatServer):
     if (server) {
         await tomcat.stopServer(server);
     } else {
-        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
@@ -107,7 +109,7 @@ async function browseServer(tomcat: TomcatController, tomcatItem ?: TomcatServer
     if (server) {
         await tomcat.openServer(server);
     } else {
-        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
@@ -116,7 +118,7 @@ async function deleteServer(tomcat: TomcatController, tomcatItem ?: TomcatServer
     if (server) {
         await tomcat.deleteServer(server);
     } else {
-        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
@@ -125,18 +127,17 @@ async function openServerConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
     if (server) {
         await tomcat.openConfig(server);
     } else {
-        await vscode.window.showInformationMessage(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
 async function createServer(tomcat: TomcatController): Promise<string> {
     const ui: VSCodeUI = new VSCodeUI();
-    const tomcatPath: string = await ui.showFileFolderDialog(false, true, Utility.localize('tomcatExt.selectdirectory', 'Select Tomcat Directory'));
+    const tomcatPath: string = await ui.showFileFolderDialog(false, true, DialogMessage.selectDirectory);
     const serverName: string = path.basename(tomcatPath);
 
     if (tomcat.getTomcatServer(serverName)) {
-        vscode.window.showInformationMessage(
-            Utility.localize('tomcatExt.alreadyexist', 'This tomcat server exists in the workspace, abort creation'));
+        vscode.window.showInformationMessage(DialogMessage.serverExist);
     } else {
         await tomcat.createTomcatServer(serverName, tomcatPath);
     }
@@ -160,7 +161,7 @@ async function selectServer(ui: VSCodeUI, placeHolder: string, tomcat: TomcatCon
         serverPicks = serverPicks.concat(serverSet.map((server: TomcatServer) =>
             new PickWithData(server.getName(), server.getName())));
         if (withNew) {
-            serverPicks.push(new PickWithData(withNew, Utility.localize('tomcatExt.newserver', 'New server')));
+            serverPicks.push(new PickWithData(withNew, DialogMessage.createServer));
         }
         serverPick = await ui.showQuickPick<string>(serverPicks, placeHolder);
     }
@@ -170,17 +171,15 @@ async function selectServer(ui: VSCodeUI, placeHolder: string, tomcat: TomcatCon
 
 async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
     const ui: VSCodeUI = new VSCodeUI();
-    const packagePath: string = uri ? uri.fsPath : await ui.showFileFolderDialog(true, false, Utility.localize('tomcatExt.selectwar', 'Select war package'));
+    const packagePath: string = uri ? uri.fsPath : await ui.showFileFolderDialog(true, false, DialogMessage.selectWarPackage);
     const originalServerSet: string[] = tomcat.getServerSet().map((s: TomcatServer) => s.getName());
     const newServer: string = ':new';
-    const serverPick: string = await selectServer(ui, Utility.localize('tomcatExt.selectserver', 'Select Tomcat Server'), tomcat, newServer);
+    const serverPick: string = await selectServer(ui, DialogMessage.selectServer, tomcat, newServer);
     const server: string = serverPick && serverPick !== newServer ? serverPick : await createServer(tomcat);
 
     if (serverPick === newServer && originalServerSet.indexOf(server) >= 0) {
-        const result: string = await vscode.window.showWarningMessage(
-            Utility.localize('tomcatExt.promptcontinueonexistingserver', 'This tomcat server already exists. Would you like to continue operation on this server?'),
-            Utility.localize('tomcatExt.yes', 'Yes'), Utility.localize('tomcatExt.no', 'No'));
-        if (result !== Utility.localize('tomcatExt.yes', 'Yes')) {
+        const result: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.continueOnExistingServer, DialogMessage.yes, DialogMessage.no);
+        if (result !== DialogMessage.yes) {
             return;
         }
     }
