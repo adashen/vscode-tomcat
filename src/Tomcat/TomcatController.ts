@@ -6,6 +6,9 @@ import * as fse from "fs-extra";
 import opn = require("opn");
 import * as path from "path";
 import * as vscode from "vscode";
+import { MessageItem } from "vscode";
+import { DialogMessage } from '../DialogMessage';
+import { localize } from '../localize';
 import { Utility } from "../Utility";
 import { Tomcat } from "./Tomcat";
 import { TomcatServer } from "./TomcatServer";
@@ -33,12 +36,12 @@ export class TomcatController {
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
         if (!tomcatServer) {
-            throw (new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw (new Error(DialogMessage.noServer));
         }
 
         if (tomcatServer.isStarted()) {
-            const confirmation: string = await vscode.window.showWarningMessage('This Tomcat Server is running, are you sure you want to delete it?', 'Yes', 'Cancel');
-            if (confirmation !== 'Yes') {
+            const confirmation: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
+            if (confirmation !== DialogMessage.yes) {
                 return;
             }
             await this.stopServer(tomcatServer);
@@ -54,12 +57,12 @@ export class TomcatController {
 
     public async openConfig(tomcatServer: TomcatServer): Promise<void> {
         if (!tomcatServer) {
-            throw (new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.')));
+            throw (new Error(DialogMessage.noServer));
         }
 
         const exist: boolean = await Utility.openFileIfExists(tomcatServer.getServerConfigPath());
         if (!exist) {
-            throw (new Error(Utility.localize('tomcatExt.noconfig', 'The tomcat server is broken. It does not have server.xml')));
+            throw (new Error(DialogMessage.noServerConfig));
         }
     }
 
@@ -98,7 +101,7 @@ export class TomcatController {
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
         if (!serverInfo) {
-            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+            throw new Error(DialogMessage.noServer);
         }
 
         await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
@@ -125,7 +128,7 @@ export class TomcatController {
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
-            throw new Error(Utility.localize('tomcatExt.noserver', 'No tomcat server.'));
+            throw new Error(DialogMessage.noServer);
         }
 
         if (serverInfo.isStarted()) {
@@ -141,7 +144,7 @@ export class TomcatController {
             port = await Utility.getFreePort();
             workspaceFolder = Utility.getWorkspaceFolder(packagePath);
             if (!workspaceFolder) {
-                throw new Error(Utility.localize('tomcatExt.noworkspacefolder', 'The selected package is not under current workspace'));
+                throw new Error(DialogMessage.noPackage);
             }
         }
         await this.startTomcat(serverInfo, appName, output, port, workspaceFolder);
@@ -235,7 +238,7 @@ export class TomcatController {
                 statusBar = vscode.window.createStatusBarItem();
                 statusBar.command = `open.${serverInfo.getName()}`;
                 statusBar.text = `$(browser) Open ${appName}`;
-                statusBar.tooltip = Utility.localize('tomcatExt.openapp', 'Open: "{0}"', serverUri);
+                statusBar.tooltip = localize('tomcatExt.open', 'Open: {0}', serverUri);
                 statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
                     opn(serverUri);
                 });
@@ -244,31 +247,20 @@ export class TomcatController {
 
             this.setStarted(serverInfo, true);
             watcher = chokidar.watch(serverInfo.getServerConfigPath());
-            const YES_OR_NO_PROMPT: vscode.MessageItem[] = [
-                {
-                    title: 'Yes',
-                    isCloseAffordance: false
-                },
-                {
-                    title: 'No',
-                    isCloseAffordance: true
-                }
-            ];
 
             watcher.on('change', async () => {
-                const item: vscode.MessageItem = await vscode.window.showInformationMessage(
-                    Utility.localize('tomcatExt.confchanged',
-                                     'server.xml of running {0} has been changed. Would you like to restart it',
-                                     serverInfo.getName()),
-                    ...YES_OR_NO_PROMPT);
-                if (item.title.toLowerCase() === 'yes') {
+                const promptString: string = localize('tomcatExt.configChanged',
+                                                      'server.xml of running server {0} has been changed. Would you like to restart it?',
+                                                      serverInfo.getName());
+                const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
+                if (item === DialogMessage.yes) {
                     try {
                         // Need restart tomcat
                         await this.stopServer(serverInfo);
                         needRestart = true;
                     } catch (err) {
                         console.error(err.toString());
-                        vscode.window.showErrorMessage(Utility.localize('tomcatExt.failstop', 'Failed to stop {0}', serverInfo.getName()));
+                        vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverInfo.getName()));
                     }
                 }
             });
