@@ -86,7 +86,7 @@ async function startServer(tomcat: TomcatController, tomcatItem?: TomcatServer):
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem, true);
     if (server) {
         if (server.isStarted()) {
-            vscode.window.showInformationMessage('This Tomcat Server is already started.');
+            vscode.window.showInformationMessage(DialogMessage.serverRunning);
             return;
         }
         await tomcat.startServer(server);
@@ -99,7 +99,7 @@ async function stopServer(tomcat: TomcatController, tomcatItem?: TomcatServer): 
     const server: TomcatServer = await getTargetServer(tomcat, tomcatItem);
     if (server) {
         if (!server.isStarted()) {
-            vscode.window.showInformationMessage('This Tomcat Server was stopped.');
+            vscode.window.showInformationMessage(DialogMessage.serverStopped);
             return;
         }
         await tomcat.stopServer(server);

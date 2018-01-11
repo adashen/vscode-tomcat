@@ -17,5 +17,7 @@ export namespace DialogMessage {
     export const selectWarPackage: string = localize('tomcatExt.selectWarPackage', 'Select War Package');
     export const selectDirectory: string = localize('tomcatExt.selectDirectory', 'Select Tomcat Directory');
     export const deleteConfirm: string = localize('tomcatExt.deleteConfirm', 'This Tomcat Server is running, are you sure you want to delete it?');
+    export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
+    export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const continueOnExistingServer: string = localize('tomcatExt.continueOnExistingServer', 'This Tomcat Server already exists. Do you want to continue the operation on this server?');
 }
