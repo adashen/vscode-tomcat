@@ -65,30 +65,20 @@ export namespace Utility {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
         const xml: string = await fse.readFile(serverXml, 'utf8');
-        const jsonObj: {} = await parseXml(xml);
-
-        if (!jsonObj || !jsonObj[Constants.SERVER]) {
-            return undefined;
-        }
-
-        let port: string | undefined;
-        const server: {} = jsonObj[Constants.SERVER];
-        const services: {}[] = server[Constants.SERVICE];
-        if (services) {
-            const service: {} = services.find((item: { $: { name: string } }) => item.$.name === Constants.CATALINA);
-            if (service && service[Constants.CONNECTOR]) {
-                const connectors: { $: {} }[] = service[Constants.CONNECTOR];
-                const connector: { $: {} } = connectors.find((item: { $: { protocol: {} } }) =>
-                    (item.$.protocol === undefined || item.$.protocol.toString().startsWith(Constants.HTTP)));
-                if (connector && connector.$) {
-                    port = connector.$[Constants.PORT];
-                }
-            }
+        let port: string;
+        try {
+            /* tslint:disable:no-any */
+            const jsonObj: any = await parseXml(xml);
+            port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                (item.$.protocol === undefined || item.$.protocol.toString().startsWith(Constants.HTTP))).$.port;
+        } catch (err) {
+            port = undefined;
         }
         return port;
-    }
+    }/* tslint:enable:no-any */
 
-    async function parseXml(xml: string): Promise<{}> {
+    // tslint:disable-next-line:no-any
+    async function parseXml(xml: string): Promise<any> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
             xml2js.parseString(xml, { explicitArray: true }, (err: Error, res: {}) => {
                 if (err) {
