@@ -1,7 +1,6 @@
 'use strict';
 
 import * as child_process from "child_process";
-import { ChildProcess, SpawnOptions } from "child_process";
 import * as fse from "fs-extra";
 import * as net from "net";
 import * as path from "path";
@@ -19,11 +18,11 @@ export namespace Utility {
         }
     }
 
-    export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: SpawnOptions, ...args: string[]): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
-            const p: ChildProcess = child_process.spawn(command, args, options);
+            const p: child_process.ChildProcess = child_process.spawn(command, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
@@ -70,7 +69,7 @@ export namespace Utility {
             /* tslint:disable:no-any */
             const jsonObj: any = await parseXml(xml);
             port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                (item.$.protocol === undefined || item.$.protocol.toString().startsWith(Constants.HTTP))).$.port;
+                (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port;
         } catch (err) {
             port = undefined;
         }

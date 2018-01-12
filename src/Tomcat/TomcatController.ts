@@ -147,7 +147,7 @@ export class TomcatController {
     }
 
     private async deployPackage(serverInfo: TomcatServer, packagePath: string, output: vscode.OutputChannel): Promise<string> {
-        const appName: string = path.basename(packagePath).replace(/\.[^/.]+$/, '');
+        const appName: string =  path.basename(packagePath, path.extname(packagePath));
         const serverName: string = serverInfo.getName();
         const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
 
