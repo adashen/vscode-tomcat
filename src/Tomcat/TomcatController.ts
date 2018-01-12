@@ -68,19 +68,16 @@ export class TomcatController {
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
-        const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
-        const sourceServerConfig: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
-        const sourceWebConfig: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
-        const sourceIndexFile: string = path.join(this._contextExtensionPath, 'resources', 'index.jsp');
-        await fse.remove(catalinaBasePath);
+        const basePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
+        await fse.remove(basePath);
 
         await Promise.all([
-            fse.copy(sourceServerConfig, path.join(catalinaBasePath, 'conf', 'server.xml')),
-            fse.copy(sourceWebConfig, path.join(catalinaBasePath, 'conf', 'web.xml')),
-            fse.copy(sourceIndexFile, path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
-            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
-            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
-            fse.mkdirs(path.join(catalinaBasePath, 'work'))
+            fse.copy(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(basePath, 'conf', 'server.xml')),
+            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(basePath, 'conf', 'web.xml')),
+            fse.copy(path.join(this._contextExtensionPath, 'resources', 'index.jsp'), path.join(basePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.mkdirs(path.join(basePath, 'logs')),
+            fse.mkdirs(path.join(basePath, 'temp')),
+            fse.mkdirs(path.join(basePath, 'work'))
         ]);
 
         const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
