@@ -61,7 +61,7 @@ export class TomcatController {
         }
 
         const configFile: string = tomcatServer.getServerConfigPath();
-        if (!fse.pathExistsSync(configFile)) {
+        if (!await fse.pathExists(configFile)) {
             throw new Error(DialogMessage.noServerConfig);
         }
         vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
