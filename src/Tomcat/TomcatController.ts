@@ -68,16 +68,16 @@ export class TomcatController {
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
-        const basePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
-        await fse.remove(basePath);
+        const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
+        await fse.remove(catalinaBasePath);
 
         await Promise.all([
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(basePath, 'conf', 'server.xml')),
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(basePath, 'conf', 'web.xml')),
-            fse.copy(path.join(this._contextExtensionPath, 'resources', 'index.jsp'), path.join(basePath, 'webapps', 'ROOT', 'index.jsp')),
-            fse.mkdirs(path.join(basePath, 'logs')),
-            fse.mkdirs(path.join(basePath, 'temp')),
-            fse.mkdirs(path.join(basePath, 'work'))
+            fse.copy(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml')),
+            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(path.join(this._contextExtensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
+            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'work'))
         ]);
 
         const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
@@ -124,7 +124,12 @@ export class TomcatController {
 
         if (debug) {
             port = await Utility.getFreePort();
-            workspaceFolder = Utility.getWorkspaceFolder(packagePath);
+            if (vscode.workspace.workspaceFolders) {
+                workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
+                    const relativePath: string = path.relative(f.uri.fsPath, packagePath);
+                    return relativePath === '' || (!relativePath.startsWith('..') && relativePath !== packagePath);
+                });
+            }
             if (!workspaceFolder) {
                 throw new Error(DialogMessage.noPackage);
             }

@@ -5,7 +5,6 @@ import { ChildProcess, SpawnOptions } from "child_process";
 import * as fse from "fs-extra";
 import * as net from "net";
 import * as path from "path";
-import { OutputChannel, WorkspaceFolder } from "vscode";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
@@ -20,7 +19,7 @@ export namespace Utility {
         }
     }
 
-    export async function executeCMD(outputPane: OutputChannel, command: string, options: SpawnOptions, ...args: string[]): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
@@ -40,17 +39,6 @@ export namespace Utility {
                 }
                 resolve();
             });
-        });
-    }
-
-    export function getWorkspaceFolder(fsPath: string): WorkspaceFolder | undefined {
-        if (!vscode.workspace.workspaceFolders) {
-            return undefined;
-        }
-
-        return vscode.workspace.workspaceFolders.find((f: WorkspaceFolder): boolean => {
-            const relativePath: string = path.relative(f.uri.fsPath, fsPath);
-            return relativePath === '' || (!relativePath.startsWith('..') && relativePath !== fsPath);
         });
     }
 
