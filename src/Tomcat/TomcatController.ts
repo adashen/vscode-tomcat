@@ -117,10 +117,6 @@ export class TomcatController {
             throw new Error(DialogMessage.noServer);
         }
 
-        if (serverInfo.isStarted()) {
-            await this.stopServer(serverInfo);
-        }
-
         const output: vscode.OutputChannel = this.getOutput(serverInfo);
         const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, output) : '';
         let port: number | undefined;
