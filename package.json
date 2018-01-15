@@ -2,7 +2,7 @@
   "name": "vscode-tomcat",
   "displayName": "Tomcat",
   "description": "%extension.description%",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "adashen",
   "icon": "resources/Tomcat.png",
   "engines": {
@@ -22,49 +22,61 @@
   ],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
-    "onCommand:tomcat.createserver",
-    "onCommand:tomcat.run",
-    "onCommand:tomcat.debug",
-    "onCommand:tomcat.stop",
-    "onCommand:tomcat.delete",
-    "onCommand:tomcat.openconfig",
-    "onCommand:tomcat.start",
+    "onCommand:tomcat.server.create",
+    "onCommand:tomcat.war.run",
+    "onCommand:tomcat.war.debug",
+    "onCommand:tomcat.server.stop",
+    "onCommand:tomcat.server.delete",
+    "onCommand:tomcat.config.open",
+    "onCommand:tomcat.server.start",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
   "contributes": {
     "commands": [
       {
-        "command": "tomcat.createserver",
-        "title": "New Tomcat Server"
+        "command": "tomcat.server.create",
+        "title": "New Tomcat Server",
+        "category": "Tomcat",
+        "icon": {
+          "light": "resources/light/add.svg",
+          "dark": "resources/dark/add.svg"
+        }
       },
       {
-        "command": "tomcat.run",
-        "title": "Run on Tomcat Server"
+        "command": "tomcat.war.run",
+        "title": "Run on Tomcat Server",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.stop",
-        "title": "Stop Tomcat Server"
+        "command": "tomcat.server.stop",
+        "title": "Stop Tomcat Server",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.debug",
-        "title": "Debug on Tomcat Server"
+        "command": "tomcat.war.debug",
+        "title": "Debug on Tomcat Server",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.delete",
-        "title": "Delete Tomcat Server"
+        "command": "tomcat.server.delete",
+        "title": "Delete Tomcat Server",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.openconfig",
-        "title": "Open server.xml"
+        "command": "tomcat.config.open",
+        "title": "Open server.xml",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.start",
-        "title": "Start Tomcat Server"
+        "command": "tomcat.server.start",
+        "title": "Start Tomcat Server",
+        "category": "Tomcat"
       },
       {
-        "command": "tomcat.open",
-        "title": "Open in Browser"
+        "command": "tomcat.server.browse",
+        "title": "Open in Browser",
+        "category": "Tomcat"
       }
     ],
     "views": {
@@ -76,46 +88,63 @@
       ]
     },
     "menus": {
+      "view/title": [
+        {
+          "command": "tomcat.server.create",
+          "when": "view == tomcatServerExplorer",
+          "group": "navigation"
+        }
+      ],
       "commandPalette": [
         {
-          "command": "tomcat.open",
+          "command": "tomcat.server.browse",
           "when": "false == true"
         },
         {
-          "command": "tomcat.debug",
+          "command": "tomcat.war.debug",
           "when": "false == true"
         }
       ],
       "explorer/context": [
         {
-          "command": "tomcat.run",
+          "command": "tomcat.war.run",
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         },
         {
-          "command": "tomcat.debug",
+          "command": "tomcat.war.debug",
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         }
       ],
       "view/item/context": [
         {
-          "command": "tomcat.start",
-          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
+          "command": "tomcat.server.start",
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@0"
         },
         {
-          "command": "tomcat.stop",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+          "command": "tomcat.server.stop",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@1"
         },
         {
-          "command": "tomcat.open",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver"
+          "command": "tomcat.server.browse",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@2"
         },
         {
-          "command": "tomcat.delete",
-          "when": "view == tomcatServerExplorer && viewItem == tomcatserver"
+          "command": "tomcat.server.delete",
+          "when": "view == tomcatServerExplorer",
+          "group": "tomcat@4"
         },
         {
-          "command": "tomcat.openconfig",
-          "when": "view == tomcatServerExplorer"
+          "command": "tomcat.config.open",
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@3"
+        },
+        {
+          "command": "tomcat.config.open",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@3"
         }
       ]
     }
