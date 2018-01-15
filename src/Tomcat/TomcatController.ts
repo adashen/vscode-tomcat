@@ -153,6 +153,9 @@ export class TomcatController {
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
+        if (serverInfo.isStarted()) {
+            await this.stopServer(serverInfo);
+        }
         await Utility.executeCMD(output, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
     }
