@@ -15,3 +15,5 @@ export const CONNECTOR: string = 'Connector';
 export const CATALINA: string = 'Catalina';
 
 export const PORT: string = 'port';
+
+export const INVALID_SERVER_DIRECTORY: string = 'Please make sure you select a valid Tomcat Directory.';
