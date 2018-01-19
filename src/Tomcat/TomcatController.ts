@@ -15,13 +15,11 @@ import { TomcatServer } from "./TomcatServer";
 
 export class TomcatController {
     private _outputChannels: Map<string, vscode.OutputChannel>;
-    private _onDidChangeTreeData: vscode.EventEmitter<TomcatServer>;
     private _tomcat: Tomcat;
     private _contextExtensionPath: string;
 
-    constructor(tomcat: Tomcat, extensionPath: string, onDidChangeTreeData: vscode.EventEmitter<TomcatServer>) {
+    constructor(tomcat: Tomcat, extensionPath: string) {
       this._outputChannels = new Map<string, vscode.OutputChannel>();
-      this._onDidChangeTreeData = onDidChangeTreeData;
       this._contextExtensionPath = extensionPath;
       this._tomcat = tomcat;
     }
@@ -52,7 +50,7 @@ export class TomcatController {
             this._outputChannels.delete(this.getChannelName(tomcatServer));
             output.dispose();
         }
-        this._onDidChangeTreeData.fire();
+        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     public async openConfig(tomcatServer: TomcatServer): Promise<void> {
@@ -82,7 +80,7 @@ export class TomcatController {
 
         const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
         this._tomcat.addServer(tomcatServer);
-        this._onDidChangeTreeData.fire();
+        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
@@ -169,7 +167,7 @@ export class TomcatController {
 
     private setStarted(serverInfo: TomcatServer, started: boolean): void {
         serverInfo.setStarted(started);
-        this._onDidChangeTreeData.fire();
+        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
@@ -215,7 +213,7 @@ export class TomcatController {
     }
 
     private async getServerUri(serverInfo: TomcatServer, appName?: string): Promise<string> {
-        const serverPort: string = await Utility.getServerPort(serverInfo.getServerConfigPath());
+        const serverPort: string = await Utility.getHttpPort(serverInfo.getServerConfigPath());
         if (!serverPort) {
             throw new Error('No http port found in server.xml');
         }
@@ -243,9 +241,7 @@ export class TomcatController {
                 statusBar.show();
             }
 
-            this.setStarted(serverInfo, true);
             watcher = chokidar.watch(serverInfo.getServerConfigPath());
-
             watcher.on('change', async () => {
                 const promptString: string = localize('tomcatExt.configChanged',
                                                       'server.xml of running server {0} has been changed. Would you like to restart it?',
@@ -263,9 +259,9 @@ export class TomcatController {
                 }
             });
 
-            const javaProcess: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
             this.startDebugSession(serverInfo);
-            await javaProcess;
+            setTimeout(() => this.setStarted(serverInfo, true), 500);
+            await Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);

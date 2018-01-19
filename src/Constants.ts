@@ -15,3 +15,8 @@ export const CONNECTOR: string = 'Connector';
 export const CATALINA: string = 'Catalina';
 
 export const PORT: string = 'port';
+
+export enum ServerState {
+    RunningServer = 'runningserver',
+    IdleServer = 'idleserver'
+}
