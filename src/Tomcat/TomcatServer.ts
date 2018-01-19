@@ -5,26 +5,13 @@ import * as vscode from "vscode";
 import { Utility } from "../Utility";
 
 export class TomcatServer implements vscode.QuickPickItem {
-    public needRestart: boolean = false;
-    public newCreated: boolean = false;
-    public label: string;
-    public description: string;
-
-    private _name: string;
-    private _tomcatPath: string;
-    private _started: boolean;
-    private _extensionPath: string;
-    private _debugPort: number;
-    private _debugWorkspace: vscode.WorkspaceFolder;
-    private _isDebugging: boolean = false;
-
-    constructor(name: string, tomcatPath: string, extensionPath: string) {
-        this._name = name;
-        this.label = name;
-        this._tomcatPath = tomcatPath;
-        this._started = false;
-        this._extensionPath = extensionPath;
-    }
+    // tslint:disable:no-parameter-properties no-unnecessary-initializer *
+    constructor(private _name: string, private _tomcatPath: string, private _extensionPath: string,
+                private _started: boolean = false, public label: string = undefined, public description: string = '',
+                private _isDebugging: boolean = false, public needRestart: boolean = false, public newCreated: boolean = false,
+                private _debugWorkspace: vscode.WorkspaceFolder = undefined, private _debugPort: number = undefined) {
+        this.label = _name;
+    }// tslint:enable:no-parameter-properties no-unnecessary-initializer *
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
         this._isDebugging = debugging;

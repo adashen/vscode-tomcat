@@ -113,16 +113,14 @@ async function openServerConfig(tomcat: TomcatController, tomcatItem ?: TomcatSe
 }
 
 async function createServer(tomcat: TomcatController): Promise<string> {
-    const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog(
-        {
-            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
-            canSelectFiles: false,
-            canSelectFolders: true,
-            openLabel: DialogMessage.selectDirectory
-        });
+    const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
+        defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
+        canSelectFiles: false,
+        canSelectFolders: true,
+        openLabel: DialogMessage.selectDirectory
+    });
     if (pathPick && pathPick.length > 0 && pathPick[0].fsPath) {
         const serverName: string = path.basename(pathPick[0].fsPath);
-
         if (tomcat.getTomcatServer(serverName)) {
             vscode.window.showInformationMessage(DialogMessage.serverExist);
         } else {
@@ -165,13 +163,12 @@ async function selectServer(tomcat: TomcatController, tomcatServer?: TomcatServe
 
 async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
     if (!uri) {
-        const dialog: vscode.Uri[] = await vscode.window.showOpenDialog(
-            {
-                defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
-                canSelectFiles: true,
-                canSelectFolders: false,
-                openLabel: DialogMessage.selectWarPackage
-            });
+        const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
+            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
+            canSelectFiles: true,
+            canSelectFolders: false,
+            openLabel: DialogMessage.selectWarPackage
+        });
         if (!dialog || dialog.length <= 0 || !dialog[0].fsPath) {
             return;
         }
