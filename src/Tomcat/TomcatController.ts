@@ -259,9 +259,10 @@ export class TomcatController {
                 }
             });
 
+            const javaProcess: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
             this.startDebugSession(serverInfo);
             setTimeout(() => this.setStarted(serverInfo, true), 500);
-            await Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
+            await javaProcess;
             this.setStarted(serverInfo, false);
             this.disposeResource(statusBarCommand);
             this.disposeResource(statusBar);
