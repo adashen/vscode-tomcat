@@ -29,6 +29,7 @@
     "onCommand:tomcat.server.delete",
     "onCommand:tomcat.config.open",
     "onCommand:tomcat.server.start",
+    "onCommand:tomcat.server.restart",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -74,6 +75,11 @@
         "category": "Tomcat"
       },
       {
+        "command": "tomcat.server.restart",
+        "title": "Restart Tomcat Server",
+        "category": "Tomcat"
+      },
+      {
         "command": "tomcat.server.browse",
         "title": "Open in Browser",
         "category": "Tomcat"
@@ -103,6 +109,10 @@
         {
           "command": "tomcat.war.debug",
           "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.restart",
+          "when": "false == true"
         }
       ],
       "explorer/context": [
@@ -127,24 +137,29 @@
           "group": "tomcat@1"
         },
         {
-          "command": "tomcat.server.browse",
+          "command": "tomcat.server.restart",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@2"
         },
         {
-          "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer",
-          "group": "tomcat@4"
+          "command": "tomcat.server.browse",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@3"
         },
         {
           "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem == idleserver",
-          "group": "tomcat@3"
+          "group": "tomcat@4"
         },
         {
           "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
-          "group": "tomcat@3"
+          "group": "tomcat@4"
+        },
+        {
+          "command": "tomcat.server.delete",
+          "when": "view == tomcatServerExplorer",
+          "group": "tomcat@5"
         }
       ]
     }

@@ -30,6 +30,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tree));
 
     initCommand(context, outputChannel, tomcat, 'tomcat.server.create', createServer);
+    initCommand(context, outputChannel, tomcat, 'tomcat.server.restart', restartServer);
     initCommand(context, outputChannel, tomcat, 'tomcat.server.start', startServer);
     initCommand(context, outputChannel, tomcat, 'tomcat.server.browse', browseServer);
     initCommand(context, outputChannel, tomcat, 'tomcat.server.stop', stopServer);
@@ -93,6 +94,10 @@ async function startServer(tomcat: TomcatController, tomcatItem?: TomcatServer):
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
+}
+
+async function restartServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
+    await tomcat.restartServer(await getTargetServer(tomcat, tomcatItem));
 }
 
 async function stopServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
