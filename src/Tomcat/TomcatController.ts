@@ -7,6 +7,7 @@ import opn = require("opn");
 import * as path from "path";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
+import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
 import { localize } from '../localize';
 import { Utility } from "../Utility";
@@ -68,12 +69,21 @@ export class TomcatController {
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
+        const serverConfigFile: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
+        const serverWebFile: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
+        const serverBootstrapJarFile: string = path.join(tomcatInstallPath, 'bin', 'bootstrap.jar');
+        const serverJuliJarFile: string = path.join(tomcatInstallPath, 'bin', 'tomcat-juli.jar');
+
+        if (!await fse.pathExists(serverConfigFile) || !await fse.pathExists(serverWebFile) ||
+            !await fse.pathExists(serverBootstrapJarFile) || !await fse.pathExists(serverJuliJarFile)) {
+            throw new Error(Constants.INVALID_SERVER_DIRECTORY);
+        }
+
         const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
         await fse.remove(catalinaBasePath);
-
         await Promise.all([
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml')),
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
+            fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
             fse.copy(path.join(this._contextExtensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.mkdirs(path.join(catalinaBasePath, 'logs')),
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
