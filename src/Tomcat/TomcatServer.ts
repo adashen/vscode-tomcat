@@ -4,8 +4,12 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { Utility } from "../Utility";
 
-export class TomcatServer {
+export class TomcatServer implements vscode.QuickPickItem {
     public needRestart: boolean = false;
+    public newCreated: boolean = false;
+    public label: string;
+    public description: string;
+
     private _name: string;
     private _tomcatPath: string;
     private _started: boolean;
@@ -15,10 +19,11 @@ export class TomcatServer {
     private _isDebugging: boolean = false;
 
     constructor(name: string, tomcatPath: string, extensionPath: string) {
-        this._name = name.trim();
-        this._tomcatPath = tomcatPath.trim();
+        this._name = name;
+        this.label = name;
+        this._tomcatPath = tomcatPath;
         this._started = false;
-        this._extensionPath = extensionPath.trim();
+        this._extensionPath = extensionPath;
     }
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
