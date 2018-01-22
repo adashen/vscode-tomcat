@@ -101,6 +101,16 @@ export class TomcatController {
         await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
     }
 
+    public async restartServer(serverInfo: TomcatServer): Promise<void> {
+        if (!serverInfo) {
+            throw new Error(DialogMessage.noServer);
+        }
+        if (serverInfo.isStarted()) {
+            serverInfo.needRestart = true;
+            await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+        }
+    }
+
     public async startServer(serverInfo: TomcatServer): Promise<void> {
         await this.run(serverInfo);
     }
@@ -236,7 +246,6 @@ export class TomcatController {
         let statusBarCommand: vscode.Disposable;
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
-        let needRestart: boolean = false;
         const serverUri: string = await this.getServerUri(serverInfo, appName);
 
         try {
@@ -261,7 +270,7 @@ export class TomcatController {
                     try {
                         // Need restart tomcat
                         await this.stopServer(serverInfo);
-                        needRestart = true;
+                        serverInfo.needRestart = true;
                     } catch (err) {
                         console.error(err.toString());
                         vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
