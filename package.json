@@ -99,10 +99,6 @@
         {
           "command": "tomcat.server.browse",
           "when": "false == true"
-        },
-        {
-          "command": "tomcat.war.debug",
-          "when": "false == true"
         }
       ],
       "explorer/context": [
