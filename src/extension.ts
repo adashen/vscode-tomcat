@@ -32,6 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.restart', restartServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.browse', browseServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.stop', stopServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.delete', deleteServer);
@@ -94,6 +95,10 @@ async function startServer(tomcatController: TomcatController, tomcatItem?: Tomc
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
+}
+
+async function restartServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
+    await tomcatController.restartServer(await getTargetServer(tomcatController, tomcatItem));
 }
 
 async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
