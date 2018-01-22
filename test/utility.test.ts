@@ -15,7 +15,7 @@ suite('utility tests', () => {
   test('getPort', async () => {
     try {
       const filePath: string = path.resolve(__dirname, '../../testResources/server.xml');
-      const port: string = await Utility.getServerPort(filePath);
+      const port: string = await Utility.getHttpPort(filePath);
       assert.equal(port, '8081');
     } catch (error) {
       assert.fail('no error', 'error');

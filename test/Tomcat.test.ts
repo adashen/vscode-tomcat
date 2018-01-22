@@ -9,7 +9,7 @@ import { Utility } from "../src/Utility";
 
 suite('Error input', () => {
   const serverInfo: TomcatServer = undefined;
-  const tomcat: TomcatController = new TomcatController(new Tomcat(''), undefined, undefined);
+  const tomcat: TomcatController = new TomcatController(new Tomcat(''), undefined);
   test('stopServer', async () => {
     try {
       await tomcat.stopServer(serverInfo);
