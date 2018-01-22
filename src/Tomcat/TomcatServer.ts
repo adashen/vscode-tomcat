@@ -14,7 +14,7 @@ export class TomcatServer implements vscode.QuickPickItem {
     private _isDebugging: boolean = false;
     private _debugPort: number;
     private _debugWorkspace: vscode.WorkspaceFolder;
-    // tslint:disable-next-line:no-parameter-properties
+
     constructor(private _name: string, private _tomcatPath: string, private _extensionPath: string) {
         this.label = _name;
     }

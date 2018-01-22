@@ -75,7 +75,7 @@ async function startServer(tomcatController: TomcatController, tomcatItem?: Tomc
 }
 
 async function restartServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    await tomcatController.restartServer(await getTargetServer(tomcatController, tomcatItem));
+    await tomcatController.restartServer(tomcatItem);
 }
 
 async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
@@ -150,7 +150,7 @@ async function selectServer(tomcatController: TomcatController, tomcatServer?: T
     }
     const serverSet: TomcatServer[] = tomcatController.getServerSet();
     const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
-        [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: null }],
+        [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: '' }],
         { placeHolder: serverSet && serverSet.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
 
     if (pick) {
