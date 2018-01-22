@@ -21,31 +21,32 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
-    const tree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
-    const tomcat: TomcatController = new TomcatController(tomcatData, context.extensionPath, tree._onDidChangeTreeData);
+    const tomcatServerTree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
+    const tomcatController: TomcatController = new TomcatController(tomcatData, context.extensionPath);
 
-    context.subscriptions.push(tomcat);
-    context.subscriptions.push(tree);
-    context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tree));
+    context.subscriptions.push(tomcatController);
+    context.subscriptions.push(tomcatServerTree);
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (element: TomcatServer) => tomcatServerTree.refresh(element)));
 
-    initCommand(context, outputChannel, tomcat, 'tomcat.server.create', createServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.server.start', startServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.server.browse', browseServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.server.stop', stopServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.server.delete', deleteServer);
-    initCommand(context, outputChannel, tomcat, 'tomcat.war.run', runWarPackage);
-    initCommand(context, outputChannel, tomcat, 'tomcat.war.debug', debugWarPackage);
-    initCommand(context, outputChannel, tomcat, 'tomcat.config.open', openServerConfig);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.browse', browseServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.stop', stopServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.server.delete', deleteServer);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.war.run', runWarPackage);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.war.debug', debugWarPackage);
+    initCommand(context, outputChannel, tomcatController, 'tomcat.config.open', openServerConfig);
 }
 
-function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcat: TomcatController,
-                        commandId: string, callback: (tomcat: TomcatController, input?: T) => Promise<string|void>): void {
+function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcatController: TomcatController,
+                        commandId: string, callback: (tomcatController: TomcatController, input?: T) => Promise<string|void>): void {
     context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: {}[]) => {
         try {
             if (args.length === 0) {
-                await callback(tomcat);
+                await callback(tomcatController);
             } else {
-                await callback(tomcat, <T>args[0]);
+                await callback(tomcatController, <T>args[0]);
             }
         } catch (error) {
             if (error instanceof Utility.UserCancelError) {
@@ -61,58 +62,58 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
     }));
 }
 
-async function startServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcat, tomcatItem);
+async function startServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
         if (server.isStarted()) {
             vscode.window.showInformationMessage(DialogMessage.serverRunning);
             return;
         }
-        await tomcat.startServer(server);
+        await tomcatController.startServer(server);
     }
 }
 
-async function stopServer(tomcat: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcat, tomcatItem);
+async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
         if (!server.isStarted()) {
             vscode.window.showInformationMessage(DialogMessage.serverStopped);
             return;
         }
-        await tomcat.stopServer(server);
+        await tomcatController.stopServer(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
-async function browseServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcat, tomcatItem);
+async function browseServer(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
-        await tomcat.openServer(server);
+        await tomcatController.openServer(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
-async function deleteServer(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcat, tomcatItem);
+async function deleteServer(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
-        await tomcat.deleteServer(server);
+        await tomcatController.deleteServer(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
-async function openServerConfig(tomcat: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcat, tomcatItem);
+async function openServerConfig(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
-        await tomcat.openConfig(server);
+        await tomcatController.openConfig(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
-async function createServer(tomcat: TomcatController): Promise<string> {
+async function createServer(tomcatController: TomcatController): Promise<string> {
     const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
         defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
         canSelectFiles: false,
@@ -121,28 +122,28 @@ async function createServer(tomcat: TomcatController): Promise<string> {
     });
     if (pathPick && pathPick.length > 0 && pathPick[0].fsPath) {
         const serverName: string = path.basename(pathPick[0].fsPath);
-        if (tomcat.getTomcatServer(serverName)) {
+        if (tomcatController.getTomcatServer(serverName)) {
             vscode.window.showInformationMessage(DialogMessage.serverExist);
         } else {
-            await tomcat.createTomcatServer(serverName, pathPick[0].fsPath);
+            await tomcatController.createTomcatServer(serverName, pathPick[0].fsPath);
         }
         return serverName;
     }
 }
 
-async function debugWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await runOnTomcat(tomcat, true, uri);
+async function debugWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {
+    await runOnTomcat(tomcatController, true, uri);
 }
 
-async function runWarPackage(tomcat: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await runOnTomcat(tomcat, false, uri);
+async function runWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {
+    await runOnTomcat(tomcatController, false, uri);
 }
 
-async function selectServer(tomcat: TomcatController, tomcatServer?: TomcatServer): Promise<TomcatServer> {
+async function selectServer(tomcatController: TomcatController, tomcatServer?: TomcatServer): Promise<TomcatServer> {
     if (tomcatServer) {
         return tomcatServer;
     }
-    const serverSet: TomcatServer[] = tomcat.getServerSet();
+    const serverSet: TomcatServer[] = tomcatController.getServerSet();
     const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
         [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: null }],
         { placeHolder: serverSet && serverSet.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
@@ -151,8 +152,8 @@ async function selectServer(tomcat: TomcatController, tomcatServer?: TomcatServe
         if (pick instanceof TomcatServer) {
             return pick;
         } else {
-            const newServerName: string = await createServer(tomcat);
-            const newServer: TomcatServer = tomcat.getTomcatServer(newServerName);
+            const newServerName: string = await createServer(tomcatController);
+            const newServer: TomcatServer = tomcatController.getTomcatServer(newServerName);
             if (newServer) {
                 newServer.newCreated = true;
                 return newServer;
@@ -161,7 +162,7 @@ async function selectServer(tomcat: TomcatController, tomcatServer?: TomcatServe
     }
 }
 
-async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
+async function runOnTomcat(tomcatController: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
     if (!uri) {
         const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
@@ -176,8 +177,8 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
     }
 
     const packagePath: string = uri.fsPath;
-    const originalServerSet: string[] = tomcat.getServerSet().map((s: TomcatServer) => s.getName());
-    const server: TomcatServer = await selectServer(tomcat);
+    const originalServerSet: string[] = tomcatController.getServerSet().map((s: TomcatServer) => s.getName());
+    const server: TomcatServer = await selectServer(tomcatController);
 
     if (server && server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
         server.newCreated = false;
@@ -187,7 +188,7 @@ async function runOnTomcat(tomcat: TomcatController, debug: boolean, uri?: vscod
         }
     }
 
-    await tomcat.runOnServer(server, packagePath, debug);
+    await tomcatController.runOnServer(server, packagePath, debug);
 }
 
 function makeRandomHexString(length: number): string {
