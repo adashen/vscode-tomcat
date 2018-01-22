@@ -22,6 +22,7 @@
   ],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
+    "onCommand:tomcat.tree.refresh",
     "onCommand:tomcat.server.create",
     "onCommand:tomcat.war.run",
     "onCommand:tomcat.war.debug",
@@ -35,6 +36,15 @@
   "main": "./out/src/extension",
   "contributes": {
     "commands": [
+      {
+        "command": "tomcat.tree.refresh",
+        "title": "Refresh Tomcat Server Tree",
+        "category": "Tomcat",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
       {
         "command": "tomcat.server.create",
         "title": "New Tomcat Server",
@@ -96,9 +106,14 @@
     "menus": {
       "view/title": [
         {
+          "command": "tomcat.tree.refresh",
+          "when": "view == tomcatServerExplorer",
+          "group": "navigation@0"
+        },
+        {
           "command": "tomcat.server.create",
           "when": "view == tomcatServerExplorer",
-          "group": "navigation"
+          "group": "navigation@1"
         }
       ],
       "commandPalette": [
@@ -107,11 +122,10 @@
           "when": "false == true"
         },
         {
-          "command": "tomcat.war.debug",
+          "command": "tomcat.server.restart",
           "when": "false == true"
         },
-        {
-          "command": "tomcat.server.restart",
+          "command": "tomcat.tree.refresh",
           "when": "false == true"
         }
       ],
@@ -185,6 +199,7 @@
     "@types/xml2js": "^0.4.2"
   },
   "dependencies": {
+    "axios": "^0.17.1",
     "chokidar": "^1.7.0",
     "fs-extra": "^4.0.2",
     "opn": "^5.1.0 ",

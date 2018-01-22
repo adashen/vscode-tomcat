@@ -1,13 +1,17 @@
 'use strict';
+
+import axios from "axios";
 import * as path from "path";
 import * as vscode from "vscode";
 import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatServer } from "./Tomcat/TomcatServer";
+import { Utility } from "./Utility";
 
 export class TomcatTreeItem implements vscode.TreeItem {
     private static readonly IDLE: string = 'idleserver';
     private static readonly RUNNING: string = 'runningserver';
     public readonly _tomcatServer: TomcatServer;
+    public iconPath: string;
     private _context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext, tomcatServer: TomcatServer) {
@@ -24,19 +28,7 @@ export class TomcatTreeItem implements vscode.TreeItem {
     }
 
     public get contextValue(): string {
-        if (this._tomcatServer.isStarted()) {
-            return TomcatTreeItem.RUNNING;
-        } else {
-            return TomcatTreeItem.IDLE;
-        }
-    }
-
-    public get iconPath(): string {
-        let status: string = 'stop.svg';
-        if (this.started) {
-            status = 'running.svg';
-        }
-        return this._context.asAbsolutePath(path.join('resources', status));
+        return this._tomcatServer.getState();
     }
 
     public get started(): boolean {
@@ -60,8 +52,22 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatSe
         this._onDidChangeTreeData.fire();
     }
 
-    public getTreeItem(element: TomcatServer): vscode.TreeItem {
-        return new TomcatTreeItem(this._context, element);
+    public async getTreeItem(element: TomcatServer): Promise<vscode.TreeItem> {
+        const treeItem: TomcatTreeItem = new TomcatTreeItem(this._context, element);
+        try {
+            const port: string = await Utility.getHttpPort(treeItem.serverConfig);
+            // tslint:disable-next-line:no-any no-http-string
+            const response: any = await axios.get(`http://localhost:${port}`);
+            element.setStarted(response.status === 200);
+        } catch (err) {
+            element.setStarted(false);
+        }
+        treeItem.iconPath = this._context.asAbsolutePath(path.join('resources', `${element.getState()}.svg`));
+        return treeItem;
+    }
+
+    public refresh(element: TomcatServer): void {
+        this._onDidChangeTreeData.fire(element);
     }
 
     public getChildren(element?: TomcatServer): TomcatServer[] {

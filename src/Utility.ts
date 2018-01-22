@@ -59,7 +59,7 @@ export namespace Utility {
         });
     }
 
-    export async function getServerPort(serverXml: string): Promise<string> | undefined {
+    export async function getHttpPort(serverXml: string): Promise<string> | undefined {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
