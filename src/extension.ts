@@ -7,8 +7,8 @@ import * as vscode from "vscode";
 import { MessageItem } from "vscode";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
-import { Tomcat } from "./Tomcat/Tomcat";
 import { TomcatController } from "./Tomcat/TomcatController";
+import { TomcatModel } from "./Tomcat/TomcatModel";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 import { TomcatSeverTreeProvider } from "./TomcatServerTree";
 import { Utility } from "./Utility";
@@ -19,9 +19,9 @@ export function activate(context: vscode.ExtensionContext): void {
         storagePath = Utility.getTempStoragePath();
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
-    const tomcatData: Tomcat = new Tomcat(storagePath);
-    const tomcatServerTree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatData);
-    const tomcatController: TomcatController = new TomcatController(tomcatData, context.extensionPath);
+    const tomcatModel: TomcatModel = new TomcatModel(storagePath);
+    const tomcatServerTree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatModel);
+    const tomcatController: TomcatController = new TomcatController(tomcatModel, context.extensionPath);
 
     context.subscriptions.push(tomcatController);
     context.subscriptions.push(tomcatServerTree);

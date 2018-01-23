@@ -42,6 +42,18 @@ export namespace Utility {
         });
     }
 
+    export function getWorkspace(): string {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const workspace: string = config.get<string>('workspace');
+            if (!workspace.startsWith('<<')) {
+                return workspace;
+            }
+        }
+        return undefined;
+    }
+
     export async function getFreePort(): Promise<number> {
         return await new Promise((resolve: (port: number) => void, reject: (e: Error) => void): void => {
             const server: net.Server = net.createServer();

@@ -10,13 +10,15 @@ export class TomcatServer implements vscode.QuickPickItem {
     public newCreated: boolean = false;
     public label: string;
     public description: string;
+    public outputChannel: vscode.OutputChannel;
     private _state: ServerState = ServerState.IdleServer;
     private _isDebugging: boolean = false;
     private _debugPort: number;
     private _debugWorkspace: vscode.WorkspaceFolder;
 
-    constructor(private _name: string, private _tomcatPath: string, private _extensionPath: string) {
+    constructor(private _name: string, private _installPath: string, private _storagePath: string) {
         this.label = _name;
+        this.outputChannel = vscode.window.createOutputChannel(`tomcat_${this._name}`);
     }
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
@@ -53,11 +55,11 @@ export class TomcatServer implements vscode.QuickPickItem {
         return this._name;
     }
 
-    public getTomcatPath(): string {
-        return this._tomcatPath;
+    public getInstallPath(): string {
+        return this._installPath;
     }
 
     public getServerConfigPath(): string {
-        return path.join(this._extensionPath, this._name, 'conf', 'server.xml');
+        return path.join(this._storagePath, this._name, 'conf', 'server.xml');
     }
 }

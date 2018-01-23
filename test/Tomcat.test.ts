@@ -2,17 +2,17 @@
 
 import * as assert from "assert";
 import { DialogMessage } from '../src/DialogMessage';
-import { Tomcat } from "../src/Tomcat/Tomcat";
 import { TomcatController } from "../src/Tomcat/TomcatController";
+import { TomcatModel } from "../src/Tomcat/TomcatModel";
 import { TomcatServer } from "../src/Tomcat/TomcatServer";
 import { Utility } from "../src/Utility";
 
 suite('Error input', () => {
   const serverInfo: TomcatServer = undefined;
-  const tomcat: TomcatController = new TomcatController(new Tomcat(''), undefined);
+  const tomcatModel: TomcatController = new TomcatController(new TomcatModel(''), undefined);
   test('stopServer', async () => {
     try {
-      await tomcat.stopServer(serverInfo);
+      await tomcatModel.stopServer(serverInfo);
       assert.fail('Resolve', 'Reject');
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
@@ -20,7 +20,7 @@ suite('Error input', () => {
   });
   test('runOnServer', async () => {
     try {
-      await tomcat.runOnServer(serverInfo, '');
+      await tomcatModel.runOnServer(serverInfo, '');
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
     }
