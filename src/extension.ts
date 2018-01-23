@@ -2,7 +2,6 @@
 
 import * as child_process from "child_process";
 import * as fse from "fs-extra";
-import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
@@ -18,7 +17,7 @@ import { PickWithData, VSCodeUI } from "./VSCodeUI";
 export function activate(context: vscode.ExtensionContext): void {
     let storagePath: string = context.storagePath;
     if (!storagePath) {
-        storagePath = path.resolve(os.tmpdir(), `vscodetomcat_${Utility.makeRandomHexString(5)}`);
+        storagePath = Utility.getTempStoragePath();
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);

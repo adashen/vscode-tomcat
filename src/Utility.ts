@@ -3,6 +3,7 @@
 import * as child_process from "child_process";
 import * as fse from "fs-extra";
 import * as net from "net";
+import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
@@ -59,15 +60,15 @@ export namespace Utility {
         });
     }
 
-    export function makeRandomHexString(length: number): string {
+    export function getTempStoragePath(): string {
         const chars: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
         let result: string = '';
-        for (let i: number = 0; i < length; i += 1) {
+        for (let i: number = 0; i < 5; i += 1) {
             // tslint:disable-next-line:insecure-random
             const idx: number = Math.floor(chars.length * Math.random());
             result += chars[idx];
         }
-        return result;
+        return path.resolve(os.tmpdir(), `vscodetomcat_${result}`);
     }
 
     export async function getPort(serverXml: string, kind: Constants.Port): Promise<string> {
