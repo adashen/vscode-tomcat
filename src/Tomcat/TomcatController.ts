@@ -127,7 +127,7 @@ export class TomcatController {
     public dispose(): void {
         this.stopServers();
         this._tomcat.saveServerListSync();
-        this._outputChannels.forEach((value: vscode.OutputChannel, key: string) => value.dispose());
+        this._outputChannels.forEach((value: vscode.OutputChannel) => value.dispose());
     }
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {

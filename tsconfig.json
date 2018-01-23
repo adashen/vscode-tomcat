@@ -7,6 +7,7 @@
             "es6"
         ],
         "sourceMap": true,
+        "noUnusedParameters": true,
         "rootDir": "."
     },
     "exclude": [
