@@ -33,7 +33,7 @@ export namespace Utility {
             p.on('error', (err: Error) => {
                 reject(err);
             });
-            p.on('exit', (code: number, signal: string) => {
+            p.on('exit', (code: number) => {
                 if (code !== 0) {
                     reject(new Error(localize('tomcatExt.commandfailed', 'Command failed with exit code {0}', code)));
                 }

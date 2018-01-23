@@ -5,20 +5,18 @@ import * as vscode from "vscode";
 import { ServerState } from "../Constants";
 import { Utility } from "../Utility";
 
-export class TomcatServer {
+export class TomcatServer implements vscode.QuickPickItem {
     public needRestart: boolean = false;
-    private _name: string;
-    private _tomcatPath: string;
-    private _extensionPath: string;
+    public newCreated: boolean = false;
+    public label: string;
+    public description: string;
+    private _state: ServerState = ServerState.IdleServer;
+    private _isDebugging: boolean = false;
     private _debugPort: number;
     private _debugWorkspace: vscode.WorkspaceFolder;
-    private _isDebugging: boolean = false;
-    private _state: ServerState = ServerState.IdleServer;
 
-    constructor(name: string, tomcatPath: string, extensionPath: string) {
-        this._name = name.trim();
-        this._tomcatPath = tomcatPath.trim();
-        this._extensionPath = extensionPath.trim();
+    constructor(private _name: string, private _tomcatPath: string, private _extensionPath: string) {
+        this.label = _name;
     }
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
