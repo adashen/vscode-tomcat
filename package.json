@@ -177,7 +177,19 @@
           "group": "tomcat@5"
         }
       ]
-    }
+    },
+    "configuration":[
+      {
+        "title": "Tomcat Configuration",
+        "properties": {
+          "tomcat.workspace": {
+            "type": "string",
+            "default": "<<fill in the workspace path, reload for it to take effect>>",
+            "description": "Tomcat Servers workspace."
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -201,7 +213,6 @@
     "@types/xml2js": "^0.4.2"
   },
   "dependencies": {
-    "axios": "^0.17.1",
     "chokidar": "^1.7.0",
     "fs-extra": "^4.0.2",
     "opn": "^5.1.0 ",

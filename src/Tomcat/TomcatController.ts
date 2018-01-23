@@ -11,26 +11,19 @@ import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
 import { localize } from '../localize';
 import { Utility } from "../Utility";
-import { Tomcat } from "./Tomcat";
+import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
 
 export class TomcatController {
-    private _outputChannels: Map<string, vscode.OutputChannel>;
-    private _tomcat: Tomcat;
-    private _contextExtensionPath: string;
-
-    constructor(tomcat: Tomcat, extensionPath: string) {
-      this._outputChannels = new Map<string, vscode.OutputChannel>();
-      this._contextExtensionPath = extensionPath;
-      this._tomcat = tomcat;
+    constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
     }
 
     public getTomcatServer(serverName: string): TomcatServer {
-        return this._tomcat.getTomcatServer(serverName);
+        return this._tomcatModel.getTomcatServer(serverName);
     }
 
     public getServerSet(): TomcatServer[] {
-        return this._tomcat.getServerSet();
+        return this._tomcatModel.getServerSet();
     }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
@@ -46,10 +39,8 @@ export class TomcatController {
             await this.stopServer(tomcatServer);
         }
 
-        if (this._tomcat.deleteServer(tomcatServer)) {
-            const output: vscode.OutputChannel = this.getOutput(tomcatServer);
-            this._outputChannels.delete(`Tomcat_${tomcatServer.getName()}`);
-            output.dispose();
+        if (this._tomcatModel.deleteServer(tomcatServer)) {
+            tomcatServer.outputChannel.dispose();
         }
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
@@ -77,19 +68,19 @@ export class TomcatController {
             throw new Error(Constants.INVALID_SERVER_DIRECTORY);
         }
 
-        const catalinaBasePath: string = path.join(this._tomcat.getExtensionPath(), serverName);
+        const catalinaBasePath: string = path.join(this._tomcatModel.getStoragePath(), serverName);
         await fse.remove(catalinaBasePath);
         await Promise.all([
             fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
             fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
-            fse.copy(path.join(this._contextExtensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.mkdirs(path.join(catalinaBasePath, 'logs')),
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
         ]);
 
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcat.getExtensionPath());
-        this._tomcat.addServer(tomcatServer);
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcatModel.getStoragePath());
+        this._tomcatModel.addServer(tomcatServer);
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
@@ -98,7 +89,7 @@ export class TomcatController {
             throw new Error(DialogMessage.noServer);
         }
 
-        await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+        await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
     }
 
     public async restartServer(serverInfo: TomcatServer): Promise<void> {
@@ -107,7 +98,7 @@ export class TomcatController {
         }
         if (serverInfo.isStarted()) {
             serverInfo.needRestart = true;
-            await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
         }
     }
 
@@ -126,8 +117,10 @@ export class TomcatController {
 
     public dispose(): void {
         this.stopServers();
-        this._tomcat.saveServerListSync();
-        this._outputChannels.forEach((value: vscode.OutputChannel) => value.dispose());
+        this._tomcatModel.saveServerListSync();
+        this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
+           element.outputChannel.dispose();
+        });
     }
 
     private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
@@ -135,8 +128,7 @@ export class TomcatController {
             throw new Error(DialogMessage.noServer);
         }
 
-        const output: vscode.OutputChannel = this.getOutput(serverInfo);
-        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, output) : '';
+        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, serverInfo.outputChannel) : '';
         if (serverInfo.isStarted() && serverInfo.isDebugging() === debug) {
             return;
         }
@@ -159,14 +151,14 @@ export class TomcatController {
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
         if (serverInfo.isStarted()) {
             serverInfo.needRestart = true;
-            await Utility.executeCMD(this.getOutput(serverInfo), 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
         } else {
-            await this.startTomcat(serverInfo, appName, output);
+            await this.startTomcat(serverInfo, appName, serverInfo.outputChannel);
         }
     }
 
     private stopServers(): void {
-        const serverList: TomcatServer[] = this._tomcat.getServerSet();
+        const serverList: TomcatServer[] = this._tomcatModel.getServerSet();
         serverList.forEach((value: TomcatServer) => {
             if (value.isStarted()) {
                 this.stopServer(value);
@@ -177,7 +169,7 @@ export class TomcatController {
     private async deployPackage(serverInfo: TomcatServer, packagePath: string, output: vscode.OutputChannel): Promise<string> {
         const appName: string =  path.basename(packagePath, path.extname(packagePath));
         const serverName: string = serverInfo.getName();
-        const appPath: string = path.join(this._tomcat.getExtensionPath(), serverName, 'webapps', appName);
+        const appPath: string = path.join(this._tomcatModel.getStoragePath(), serverName, 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
@@ -192,15 +184,15 @@ export class TomcatController {
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
         const serverName: string = serverInfo.getName();
-        const catalinaBase: string = path.join(this._tomcat.getExtensionPath(), serverName);
-        const bootStrap: string = path.join(serverInfo.getTomcatPath(), 'bin', 'bootstrap.jar');
-        const tomcat: string = path.join(serverInfo.getTomcatPath(), 'bin', 'tomcat-juli.jar');
+        const catalinaBase: string = path.join(this._tomcatModel.getStoragePath(), serverName);
+        const bootStrap: string = path.join(serverInfo.getInstallPath(), 'bin', 'bootstrap.jar');
+        const tomcat: string = path.join(serverInfo.getInstallPath(), 'bin', 'tomcat-juli.jar');
         const sep: string = path.delimiter;
         const classPath: string = `${bootStrap}${sep}${tomcat}`;
         const tmdir: string = path.join(catalinaBase, 'temp');
         let args: string[] = [`-classpath "${classPath}"`,
         `"-Dcatalina.base=${catalinaBase}"`,
-        `"-Dcatalina.home=${serverInfo.getTomcatPath()}"`,
+        `"-Dcatalina.home=${serverInfo.getInstallPath()}"`,
         `"-Djava.io.tmpdir=${tmdir}"`,
         '"-Dfile.encoding=UTF8"',
         'org.apache.catalina.startup.Bootstrap',
@@ -310,15 +302,5 @@ export class TomcatController {
         if (resources) {
             resources.forEach((item: vscode.Disposable) => item.dispose());
         }
-    }
-
-    private getOutput(serverInfo: TomcatServer): vscode.OutputChannel {
-        const channelName: string = `Tomcat_${serverInfo.getName()}`;
-        let output: vscode.OutputChannel = this._outputChannels.get(channelName);
-        if (!output) {
-            output  = vscode.window.createOutputChannel(channelName);
-            this._outputChannels.set(channelName, output);
-        }
-        return output;
     }
 }
