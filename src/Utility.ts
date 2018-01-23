@@ -71,7 +71,7 @@ export namespace Utility {
         return path.resolve(os.tmpdir(), `vscodetomcat_${result}`);
     }
 
-    export async function getPort(serverXml: string, kind: Constants.Port): Promise<string> {
+    export async function getPort(serverXml: string, kind: Constants.PortKind): Promise<string> {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
@@ -80,12 +80,12 @@ export namespace Utility {
         try {
             /* tslint:disable:no-any */
             const jsonObj: any = await parseXml(xml);
-            if (kind === Constants.Port.Server) {
+            if (kind === Constants.PortKind.Server) {
                 port = jsonObj.Server.$.port;
-            } else if (kind === Constants.Port.Http) {
+            } else if (kind === Constants.PortKind.Http) {
                 port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
                     (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port;
-            } else if (kind === Constants.Port.Https) {
+            } else if (kind === Constants.PortKind.Https) {
                 port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
                     (item.$.SSLEnabled.toLowerCase() === 'true')).$.port;
             }

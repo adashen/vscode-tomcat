@@ -23,7 +23,7 @@ export enum ServerState {
     IdleServer = 'idleserver'
 }
 
-export enum Port {
+export enum PortKind {
     Server = 'Server',
     Http = 'Http',
     Https = 'Https'
