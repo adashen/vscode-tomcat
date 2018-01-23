@@ -59,7 +59,18 @@ export namespace Utility {
         });
     }
 
-    export async function getHttpPort(serverXml: string): Promise<string> | undefined {
+    export function makeRandomHexString(length: number): string {
+        const chars: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+        let result: string = '';
+        for (let i: number = 0; i < length; i += 1) {
+            // tslint:disable-next-line:insecure-random
+            const idx: number = Math.floor(chars.length * Math.random());
+            result += chars[idx];
+        }
+        return result;
+    }
+
+    export async function getPort(serverXml: string, kind: Constants.Port): Promise<string> {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
         }
@@ -68,15 +79,22 @@ export namespace Utility {
         try {
             /* tslint:disable:no-any */
             const jsonObj: any = await parseXml(xml);
-            port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port;
+            if (kind === Constants.Port.Server) {
+                port = jsonObj.Server.$.port;
+            } else if (kind === Constants.Port.Http) {
+                port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                    (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port;
+            } else if (kind === Constants.Port.Https) {
+                port = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                    (item.$.SSLEnabled.toLowerCase() === 'true')).$.port;
+            }
         } catch (err) {
             port = undefined;
         }
         return port;
     }/* tslint:enable:no-any */
 
-    // tslint:disable-next-line:no-any
+    /* tslint:disable:no-any */
     async function parseXml(xml: string): Promise<any> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
             xml2js.parseString(xml, { explicitArray: true }, (err: Error, res: {}) => {
@@ -86,5 +104,5 @@ export namespace Utility {
                 return resolve(res);
             });
         });
-    }
+    }/* tslint:enable:no-any */
 }

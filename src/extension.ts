@@ -18,7 +18,7 @@ import { PickWithData, VSCodeUI } from "./VSCodeUI";
 export function activate(context: vscode.ExtensionContext): void {
     let storagePath: string = context.storagePath;
     if (!storagePath) {
-        storagePath = path.resolve(os.tmpdir(), `vscodetomcat_${makeRandomHexString(5)}`);
+        storagePath = path.resolve(os.tmpdir(), `vscodetomcat_${Utility.makeRandomHexString(5)}`);
     }
     const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatData: Tomcat = new Tomcat(storagePath);
@@ -195,15 +195,4 @@ async function runOnTomcat(tomcatController: TomcatController, debug: boolean, u
     }
 
     await tomcatController.runOnServer(tomcatController.getTomcatServer(server), packagePath, debug);
-}
-
-function makeRandomHexString(length: number): string {
-    const chars: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
-    let result: string = '';
-    for (let i: number = 0; i < length; i += 1) {
-        // tslint:disable-next-line:insecure-random
-        const idx: number = Math.floor(chars.length * Math.random());
-        result += chars[idx];
-    }
-    return result;
 }
