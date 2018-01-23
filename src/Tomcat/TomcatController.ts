@@ -48,7 +48,7 @@ export class TomcatController {
 
         if (this._tomcat.deleteServer(tomcatServer)) {
             const output: vscode.OutputChannel = this.getOutput(tomcatServer);
-            this._outputChannels.delete(this.getChannelName(tomcatServer));
+            this._outputChannels.delete(`Tomcat_${tomcatServer.getName()}`);
             output.dispose();
         }
         vscode.commands.executeCommand('tomcat.tree.refresh');
@@ -233,7 +233,7 @@ export class TomcatController {
     }
 
     private async getServerUri(serverInfo: TomcatServer, appName?: string): Promise<string> {
-        const serverPort: string = await Utility.getHttpPort(serverInfo.getServerConfigPath());
+        const serverPort: string = await Utility.getPort(serverInfo.getServerConfigPath(), Constants.PortKind.Http);
         if (!serverPort) {
             throw new Error('No http port found in server.xml');
         }
@@ -247,6 +247,10 @@ export class TomcatController {
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
         const serverUri: string = await this.getServerUri(serverInfo, appName);
+        const serverConfig: string = serverInfo.getServerConfigPath();
+        const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
+        const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
+        const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
             if (serverUri) {
@@ -260,31 +264,35 @@ export class TomcatController {
                 statusBar.show();
             }
 
-            watcher = chokidar.watch(serverInfo.getServerConfigPath());
+            watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
-                const promptString: string = localize('tomcatExt.configChanged',
-                                                      'server.xml of running server {0} has been changed. Would you like to restart it?',
-                                                      serverName);
-                const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
-                if (item === DialogMessage.yes) {
-                    try {
-                        // Need restart tomcat
-                        await this.stopServer(serverInfo);
-                        serverInfo.needRestart = true;
-                    } catch (err) {
-                        console.error(err.toString());
-                        vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
+                if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
+                    vscode.window.showErrorMessage(localize('tomcatExt.serverPortChangeError', `Changing the server port of a running server will cause errors, please change it back to ${ serverPort} ！`));
+                } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
+                           httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
+                    const promptString: string = localize('tomcatExt.configChanged',
+                                                          'server.xml of running server {0} has been changed. Would you like to restart it?',
+                                                          serverName);
+                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
+                    if (item === DialogMessage.yes) {
+                        try {
+                            // Need restart tomcat
+                            await this.stopServer(serverInfo);
+                            serverInfo.needRestart = true;
+                        } catch (err) {
+                            console.error(err.toString());
+                            vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
+                        }
                     }
                 }
             });
 
             const javaProcess: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
+            this.setStarted(serverInfo, true);
             this.startDebugSession(serverInfo);
-            setTimeout(() => this.setStarted(serverInfo, true), 500);
             await javaProcess;
             this.setStarted(serverInfo, false);
-            this.disposeResource(statusBarCommand);
-            this.disposeResource(statusBar);
+            this.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
@@ -292,25 +300,20 @@ export class TomcatController {
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
-            this.disposeResource(statusBarCommand);
-            this.disposeResource(statusBar);
+            this.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
         }
     }
 
-    private disposeResource(resource: vscode.Disposable | undefined): void {
-        if (resource) {
-            resource.dispose();
+    private disposeResources(...resources: vscode.Disposable[]): void {
+        if (resources) {
+            resources.forEach((item: vscode.Disposable) => item.dispose());
         }
     }
 
-    private getChannelName(serverInfo: TomcatServer): string {
-        return `Tomcat_${serverInfo.getName()}`;
-    }
-
     private getOutput(serverInfo: TomcatServer): vscode.OutputChannel {
-        const channelName: string = this.getChannelName(serverInfo);
+        const channelName: string = `Tomcat_${serverInfo.getName()}`;
         let output: vscode.OutputChannel = this._outputChannels.get(channelName);
         if (!output) {
             output  = vscode.window.createOutputChannel(channelName);

@@ -54,6 +54,10 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatSe
 
     public async getTreeItem(element: TomcatServer): Promise<vscode.TreeItem> {
         const treeItem: TomcatTreeItem = new TomcatTreeItem(this._context, element);
+        /* qisun: checking http port is not a valid way to detect the server running or not
+        // update the logic when finding a proper way to check the server real state
+        // currently behavior is ignoring the server state outside vscode
+        // and always stop servers when exiting vscode
         try {
             const port: string = await Utility.getHttpPort(treeItem.serverConfig);
             // tslint:disable-next-line:no-any no-http-string
@@ -62,6 +66,7 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TomcatSe
         } catch (err) {
             element.setStarted(false);
         }
+        */
         treeItem.iconPath = this._context.asAbsolutePath(path.join('resources', `${element.getState()}.svg`));
         return treeItem;
     }

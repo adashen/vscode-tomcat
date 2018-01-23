@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as Constants from "../src/Constants";
 import { TomcatServer } from "../src/Tomcat/TomcatServer";
 import { Utility } from "../src/Utility";
 
@@ -15,7 +16,7 @@ suite('utility tests', () => {
   test('getPort', async () => {
     try {
       const filePath: string = path.resolve(__dirname, '../../testResources/server.xml');
-      const port: string = await Utility.getHttpPort(filePath);
+      const port: string = await Utility.getPort(filePath, Constants.PortKind.Http);
       assert.equal(port, '8081');
     } catch (error) {
       assert.fail('no error', 'error');
