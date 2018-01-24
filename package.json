@@ -184,7 +184,7 @@
         "properties": {
           "tomcat.workspace": {
             "type": "string",
-            "default": "<<fill in the workspace path, reload for it to take effect>>",
+            "default": "<<fill in tomcat servers workspace path>>",
             "description": "Tomcat Servers workspace."
           }
         }

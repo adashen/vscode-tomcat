@@ -6,21 +6,12 @@ import { Utility } from "../Utility";
 import { TomcatServer } from "./TomcatServer";
 
 export class TomcatModel {
-    private _storagePath: string;
     private _serverList: TomcatServer[] = [];
     private _serversJsonFile: string;
 
-    constructor(storagePath: string) {
-        this._storagePath = Utility.getWorkspace();
-        if (!this._storagePath) {
-            this._storagePath = path.join(storagePath, '/tomcat');
-        }
-        this._serversJsonFile = path.join(storagePath, 'servers.json');
+    constructor(public defaultStoragePath: string) {
+        this._serversJsonFile = path.join(defaultStoragePath, 'servers.json');
         this.initServerListSync();
-    }
-
-    public getStoragePath(): string {
-        return this._storagePath;
     }
 
     public getTomcatServer(serverName: string): TomcatServer | undefined {
@@ -32,7 +23,7 @@ export class TomcatModel {
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (oldServer.length > 0) {
-                const catalinaBasePath: string = path.join(this._storagePath, oldServer[0].getName());
+                const catalinaBasePath: string = path.join(tomcatServer.getStoragePath(), oldServer[0].getName());
                 fse.remove(catalinaBasePath);
                 this.saveServerList();
                 return true;
@@ -57,7 +48,9 @@ export class TomcatModel {
 
     public saveServerListSync(): void {
         try {
-            fse.outputJsonSync(this._serversJsonFile, this._serverList);
+            fse.outputJsonSync(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+            }));
         } catch (err) {
             console.error(err.toString());
         }
@@ -69,9 +62,9 @@ export class TomcatModel {
                 const objArray: {}[] = fse.readJsonSync(this._serversJsonFile);
                 if (objArray && objArray.length > 0) {
                     this._serverList = this._serverList.concat(objArray.map(
-                        (obj: { _name: string, _tomcatPath: string, _storagePath: string }) => {
+                        (obj: { _name: string, _installPath: string, _storagePath: string }) => {
                             console.error(obj);
-                            return new TomcatServer(obj._name, obj._tomcatPath, this._storagePath);
+                            return new TomcatServer(obj._name, obj._installPath, obj._storagePath);
                         }));
                 }
             }
@@ -82,7 +75,9 @@ export class TomcatModel {
 
     private async saveServerList(): Promise<void> {
         try {
-            await fse.outputJson(this._serversJsonFile, this._serverList);
+            await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+            }));
         } catch (err) {
             console.error(err.toString());
         }

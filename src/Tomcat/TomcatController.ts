@@ -68,7 +68,12 @@ export class TomcatController {
             throw new Error(Constants.INVALID_SERVER_DIRECTORY);
         }
 
-        const catalinaBasePath: string = path.join(this._tomcatModel.getStoragePath(), serverName);
+        let storagePath: string = Utility.getWorkspace();
+        if (!storagePath) {
+            storagePath = path.join(this._tomcatModel.defaultStoragePath, '/tomcat');
+        }
+
+        const catalinaBasePath: string = path.join(storagePath, serverName);
         await fse.remove(catalinaBasePath);
         await Promise.all([
             fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
@@ -79,7 +84,7 @@ export class TomcatController {
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
         ]);
 
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, this._tomcatModel.getStoragePath());
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, storagePath);
         this._tomcatModel.addServer(tomcatServer);
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
@@ -128,8 +133,8 @@ export class TomcatController {
             throw new Error(DialogMessage.noServer);
         }
 
-        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath, serverInfo.outputChannel) : '';
-        if (serverInfo.isStarted() && serverInfo.isDebugging() === debug) {
+        const appName: string = packagePath ? await this.deployPackage(serverInfo, packagePath) : '';
+        if (serverInfo.isStarted() && ((!serverInfo.isDebugging() && !debug) ||  serverInfo.isDebugging() === debug)) {
             return;
         }
         let port: number | undefined;
@@ -153,7 +158,7 @@ export class TomcatController {
             serverInfo.needRestart = true;
             await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
         } else {
-            await this.startTomcat(serverInfo, appName, serverInfo.outputChannel);
+            await this.startTomcat(serverInfo, appName);
         }
     }
 
@@ -166,14 +171,14 @@ export class TomcatController {
         });
     }
 
-    private async deployPackage(serverInfo: TomcatServer, packagePath: string, output: vscode.OutputChannel): Promise<string> {
+    private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<string> {
         const appName: string =  path.basename(packagePath, path.extname(packagePath));
         const serverName: string = serverInfo.getName();
-        const appPath: string = path.join(this._tomcatModel.getStoragePath(), serverName, 'webapps', appName);
+        const appPath: string = path.join(serverInfo.getStoragePath(), serverName, 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
-        await Utility.executeCMD(output, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
+        await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
     }
 
@@ -184,7 +189,7 @@ export class TomcatController {
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
         const serverName: string = serverInfo.getName();
-        const catalinaBase: string = path.join(this._tomcatModel.getStoragePath(), serverName);
+        const catalinaBase: string = path.join(serverInfo.getStoragePath(), serverName);
         const bootStrap: string = path.join(serverInfo.getInstallPath(), 'bin', 'bootstrap.jar');
         const tomcat: string = path.join(serverInfo.getInstallPath(), 'bin', 'tomcat-juli.jar');
         const sep: string = path.delimiter;
@@ -233,7 +238,7 @@ export class TomcatController {
         return `http://localhost:${serverPort}/${appName ? appName : ''}`;
     }
 
-    private async startTomcat(serverInfo: TomcatServer, appName: string, output: vscode.OutputChannel): Promise<void> {
+    private async startTomcat(serverInfo: TomcatServer, appName: string): Promise<void> {
         let statusBar: vscode.StatusBarItem;
         let statusBarCommand: vscode.Disposable;
         const serverName: string = serverInfo.getName();
@@ -279,7 +284,7 @@ export class TomcatController {
                 }
             });
 
-            const javaProcess: Promise<void> = Utility.executeCMD(output, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
             this.setStarted(serverInfo, true);
             this.startDebugSession(serverInfo);
             await javaProcess;
@@ -288,7 +293,7 @@ export class TomcatController {
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
-                await this.startTomcat(serverInfo, appName, output);
+                await this.startTomcat(serverInfo, appName);
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
