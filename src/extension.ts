@@ -1,7 +1,5 @@
 'use strict';
 
-import * as child_process from "child_process";
-import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
@@ -27,16 +25,17 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(tomcatServerTree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (element: TomcatServer) => tomcatServerTree.refresh(element)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.configurevm', (element: TomcatServer) => tomcatController.customizeVMOptions(element)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.config.open', (element: TomcatServer) => tomcatController.openServerConfig(element)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.restart', (element: TomcatServer) => tomcatController.stopServer(element, true)));
 
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.restart', restartServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.browse', browseServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.stop', stopServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.delete', deleteServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.war.run', runWarPackage);
     initCommand(context, outputChannel, tomcatController, 'tomcat.war.debug', debugWarPackage);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.config.open', openServerConfig);
 }
 
 function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcatController: TomcatController,
@@ -69,12 +68,8 @@ async function startServer(tomcatController: TomcatController, tomcatItem?: Tomc
             vscode.window.showInformationMessage(DialogMessage.serverRunning);
             return;
         }
-        await tomcatController.startServer(server);
+        await tomcatController.run(server);
     }
-}
-
-async function restartServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    await tomcatController.restartServer(tomcatItem);
 }
 
 async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
@@ -103,15 +98,6 @@ async function deleteServer(tomcatController: TomcatController, tomcatItem ?: To
     const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
         await tomcatController.deleteServer(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
-    }
-}
-
-async function openServerConfig(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        await tomcatController.openConfig(server);
     } else {
         await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
@@ -183,8 +169,11 @@ async function runOnTomcat(tomcatController: TomcatController, debug: boolean, u
     const packagePath: string = uri.fsPath;
     const originalServerSet: string[] = tomcatController.getServerSet().map((s: TomcatServer) => s.getName());
     const server: TomcatServer = await selectServer(tomcatController);
+    if (!server) {
+        return;
+    }
 
-    if (server && server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
+    if (server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
         server.newCreated = false;
         const result: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.continueOnExistingServer, DialogMessage.yes, DialogMessage.no);
         if (result !== DialogMessage.yes) {
@@ -192,7 +181,7 @@ async function runOnTomcat(tomcatController: TomcatController, debug: boolean, u
         }
     }
 
-    await tomcatController.runOnServer(server, packagePath, debug);
+    await tomcatController.run(server, packagePath, debug);
 }
 
 // tslint:disable-next-line:no-empty

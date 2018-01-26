@@ -10,7 +10,6 @@ import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
-import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
     export class UserCancelError extends Error {
@@ -70,6 +69,19 @@ export namespace Utility {
             });
             server.listen(0, '127.0.0.1');
         });
+    }
+
+    export async function openFile(file: string): Promise<void> {
+        if (!await fse.pathExists(file)) {
+            throw new Error(localize('tomcatExt.fileNotExist', `File ${file} does not exist.`));
+        }
+        vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
+    }
+
+    export function disposeResources(...resources: vscode.Disposable[]): void {
+        if (resources) {
+            resources.forEach((item: vscode.Disposable) => item.dispose());
+        }
     }
 
     export function getTempStoragePath(): string {
