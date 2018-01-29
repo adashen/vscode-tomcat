@@ -97,11 +97,11 @@ export class TomcatController {
         serverInfo.needRestart = restart;
     }
 
-    public customizeVMOptions(server: TomcatServer): void {
-        if (!server) {
+    public customizeVMOptions(serverInfo: TomcatServer): void {
+        if (!serverInfo) {
             return;
         }
-        Utility.openFile(server.getVMOptionFile());
+        Utility.openFile(serverInfo.getVMOptionFile());
     }
 
     public async openServer(serverInfo: TomcatServer): Promise<void> {
@@ -173,8 +173,8 @@ export class TomcatController {
         return appName;
     }
 
-    private startDebugSession(server: TomcatServer): void {
-        if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
+    private startDebugSession(serverInfo: TomcatServer): void {
+        if (!serverInfo || !serverInfo.getDebugPort() || !serverInfo.getDebugWorkspace()) {
             return;
         }
         const config: vscode.DebugConfiguration = {
@@ -182,9 +182,9 @@ export class TomcatController {
             name: 'Tomcat Debug (Attach)',
             request: 'attach',
             hostName: 'localhost',
-            port: server.getDebugPort()
+            port: serverInfo.getDebugPort()
         };
-        setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
+        setTimeout(() => vscode.debug.startDebugging(serverInfo.getDebugWorkspace(), config), 500);
     }
 
     private async startTomcat(serverInfo: TomcatServer, appName: string): Promise<void> {
