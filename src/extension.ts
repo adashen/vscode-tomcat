@@ -63,7 +63,7 @@ function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputC
 }
 
 async function startServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem, true);
     if (server) {
         if (server.isStarted()) {
             vscode.window.showInformationMessage(DialogMessage.serverRunning);
@@ -143,11 +143,14 @@ async function runWarPackage(tomcatController: TomcatController, uri?: vscode.Ur
     await runOnTomcat(tomcatController, false, uri);
 }
 
-async function selectServer(tomcatController: TomcatController, tomcatServer?: TomcatServer): Promise<TomcatServer> {
+async function selectServer(tomcatController: TomcatController, tomcatServer?: TomcatServer, createIfNoneServer: boolean = false): Promise<TomcatServer> {
     if (tomcatServer) {
         return tomcatServer;
     }
     const serverSet: TomcatServer[] = tomcatController.getServerSet();
+    if ((!serverSet || serverSet.length <= 0) && !createIfNoneServer) {
+        return;
+    }
     const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
         [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: '' }],
         { placeHolder: serverSet && serverSet.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
@@ -182,7 +185,10 @@ async function runOnTomcat(tomcatController: TomcatController, debug: boolean, u
 
     const packagePath: string = uri.fsPath;
     const originalServerSet: string[] = tomcatController.getServerSet().map((s: TomcatServer) => s.getName());
-    const server: TomcatServer = await selectServer(tomcatController);
+    const server: TomcatServer = await selectServer(tomcatController, undefined, true);
+    if (!server) {
+        return;
+    }
 
     if (server && server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
         server.newCreated = false;
