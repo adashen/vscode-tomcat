@@ -85,8 +85,6 @@ async function stopServer(tomcatController: TomcatController, tomcatItem?: Tomca
             return;
         }
         await tomcatController.stopServer(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
@@ -103,8 +101,6 @@ async function deleteServer(tomcatController: TomcatController, tomcatItem ?: To
     const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
         await tomcatController.deleteServer(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 
