@@ -264,13 +264,9 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    vscode.window.showErrorMessage(localize('tomcatExt.serverPortChangeError', `Changing the server port of a running server will cause errors, please change it back to ${ serverPort} ！`));
-                } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
-                           httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
-                    const promptString: string = localize('tomcatExt.configChanged',
-                                                          'server.xml of running server {0} has been changed. Would you like to restart it?',
-                                                          serverName);
-                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
+                    vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort));
+                } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) || httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
+                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
                     if (item === DialogMessage.yes) {
                         try {
                             // Need restart tomcat
@@ -278,7 +274,7 @@ export class TomcatController {
                             serverInfo.needRestart = true;
                         } catch (err) {
                             console.error(err.toString());
-                            vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
+                            vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
                         }
                     }
                 }
