@@ -7,12 +7,12 @@
 	<body>
 	<div class="container-fluid">
 	<div class="row jumbotron">
-		<div class="col-md-1"><p><img src="https://github.com/adashen/vscode-tomcat/raw/master/resources/Tomcat.png" alt="Tomcat.png" style="height:128;"></p></div>
+		<div class="col-md-1"><p><img src="https://github.com/adashen/vscode-tomcat/raw/master/resources/icon.png" alt="icon.png" style="height:128;"></p></div>
 		<div class="col-md-11"><h1 class="display-3">Tomcat for Visual Studio Code</h1></div>
 	</div></div>
 	<div class="container">
-		<div class="row"><p><h2>Deployed Packages</h2></p></div>
-		<div class="row">
+		<div class="row"><p><h2>War Packages Deployed on Tomcat Server</h2></p></div>
+		<div class="row" style="font-size: 22px;">
 	<%@ page import="java.io.*" %>
 	<% 
 		String file = application.getRealPath("/");
