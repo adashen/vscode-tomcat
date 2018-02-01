@@ -7,7 +7,7 @@ import { Utility } from "../Utility";
 
 export class TomcatServer implements vscode.QuickPickItem {
     public needRestart: boolean = false;
-    public newCreated: boolean = false;
+    public createMark: boolean = false;
     public label: string;
     public description: string;
     public outputChannel: vscode.OutputChannel;
