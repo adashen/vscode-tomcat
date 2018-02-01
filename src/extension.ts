@@ -27,11 +27,11 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(tomcatServerTree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (element: TomcatServer) => tomcatServerTree.refresh(element)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.click', (element: TomcatServer) => tomcatController.clickServer(element)));
 
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.restart', restartServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.browse', browseServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.stop', stopServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.delete', deleteServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.war.run', runWarPackage);
@@ -85,15 +85,6 @@ async function stopServer(tomcatController: TomcatController, tomcatItem?: Tomca
             return;
         }
         await tomcatController.stopServer(server);
-    }
-}
-
-async function browseServer(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        await tomcatController.openServer(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 

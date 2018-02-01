@@ -9,9 +9,15 @@ import { Utility } from "./Utility";
 export class TomcatTreeItem implements vscode.TreeItem {
     public iconPath: string;
     public label: string;
+    public command: vscode.Command;
 
     constructor(private _context: vscode.ExtensionContext, public readonly _tomcatServer: TomcatServer) {
         this.label = this._tomcatServer.getName();
+        this.command = {
+            command: 'tomcat.server.click',
+            title: '',
+            arguments: [this._tomcatServer]
+        };
     }
 
     public get contextValue(): string {

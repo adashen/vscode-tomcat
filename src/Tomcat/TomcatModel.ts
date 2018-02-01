@@ -63,7 +63,6 @@ export class TomcatModel {
                 if (objArray && objArray.length > 0) {
                     this._serverList = this._serverList.concat(objArray.map(
                         (obj: { _name: string, _installPath: string, _storagePath: string }) => {
-                            console.error(obj);
                             return new TomcatServer(obj._name, obj._installPath, obj._storagePath);
                         }));
                 }
