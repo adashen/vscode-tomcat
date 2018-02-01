@@ -75,6 +75,7 @@ export class TomcatController {
             fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.copy(path.join(this._extensionPath, 'resources', 'vm.properties'), path.join(catalinaBasePath, 'vm.properties')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
             fse.mkdirs(path.join(catalinaBasePath, 'logs')),
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
