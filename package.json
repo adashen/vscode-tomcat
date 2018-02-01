@@ -4,7 +4,7 @@
   "description": "%extension.description%",
   "version": "0.4.0",
   "publisher": "adashen",
-  "icon": "resources/Tomcat.png",
+  "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.17.0"
   },
