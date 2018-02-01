@@ -35,7 +35,7 @@ export namespace Utility {
             });
             p.on('exit', (code: number) => {
                 if (code !== 0) {
-                    reject(new Error(localize('tomcatExt.commandfailed', 'Command failed with exit code {0}', code)));
+                    reject(new Error(DialogMessage.getCommandFailedMessage(code)));
                 }
                 resolve();
             });
@@ -96,7 +96,7 @@ export namespace Utility {
 
     export function disposeResources(...resources: vscode.Disposable[]): void {
         if (resources) {
-            resources.forEach((item: vscode.Disposable) => item.dispose());
+            resources.forEach((item: vscode.Disposable) => { if (item) { item.dispose(); }});
         }
     }
 
@@ -177,7 +177,7 @@ export namespace Utility {
             return false;
         }
         return true;
-    }
+    }/* tslint:enable:no-any */
 
     /* tslint:disable:no-any */
     async function parseXml(xml: string): Promise<any> {
