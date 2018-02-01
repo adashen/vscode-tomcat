@@ -28,6 +28,7 @@
     "onCommand:tomcat.war.debug",
     "onCommand:tomcat.server.stop",
     "onCommand:tomcat.server.delete",
+    "onCommand:tomcat.server.configurevm",
     "onCommand:tomcat.config.open",
     "onCommand:tomcat.server.start",
     "onCommand:tomcat.server.restart",
@@ -82,6 +83,11 @@
       {
         "command": "tomcat.server.start",
         "title": "Start Tomcat Server",
+        "category": "Tomcat"
+      },
+      {
+        "command": "tomcat.server.configurevm",
+        "title": "Configure JVM Options",
         "category": "Tomcat"
       },
       {
@@ -152,33 +158,33 @@
           "group": "tomcat@1"
         },
         {
-          "command": "tomcat.server.restart",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "command": "tomcat.server.configurevm",
+          "when": "view == tomcatServerExplorer && viewItem",
           "group": "tomcat@2"
         },
         {
-          "command": "tomcat.server.browse",
+          "command": "tomcat.server.restart",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@3"
         },
         {
-          "command": "tomcat.config.open",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver",
-          "group": "tomcat@4"
-        },
-        {
-          "command": "tomcat.config.open",
+          "command": "tomcat.server.browse",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@4"
         },
         {
-          "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer",
+          "command": "tomcat.config.open",
+          "when": "view == tomcatServerExplorer && viewItem",
           "group": "tomcat@5"
+        },
+        {
+          "command": "tomcat.server.delete",
+          "when": "view == tomcatServerExplorer && viewItem",
+          "group": "tomcat@6"
         }
       ]
     },
-    "configuration":[
+    "configuration": [
       {
         "title": "Tomcat Configuration",
         "properties": {
@@ -216,6 +222,7 @@
     "chokidar": "^1.7.0",
     "fs-extra": "^4.0.2",
     "opn": "^5.1.0 ",
+    "readline": "^1.3.0",
     "vscode-nls": "^2.0.2",
     "xml2js": "^0.4.19"
   }

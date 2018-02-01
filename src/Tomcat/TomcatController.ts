@@ -45,16 +45,11 @@ export class TomcatController {
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
-    public async openConfig(tomcatServer: TomcatServer): Promise<void> {
+    public openServerConfig(tomcatServer: TomcatServer): void {
         if (!tomcatServer) {
             throw (new Error(DialogMessage.noServer));
         }
-
-        const configFile: string = tomcatServer.getServerConfigPath();
-        if (!await fse.pathExists(configFile)) {
-            throw new Error(DialogMessage.noServerConfig);
-        }
-        vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
+        Utility.openFile(tomcatServer.getServerConfigPath());
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
@@ -79,6 +74,7 @@ export class TomcatController {
             fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
             fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'vm.properties'), path.join(catalinaBasePath, 'vm.properties')),
             fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
             fse.mkdirs(path.join(catalinaBasePath, 'logs')),
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
@@ -90,35 +86,32 @@ export class TomcatController {
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
-    public async stopServer(serverInfo: TomcatServer): Promise<void> {
+    public async stopServer(serverInfo: TomcatServer, restart: boolean = false): Promise<void> {
         if (!serverInfo) {
             throw new Error(DialogMessage.noServer);
         }
-
-        await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+        if (!serverInfo.isStarted()) {
+            vscode.window.showInformationMessage(DialogMessage.serverStopped);
+            return;
+        }
+        await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...serverInfo.vmOptions.concat('stop'));
+        serverInfo.needRestart = restart;
     }
 
-    public async restartServer(serverInfo: TomcatServer): Promise<void> {
+    public customizeVMOptions(serverInfo: TomcatServer): void {
         if (!serverInfo) {
-            throw new Error(DialogMessage.noServer);
+            return;
         }
-        if (serverInfo.isStarted()) {
-            serverInfo.needRestart = true;
-            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
-        }
-    }
-
-    public async startServer(serverInfo: TomcatServer): Promise<void> {
-        await this.run(serverInfo);
-    }
-
-    public async runOnServer(serverInfo: TomcatServer, packagePath: string, debug: boolean = false): Promise<void> {
-        await this.run(serverInfo, packagePath, debug);
+        Utility.openFile(serverInfo.getVMOptionFile());
     }
 
     public async openServer(serverInfo: TomcatServer): Promise<void> {
-        const serverUri: string = await this.getServerUri(serverInfo);
-        await opn(serverUri);
+        const httpPort: string = await Utility.getPort(serverInfo.getServerConfigPath(), Constants.PortKind.Http);
+        if (!httpPort) {
+            throw new Error('No http port found in server.xml');
+        }
+        // tslint:disable-next-line:no-http-string
+        await opn(`http://localhost:${httpPort}`);
     }
 
     public dispose(): void {
@@ -129,7 +122,7 @@ export class TomcatController {
         });
     }
 
-    private async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
+    public async run(serverInfo: TomcatServer, packagePath ?: string, debug ?: boolean): Promise<void> {
         if (!serverInfo) {
             throw new Error(DialogMessage.noServer);
         }
@@ -142,7 +135,6 @@ export class TomcatController {
         let workspaceFolder: vscode.WorkspaceFolder | undefined;
 
         if (debug) {
-            port = await Utility.getFreePort();
             if (vscode.workspace.workspaceFolders) {
                 workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
                     const relativePath: string = path.relative(f.uri.fsPath, packagePath);
@@ -152,12 +144,12 @@ export class TomcatController {
             if (!workspaceFolder) {
                 throw new Error(DialogMessage.noPackage);
             }
+            port = await Utility.getFreePort();
         }
 
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
         if (serverInfo.isStarted()) {
-            serverInfo.needRestart = true;
-            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+            await this.stopServer(serverInfo, true);
         } else {
             await this.startTomcat(serverInfo, appName);
         }
@@ -174,8 +166,7 @@ export class TomcatController {
 
     private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<string> {
         const appName: string =  path.basename(packagePath, path.extname(packagePath));
-        const serverName: string = serverInfo.getName();
-        const appPath: string = path.join(serverInfo.getStoragePath(), serverName, 'webapps', appName);
+        const appPath: string = path.join(serverInfo.getStoragePath(), serverInfo.getName(), 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
@@ -183,41 +174,8 @@ export class TomcatController {
         return appName;
     }
 
-    private setStarted(serverInfo: TomcatServer, started: boolean): void {
-        serverInfo.setStarted(started);
-        vscode.commands.executeCommand('tomcat.tree.refresh');
-    }
-
-    private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
-        const serverName: string = serverInfo.getName();
-        const catalinaBase: string = path.join(serverInfo.getStoragePath(), serverName);
-        const bootStrap: string = path.join(serverInfo.getInstallPath(), 'bin', 'bootstrap.jar');
-        const tomcat: string = path.join(serverInfo.getInstallPath(), 'bin', 'tomcat-juli.jar');
-        const sep: string = path.delimiter;
-        const classPath: string = `${bootStrap}${sep}${tomcat}`;
-        const tmdir: string = path.join(catalinaBase, 'temp');
-        let args: string[] = [`-classpath "${classPath}"`,
-        `"-Dcatalina.base=${catalinaBase}"`,
-        `"-Dcatalina.home=${serverInfo.getInstallPath()}"`,
-        `"-Djava.io.tmpdir=${tmdir}"`,
-        '"-Dfile.encoding=UTF8"',
-        'org.apache.catalina.startup.Bootstrap',
-        '"$@"'];
-
-        if (start) {
-            if (serverInfo.getDebugPort()) {
-                args = [`-agentlib:jdwp=transport=dt_socket,suspend=n,server=y,address=localhost:${serverInfo.getDebugPort()}`].concat(args);
-            }
-            args.push('start');
-        } else {
-            args.push('stop');
-        }
-
-        return args;
-    }
-
-    private startDebugSession(server: TomcatServer): void {
-        if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
+    private startDebugSession(serverInfo: TomcatServer): void {
+        if (!serverInfo || !serverInfo.getDebugPort() || !serverInfo.getDebugWorkspace()) {
             return;
         }
         const config: vscode.DebugConfiguration = {
@@ -225,43 +183,36 @@ export class TomcatController {
             name: 'Tomcat Debug (Attach)',
             request: 'attach',
             hostName: 'localhost',
-            port: server.getDebugPort()
+            port: serverInfo.getDebugPort()
         };
-        setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
-    }
-
-    private async getServerUri(serverInfo: TomcatServer, appName?: string): Promise<string> {
-        const serverPort: string = await Utility.getPort(serverInfo.getServerConfigPath(), Constants.PortKind.Http);
-        if (!serverPort) {
-            throw new Error('No http port found in server.xml');
-        }
-        // tslint:disable-next-line:no-http-string
-        return `http://localhost:${serverPort}/${appName ? appName : ''}`;
+        setTimeout(() => vscode.debug.startDebugging(serverInfo.getDebugWorkspace(), config), 500);
     }
 
     private async startTomcat(serverInfo: TomcatServer, appName: string): Promise<void> {
-        let statusBar: vscode.StatusBarItem;
-        let statusBarCommand: vscode.Disposable;
+        const serverConfig: string = serverInfo.getServerConfigPath();
+        const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
+        if (!httpPort) {
+            throw new Error('No http port found in server.xml');
+        }
+        const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
+        const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
-        const serverUri: string = await this.getServerUri(serverInfo, appName);
-        const serverConfig: string = serverInfo.getServerConfigPath();
-        const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
-        const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
-        const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
+        let statusBarItem: vscode.StatusBarItem;
+        let statusBarCommand: vscode.Disposable;
+        await serverInfo.updateVMOptions();
+        // tslint:disable-next-line:no-http-string
+        const serverUri: string = `http://localhost:${httpPort}/${appName}`;
+        statusBarItem = vscode.window.createStatusBarItem();
+        statusBarItem.command = `open.${serverName}`;
+        statusBarItem.text = `$(browser) Open ${appName}`;
+        statusBarItem.tooltip = localize('tomcatExt.open', 'Open: {0}', serverUri);
+        statusBarCommand = vscode.commands.registerCommand(statusBarItem.command, async () => {
+            opn(serverUri);
+        });
+        statusBarItem.show();
 
         try {
-            if (serverUri) {
-                statusBar = vscode.window.createStatusBarItem();
-                statusBar.command = `open.${serverName}`;
-                statusBar.text = `$(browser) Open ${appName}`;
-                statusBar.tooltip = localize('tomcatExt.open', 'Open: {0}', serverUri);
-                statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
-                    opn(serverUri);
-                });
-                statusBar.show();
-            }
-
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
@@ -285,28 +236,27 @@ export class TomcatController {
                 }
             });
 
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
-            this.setStarted(serverInfo, true);
+            let startAgruments: string[] = serverInfo.vmOptions;
+            if (serverInfo.getDebugPort()) {
+                startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}:${serverInfo.getDebugPort()}`].concat(startAgruments);
+            }
+            startAgruments.push('start');
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startAgruments);
+            serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
-            this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            serverInfo.setStarted(false);
+            Utility.disposeResources(statusBarItem, statusBarCommand);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
                 await this.startTomcat(serverInfo, appName);
             }
         } catch (err) {
-            this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            serverInfo.setStarted(false);
+            Utility.disposeResources(statusBarItem, statusBarCommand);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
-        }
-    }
-
-    private disposeResources(...resources: vscode.Disposable[]): void {
-        if (resources) {
-            resources.forEach((item: vscode.Disposable) => item.dispose());
         }
     }
 }
