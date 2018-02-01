@@ -35,14 +35,37 @@ export namespace Utility {
             });
             p.on('exit', (code: number) => {
                 if (code !== 0) {
-                    reject(new Error(localize('tomcatExt.commandfailed', 'Command failed with exit code {0}', code)));
+                    reject(new Error(DialogMessage.getCommandFailedMessage(code)));
                 }
                 resolve();
             });
         });
     }
 
-    export function getWorkspace(): string {
+    export async function copyServerFiles(serverName: string, tomcatInstallPath: string, storagePath: string, extensionPath: string): Promise<void> {
+        const serverConfigFile: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
+        const serverWebFile: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
+        const serverBootstrapJarFile: string = path.join(tomcatInstallPath, 'bin', 'bootstrap.jar');
+        const serverJuliJarFile: string = path.join(tomcatInstallPath, 'bin', 'tomcat-juli.jar');
+
+        if (!await fse.pathExists(serverConfigFile) || !await fse.pathExists(serverWebFile) ||
+            !await fse.pathExists(serverBootstrapJarFile) || !await fse.pathExists(serverJuliJarFile)) {
+            throw new Error(Constants.INVALID_SERVER_DIRECTORY);
+        }
+        const catalinaBasePath: string = path.join(storagePath, serverName);
+        await fse.remove(catalinaBasePath);
+        await Promise.all([
+            fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
+            fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(path.join(extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.copy(path.join(extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
+            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
+            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'work'))
+        ]);
+    }
+
+    export function getWorkspace(defaultStoragePath: string): string {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model
@@ -51,7 +74,30 @@ export namespace Utility {
                 return workspace;
             }
         }
-        return undefined;
+        return path.join(defaultStoragePath, '/tomcat');
+    }
+
+    export async function promptServerName(placeHolder: string): Promise<string> {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const customizeConfig: boolean = config.get<boolean>('customizeServerName');
+            if (customizeConfig) {
+                return await vscode.window.showInputBox({
+                    prompt: 'input server name, or press enter to user placeHoder',
+                    placeHolder: placeHolder,
+                    ignoreFocusOut: true
+                });
+            }
+            return '';
+        }
+        return '';
+    }
+
+    export function disposeResources(...resources: vscode.Disposable[]): void {
+        if (resources) {
+            resources.forEach((item: vscode.Disposable) => { if (item) { item.dispose(); }});
+        }
     }
 
     export async function getFreePort(): Promise<number> {
@@ -85,7 +131,7 @@ export namespace Utility {
 
     export async function getPort(serverXml: string, kind: Constants.PortKind): Promise<string> {
         if (!await fse.pathExists(serverXml)) {
-            throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
+            throw new Error(DialogMessage.noServer);
         }
         const xml: string = await fse.readFile(serverXml, 'utf8');
         let port: string;
@@ -105,6 +151,32 @@ export namespace Utility {
             port = undefined;
         }
         return port;
+    }/* tslint:enable:no-any */
+
+    export async function setPort(serverXml: string, kind: Constants.PortKind, value: string): Promise<boolean> {
+        if (!await fse.pathExists(serverXml)) {
+            throw new Error(DialogMessage.noServer);
+        }
+        const xml: string = await fse.readFile(serverXml, 'utf8');
+        try {
+            /* tslint:disable:no-any */
+            const jsonObj: any = await parseXml(xml);
+            if (kind === Constants.PortKind.Server) {
+                jsonObj.Server.$.port = value;
+            } else if (kind === Constants.PortKind.Http) {
+                jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                    (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port =  value;
+            } else if (kind === Constants.PortKind.Https) {
+                jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                    (item.$.SSLEnabled.toLowerCase() === 'true')).$.port = value;
+            }
+            const builder: xml2js.Builder = new xml2js.Builder();
+            const newXml: string = builder.buildObject(jsonObj);
+            await fse.writeFile(serverXml, newXml);
+        } catch (err) {
+            return false;
+        }
+        return true;
     }/* tslint:enable:no-any */
 
     /* tslint:disable:no-any */

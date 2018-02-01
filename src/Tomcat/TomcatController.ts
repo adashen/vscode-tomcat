@@ -57,37 +57,34 @@ export class TomcatController {
         vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
     }
 
-    public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
-        const serverConfigFile: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
-        const serverWebFile: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
-        const serverBootstrapJarFile: string = path.join(tomcatInstallPath, 'bin', 'bootstrap.jar');
-        const serverJuliJarFile: string = path.join(tomcatInstallPath, 'bin', 'tomcat-juli.jar');
-
-        if (!await fse.pathExists(serverConfigFile) || !await fse.pathExists(serverWebFile) ||
-            !await fse.pathExists(serverBootstrapJarFile) || !await fse.pathExists(serverJuliJarFile)) {
-            throw new Error(Constants.INVALID_SERVER_DIRECTORY);
+    public async createServer(): Promise<TomcatServer> {
+        const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
+            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
+            canSelectFiles: false,
+            canSelectFolders: true,
+            openLabel: DialogMessage.selectDirectory
+        });
+        if (!pathPick || pathPick.length <= 0 || !pathPick[0].fsPath) {
+            return;
         }
-
-        let storagePath: string = Utility.getWorkspace();
-        if (!storagePath) {
-            storagePath = path.join(this._tomcatModel.defaultStoragePath, '/tomcat');
+        const tomcatInstallPath: string = pathPick[0].fsPath;
+        let serverName: string = await Utility.promptServerName(path.basename(tomcatInstallPath));
+        if (serverName === undefined) {
+            return;
         }
-
-        const catalinaBasePath: string = path.join(storagePath, serverName);
-        await fse.remove(catalinaBasePath);
-        await Promise.all([
-            fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
-            fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
-            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
-            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
-            fse.mkdirs(path.join(catalinaBasePath, 'work'))
-        ]);
-
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, storagePath);
+        serverName = serverName === '' ? path.basename(tomcatInstallPath) : serverName;
+        let tomcatServer: TomcatServer = this._tomcatModel.getTomcatServer(serverName);
+        if (tomcatServer) {
+            vscode.window.showInformationMessage(DialogMessage.serverExist);
+            tomcatServer.createMark = true;
+            return tomcatServer;
+        }
+        const storagePath: string = Utility.getWorkspace(this._tomcatModel.defaultStoragePath);
+        await Utility.copyServerFiles(serverName, tomcatInstallPath, storagePath, this._extensionPath);
+        tomcatServer = new TomcatServer(serverName, tomcatInstallPath, storagePath);
         this._tomcatModel.addServer(tomcatServer);
         vscode.commands.executeCommand('tomcat.tree.refresh');
+        return tomcatServer;
     }
 
     public async stopServer(serverInfo: TomcatServer): Promise<void> {
@@ -119,6 +116,26 @@ export class TomcatController {
     public async openServer(serverInfo: TomcatServer): Promise<void> {
         const serverUri: string = await this.getServerUri(serverInfo);
         await opn(serverUri);
+    }
+
+    public async selectServer(tomcatServer?: TomcatServer, createIfNoneServer: boolean = false): Promise<TomcatServer> {
+        if (tomcatServer) {
+            return tomcatServer;
+        }
+        const serverSet: TomcatServer[] = this._tomcatModel.getServerSet();
+        if ((!serverSet || serverSet.length <= 0 ) && !createIfNoneServer) {
+            return;
+        }
+        const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
+            [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: '' }],
+            { placeHolder: serverSet && serverSet.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
+        if (pick) {
+            if (pick instanceof TomcatServer) {
+                return pick;
+            } else {
+                return await this.createServer();
+            }
+        }
     }
 
     public dispose(): void {
@@ -265,13 +282,13 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    vscode.window.showErrorMessage(localize('tomcatExt.serverPortChangeError', `Changing the server port of a running server will cause errors, please change it back to ${ serverPort} ！`));
+                    const result: MessageItem = await vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.revert);
+                    if (result === DialogMessage.revert) {
+                        await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
+                    }
                 } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
                            httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
-                    const promptString: string = localize('tomcatExt.configChanged',
-                                                          'server.xml of running server {0} has been changed. Would you like to restart it?',
-                                                          serverName);
-                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
+                    const item: MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
                     if (item === DialogMessage.yes) {
                         try {
                             // Need restart tomcat
@@ -279,7 +296,7 @@ export class TomcatController {
                             serverInfo.needRestart = true;
                         } catch (err) {
                             console.error(err.toString());
-                            vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
+                            vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
                         }
                     }
                 }
@@ -290,7 +307,7 @@ export class TomcatController {
             this.startDebugSession(serverInfo);
             await javaProcess;
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            Utility.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
@@ -298,15 +315,9 @@ export class TomcatController {
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            Utility.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
-        }
-    }
-
-    private disposeResources(...resources: vscode.Disposable[]): void {
-        if (resources) {
-            resources.forEach((item: vscode.Disposable) => item.dispose());
         }
     }
 }
