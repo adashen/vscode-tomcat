@@ -282,10 +282,13 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort));
+                    const result: MessageItem = await vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.revert);
+                    if (result === DialogMessage.revert) {
+                        await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
+                    }
                 } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
                            httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
-                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
+                    const item: MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
                     if (item === DialogMessage.yes) {
                         try {
                             // Need restart tomcat
@@ -293,7 +296,7 @@ export class TomcatController {
                             serverInfo.needRestart = true;
                         } catch (err) {
                             console.error(err.toString());
-                            vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));
+                            vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
                         }
                     }
                 }

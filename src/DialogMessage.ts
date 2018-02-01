@@ -7,6 +7,7 @@ export namespace DialogMessage {
     export const yes: MessageItem = { title: localize('tomcatExt.yes', 'Yes') };
     export const no: MessageItem = { title: localize('tomcatExt.no', 'No'), isCloseAffordance: true };
     export const cancel: MessageItem = { title: localize('tomcatExt.cancel', 'Cancel'), isCloseAffordance: true };
+    export const revert: MessageItem = { title: localize('tomcatExt.revert', 'revert') };
 
     export const selectServer: string = localize('tomcatExt.selectServer', 'Select Tomcat Server');
     export const createServer: string = localize('tomcatExt.createServer', 'Create New Server');
