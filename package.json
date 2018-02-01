@@ -186,6 +186,11 @@
             "type": "string",
             "default": "<<fill in tomcat servers workspace path>>",
             "description": "Tomcat Servers workspace."
+          },
+          "tomcat.customizeServerName": {
+            "type": "boolean",
+            "default": false,
+            "definitions": "Customize the name of tomcat server"
           }
         }
       }
