@@ -9,10 +9,10 @@ import { Utility } from "../src/Utility";
 
 suite('Error input', () => {
   const serverInfo: TomcatServer = undefined;
-  const tomcatModel: TomcatController = new TomcatController(new TomcatModel(''), undefined);
+  const tomcatController: TomcatController = new TomcatController(new TomcatModel(''), undefined);
   test('stopServer', async () => {
     try {
-      await tomcatModel.stopServer(serverInfo);
+      await tomcatController.stopOrRestartServer(serverInfo);
       assert.fail('Resolve', 'Reject');
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
@@ -20,7 +20,7 @@ suite('Error input', () => {
   });
   test('runOnServer', async () => {
     try {
-      await tomcatModel.runOnServer(serverInfo, '');
+      await tomcatController.runOnTomcat(false, undefined);
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
     }

@@ -83,6 +83,12 @@ export namespace Utility {
         return path.resolve(os.tmpdir(), `vscodetomcat_${result}`);
     }
 
+    export function disposeResources(...resources: vscode.Disposable[]): void {
+        if (resources) {
+            resources.forEach((item: vscode.Disposable) => {if (item) { item.dispose(); }});
+        }
+    }
+
     export async function getPort(serverXml: string, kind: Constants.PortKind): Promise<string> {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
