@@ -148,8 +148,10 @@ async function selectServer(tomcatController: TomcatController, tomcatServer?: T
         return;
     }
     items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
-    const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(items,
-                                                                         { placeHolder: items && items.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
+    const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
+        items,
+        { placeHolder: items && items.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer }
+    );
 
     if (pick) {
         if (pick instanceof TomcatServer) {
