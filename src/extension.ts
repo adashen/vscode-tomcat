@@ -143,13 +143,15 @@ async function selectServer(tomcatController: TomcatController, tomcatServer?: T
     if (tomcatServer) {
         return tomcatServer;
     }
-    const serverSet: TomcatServer[] = tomcatController.getServerSet();
-    if ((!serverSet || serverSet.length <= 0) && !createIfNoneServer) {
+    let items: vscode.QuickPickItem[] = tomcatController.getServerSet();
+    if ((!items || items.length <= 0) && !createIfNoneServer) {
         return;
     }
+    items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
     const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
-        [...serverSet, { label: `$(plus) ${DialogMessage.createServer}`, description: '' }],
-        { placeHolder: serverSet && serverSet.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer });
+        items,
+        { placeHolder: items && items.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer }
+    );
 
     if (pick) {
         if (pick instanceof TomcatServer) {
