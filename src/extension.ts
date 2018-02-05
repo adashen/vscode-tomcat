@@ -73,8 +73,11 @@ async function startServer(tomcatController: TomcatController, tomcatItem?: Tomc
     }
 }
 
-async function restartServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    await tomcatController.restartServer(tomcatItem);
+async function restartServer(tomcatController: TomcatController, tomcatItem: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem, true);
+    if (server && server.isStarted()) {
+        await tomcatController.stopOrRestartServer(tomcatItem, true);
+    }
 }
 
 async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
@@ -84,7 +87,7 @@ async function stopServer(tomcatController: TomcatController, tomcatItem?: Tomca
             vscode.window.showInformationMessage(DialogMessage.serverStopped);
             return;
         }
-        await tomcatController.stopServer(server);
+        await tomcatController.stopOrRestartServer(server);
     }
 }
 
