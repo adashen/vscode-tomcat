@@ -12,7 +12,7 @@ suite('Error input', () => {
   const tomcatModel: TomcatController = new TomcatController(new TomcatModel(''), undefined);
   test('stopServer', async () => {
     try {
-      await tomcatModel.stopServer(serverInfo);
+      await tomcatModel.stopOrRestartServer(serverInfo);
       assert.fail('Resolve', 'Reject');
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
