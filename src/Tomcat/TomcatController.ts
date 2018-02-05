@@ -36,7 +36,7 @@ export class TomcatController {
             if (confirmation !== DialogMessage.yes) {
                 return;
             }
-            await this.stopServer(tomcatServer);
+            await this.stopOrRestartServer(tomcatServer);
         }
 
         if (this._tomcatModel.deleteServer(tomcatServer)) {
@@ -90,22 +90,13 @@ export class TomcatController {
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
-    public async stopServer(serverInfo: TomcatServer): Promise<void> {
+    public async stopOrRestartServer(serverInfo: TomcatServer, restart: boolean = false): Promise<void> {
         if (!serverInfo) {
             throw new Error(DialogMessage.noServer);
         }
 
         await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
-    }
-
-    public async restartServer(serverInfo: TomcatServer): Promise<void> {
-        if (!serverInfo) {
-            throw new Error(DialogMessage.noServer);
-        }
-        if (serverInfo.isStarted()) {
-            serverInfo.needRestart = true;
-            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
-        }
+        serverInfo.needRestart = restart;
     }
 
     public async startServer(serverInfo: TomcatServer): Promise<void> {
@@ -156,8 +147,7 @@ export class TomcatController {
 
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
         if (serverInfo.isStarted()) {
-            serverInfo.needRestart = true;
-            await Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, false));
+            await this.stopOrRestartServer(serverInfo, true);
         } else {
             await this.startTomcat(serverInfo, appName);
         }
@@ -165,9 +155,9 @@ export class TomcatController {
 
     private stopServers(): void {
         const serverList: TomcatServer[] = this._tomcatModel.getServerSet();
-        serverList.forEach((value: TomcatServer) => {
-            if (value.isStarted()) {
-                this.stopServer(value);
+        serverList.forEach((server: TomcatServer) => {
+            if (server.isStarted()) {
+                this.stopOrRestartServer(server);
             }
         });
     }
@@ -274,9 +264,7 @@ export class TomcatController {
                     const item: vscode.MessageItem = await vscode.window.showInformationMessage(promptString, DialogMessage.yes, DialogMessage.no);
                     if (item === DialogMessage.yes) {
                         try {
-                            // Need restart tomcat
-                            await this.stopServer(serverInfo);
-                            serverInfo.needRestart = true;
+                            await this.stopOrRestartServer(serverInfo, true);
                         } catch (err) {
                             console.error(err.toString());
                             vscode.window.showErrorMessage(localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName));

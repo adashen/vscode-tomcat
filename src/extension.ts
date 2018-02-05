@@ -73,18 +73,29 @@ async function startServer(tomcatController: TomcatController, tomcatItem?: Tomc
     }
 }
 
-async function restartServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    await tomcatController.restartServer(tomcatItem);
+async function restartServer(tomcatController: TomcatController, tomcatItem: TomcatServer): Promise<void> {
+    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
+    if (!server) {
+        vscode.window.showInformationMessage(DialogMessage.noServer);
+        return;
+    }
+    if (server.isStarted()) {
+        await tomcatController.stopOrRestartServer(server, true);
+    } else {
+        await tomcatController.startServer(server);
+    }
 }
 
 async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
     const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        if (!server.isStarted()) {
-            vscode.window.showInformationMessage(DialogMessage.serverStopped);
-            return;
-        }
-        await tomcatController.stopServer(server);
+    if (!server) {
+        vscode.window.showInformationMessage(DialogMessage.noServer);
+        return;
+    }
+    if (server.isStarted()) {
+        await tomcatController.stopOrRestartServer(server);
+    } else {
+        vscode.window.showInformationMessage(DialogMessage.serverStopped);
     }
 }
 
@@ -101,6 +112,8 @@ async function deleteServer(tomcatController: TomcatController, tomcatItem ?: To
     const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
     if (server) {
         await tomcatController.deleteServer(server);
+    } else {
+        vscode.window.showInformationMessage(DialogMessage.noServer);
     }
 }
 

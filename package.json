@@ -122,10 +122,6 @@
           "when": "false == true"
         },
         {
-          "command": "tomcat.server.restart",
-          "when": "false == true"
-        },
-        {
           "command": "tomcat.tree.refresh",
           "when": "false == true"
         }
