@@ -23,8 +23,7 @@ export class TomcatModel {
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (oldServer.length > 0) {
-                const catalinaBasePath: string = path.join(tomcatServer.getStoragePath(), oldServer[0].getName());
-                fse.remove(catalinaBasePath);
+                fse.remove(tomcatServer.getStoragePath());
                 this.saveServerList();
                 return true;
             }
@@ -44,6 +43,16 @@ export class TomcatModel {
         }
         this._serverList.push(tomcatServer);
         this.saveServerList();
+    }
+
+    public async renameServer(tomcatServer: TomcatServer, newName: string): Promise<void> {
+        tomcatServer.setName(newName);
+        const oldStoragePath: string = tomcatServer.getStoragePath();
+        // tslint:disable-next-line:no-unexternalized-strings
+        const newStoragePath: string = path.join(oldStoragePath.substring(0, oldStoragePath.lastIndexOf("\\")), newName);
+        tomcatServer.updateStoragePath(newStoragePath);
+        await fse.rename(oldStoragePath, tomcatServer.getStoragePath());
+        await this.saveServerList();
     }
 
     public saveServerListSync(): void {
