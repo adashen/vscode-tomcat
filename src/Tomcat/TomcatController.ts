@@ -88,7 +88,12 @@ export class TomcatController {
     public async renameServer(server: TomcatServer): Promise<void> {
         const newName: string = await vscode.window.showInputBox({
             prompt: 'input a new server name',
-            placeHolder: server.getName()
+            validateInput: (name: string): string => {
+                if (!name.match(/^[\w.-]+$/)) {
+                    return 'please input a valid server name';
+                }
+                return null;
+            }
         });
         if (!newName) {
             return;
