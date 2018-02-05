@@ -230,34 +230,22 @@ export class TomcatController {
     }
 
     private async startTomcat(serverInfo: TomcatServer, appName: string): Promise<void> {
-        let statusBar: vscode.StatusBarItem;
-        let statusBarCommand: vscode.Disposable;
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
-        const serverUri: string = await this.getServerUri(serverInfo, appName);
         const serverConfig: string = serverInfo.getServerConfigPath();
         const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
         const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
-            if (serverUri) {
-                statusBar = vscode.window.createStatusBarItem();
-                statusBar.command = `open.${serverName}`;
-                statusBar.text = `$(browser) Open ${appName}`;
-                statusBar.tooltip = localize('tomcatExt.open', 'Open: {0}', serverUri);
-                statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
-                    opn(serverUri);
-                });
-                statusBar.show();
-            }
-
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
                     vscode.window.showErrorMessage(localize('tomcatExt.serverPortChangeError', `Changing the server port of a running server will cause errors, please change it back to ${ serverPort} ！`));
-                } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
-                           httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
+                } else if (
+                    httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
+                    httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)
+                ) {
                     const promptString: string = localize('tomcatExt.configChanged',
                                                           'server.xml of running server {0} has been changed. Would you like to restart it?',
                                                           serverName);
@@ -278,7 +266,6 @@ export class TomcatController {
             this.startDebugSession(serverInfo);
             await javaProcess;
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
@@ -286,15 +273,8 @@ export class TomcatController {
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
-        }
-    }
-
-    private disposeResources(...resources: vscode.Disposable[]): void {
-        if (resources) {
-            resources.forEach((item: vscode.Disposable) => item.dispose());
         }
     }
 }
