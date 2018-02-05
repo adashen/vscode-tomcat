@@ -13,6 +13,7 @@ import { localize } from '../localize';
 import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
+import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
@@ -55,6 +56,17 @@ export class TomcatController {
             throw new Error(DialogMessage.noServerConfig);
         }
         vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
+    }
+
+    public async browseWarPackage(warPackage: WarPackage): Promise<void> {
+        if (warPackage) {
+            const server: TomcatServer = this._tomcatModel.getTomcatServer(warPackage.serverName);
+            opn(await this.getServerUri(server, warPackage.label));
+            if (!server.isStarted()) {
+                server.outputChannel.appendLine('Start server to see real war package');
+                server.outputChannel.show();
+            }
+        }
     }
 
     public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {

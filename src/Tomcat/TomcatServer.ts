@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { ServerState } from "../Constants";
 import { Utility } from "../Utility";
 
-export class TomcatServer implements vscode.QuickPickItem {
+export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickItem {
     public needRestart: boolean = false;
     public newCreated: boolean = false;
     public label: string;
@@ -18,6 +18,7 @@ export class TomcatServer implements vscode.QuickPickItem {
     private _serverConfigFile: string;
 
     constructor(private _name: string, private _installPath: string, private _storagePath: string) {
+        super(_name);
         this.label = _name;
         this.outputChannel = vscode.window.createOutputChannel(`tomcat_${this._name}`);
         this._serverConfigFile = path.join(this._storagePath, this._name, 'conf', 'server.xml');

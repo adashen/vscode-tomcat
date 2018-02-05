@@ -60,6 +60,11 @@
         "category": "Tomcat"
       },
       {
+        "command": "tomcat.war.browse",
+        "title": "Open in Browser",
+        "category": "Tomcat"
+      },
+      {
         "command": "tomcat.server.stop",
         "title": "Stop Tomcat Server",
         "category": "Tomcat"
@@ -124,6 +129,10 @@
         {
           "command": "tomcat.tree.refresh",
           "when": "false == true"
+        },
+        {
+          "command": "tomcat.war.browse",
+          "when": "false == true"
         }
       ],
       "explorer/context": [
@@ -169,8 +178,17 @@
         },
         {
           "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@5"
+        },
+        {
+          "command": "tomcat.server.delete",
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@5"
+        },
+        {
+          "command": "tomcat.war.browse",
+          "when": "view == tomcatServerExplorer && viewItem == war"
         }
       ]
     },
