@@ -5,11 +5,11 @@ import * as fse from "fs-extra";
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import * as path from "path";
+import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
 import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
-import { localize } from '../localize';
 import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
@@ -33,7 +33,7 @@ export class TomcatController {
         }
 
         if (tomcatServer.isStarted()) {
-            const confirmation: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
+            const confirmation: MessageItem = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
             if (confirmation !== DialogMessage.yes) {
                 return;
             }
@@ -120,7 +120,6 @@ export class TomcatController {
         await fse.rename(oldStoragePath, server.getStoragePath());
         await this._tomcatModel.saveServerList();
         vscode.commands.executeCommand('tomcat.tree.refresh');
-        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     public async stopOrRestartServer(serverInfo: TomcatServer, restart: boolean = false): Promise<void> {
@@ -162,11 +161,10 @@ export class TomcatController {
         if (serverInfo.isStarted() && ((!serverInfo.isDebugging() && !debug) ||  serverInfo.isDebugging() === debug)) {
             return;
         }
-        let port: number | undefined;
-        let workspaceFolder: vscode.WorkspaceFolder | undefined;
+        let port: number;
+        let workspaceFolder: vscode.WorkspaceFolder;
 
         if (debug) {
-            port = await Utility.getFreePort();
             if (vscode.workspace.workspaceFolders) {
                 workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
                     const relativePath: string = path.relative(f.uri.fsPath, packagePath);
@@ -176,6 +174,7 @@ export class TomcatController {
             if (!workspaceFolder) {
                 throw new Error(DialogMessage.noPackage);
             }
+            port = await portfinder.getPortPromise();
         }
 
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
@@ -203,11 +202,6 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
-    }
-
-    private setStarted(serverInfo: TomcatServer, started: boolean): void {
-        serverInfo.setStarted(started);
-        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
@@ -295,17 +289,17 @@ export class TomcatController {
             });
 
             const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
-            this.setStarted(serverInfo, true);
+            serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
-            this.setStarted(serverInfo, false);
+            serverInfo.setStarted(false);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
                 await this.startTomcat(serverInfo, appName);
             }
         } catch (err) {
-            this.setStarted(serverInfo, false);
+            serverInfo.setStarted(false);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
         }

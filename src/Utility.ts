@@ -8,9 +8,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
-import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
-import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
     export class UserCancelError extends Error {
@@ -84,24 +82,6 @@ export namespace Utility {
             }
         }
         return path.join(defaultStoragePath, 'tomcat');
-    }
-
-    export async function getFreePort(): Promise<number> {
-        return await new Promise((resolve: (port: number) => void, reject: (e: Error) => void): void => {
-            const server: net.Server = net.createServer();
-            let port: number = 0;
-            server.on('listening', () => {
-                port = server.address().port;
-                server.close();
-            });
-            server.on('close', () => {
-                return resolve(port);
-            });
-            server.on('error', (err: Error) => {
-                return reject(err);
-            });
-            server.listen(0, '127.0.0.1');
-        });
     }
 
     export function getTempStoragePath(): string {

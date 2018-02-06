@@ -199,9 +199,9 @@ async function runOnTomcat(tomcatController: TomcatController, debug: boolean, u
         return;
     }
 
-    if (server && server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
+    if (server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
         server.newCreated = false;
-        const result: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.continueOnExistingServer, DialogMessage.yes, DialogMessage.no);
+        const result: MessageItem = await vscode.window.showWarningMessage(DialogMessage.continueOnExistingServer, DialogMessage.yes, DialogMessage.no);
         if (result !== DialogMessage.yes) {
             return;
         }

@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as portfinder from "portfinder";
 import * as Constants from "../src/Constants";
 import { TomcatServer } from "../src/Tomcat/TomcatServer";
 import { Utility } from "../src/Utility";
@@ -7,7 +8,7 @@ import { Utility } from "../src/Utility";
 suite('utility tests', () => {
   test('getFreePort', async () => {
     try {
-      const port: number = await Utility.getFreePort();
+      const port: number = await portfinder.getPortPromise();
       assert.notEqual(port, 0);
     } catch (error) {
       assert.fail('no eror', 'error');
