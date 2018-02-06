@@ -183,6 +183,11 @@
         },
         {
           "command": "tomcat.config.open",
+          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "group": "tomcat@5"
+        },
+        {
+          "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem == idleserver",
           "group": "tomcat@5"
         },

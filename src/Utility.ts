@@ -8,6 +8,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
+import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 
 export namespace Utility {
