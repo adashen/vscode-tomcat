@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server) ));
 
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);

@@ -199,6 +199,10 @@
         {
           "command": "tomcat.war.browse",
           "when": "view == tomcatServerExplorer && viewItem == war"
+        },
+        {
+          "command": "tomcat.server.create",
+          "when": "view == tomcatServerExplorer && !viewItem"
         }
       ]
     },
