@@ -271,12 +271,7 @@ export class TomcatController {
                            httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
                     const item: vscode.MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
                     if (item === DialogMessage.yes) {
-                        try {
-                            await this.stopOrRestartServer(serverInfo, true);
-                        } catch (err) {
-                            console.error(err.toString());
-                            vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
-                        }
+                        await this.stopOrRestartServer(serverInfo, true);
                     }
                 }
             });
