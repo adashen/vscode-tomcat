@@ -42,16 +42,33 @@ export namespace Utility {
         });
     }
 
-    export function getWorkspace(): string {
+    export function getServerStoragePath(defaultStoragePath: string, serverName: string): string {
+        return path.join(getWorkspace(defaultStoragePath), serverName);
+    }
+
+    export async function getServerName(installPath: string, defaultStoragePath: string): Promise<string> {
+        const workspace: string = getWorkspace(defaultStoragePath);
+        await fse.ensureDir(workspace);
+        const fileNames: string[] = await fse.readdir(workspace);
+        let serverName: string = path.basename(installPath);
+        let index: number = 1;
+        while (fileNames.indexOf(serverName) >= 0) {
+            serverName = path.basename(installPath).concat(`-${index}`);
+            index += 1;
+        }
+        return serverName;
+    }
+
+    function getWorkspace(defaultStoragePath: string): string {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model
             const workspace: string = config.get<string>('workspace');
-            if (!workspace.startsWith('<<')) {
+            if (workspace && !workspace.startsWith('<<')) {
                 return workspace;
             }
         }
-        return undefined;
+        return path.join(defaultStoragePath, 'tomcat');
     }
 
     export async function getFreePort(): Promise<number> {

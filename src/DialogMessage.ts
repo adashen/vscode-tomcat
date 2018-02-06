@@ -20,4 +20,16 @@ export namespace DialogMessage {
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const continueOnExistingServer: string = localize('tomcatExt.continueOnExistingServer', 'This Tomcat Server already exists. Do you want to continue the operation on this server?');
+
+    export function getServerPortChangeErrorMessage(serverName: string, serverPort: string): string {
+        return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause errors, please change it back to {1}!', serverName, serverPort);
+    }
+
+    export function getConfigChangedMessage(serverName: string): string {
+        return localize('tomcatExt.configChanged', 'server.xml of running server {0} has been changed. Would you like to restart it?', serverName);
+    }
+
+    export function getStopFailureMessage(serverName: string): string {
+        return localize('tomcatExt.stopFailure', 'Failed to stop Tomcat Server {0}', serverName);
+    }
 }

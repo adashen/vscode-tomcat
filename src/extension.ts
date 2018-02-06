@@ -135,15 +135,10 @@ async function createServer(tomcatController: TomcatController): Promise<string>
         canSelectFolders: true,
         openLabel: DialogMessage.selectDirectory
     });
-    if (pathPick && pathPick.length > 0 && pathPick[0].fsPath) {
-        const serverName: string = path.basename(pathPick[0].fsPath);
-        if (tomcatController.getTomcatServer(serverName)) {
-            vscode.window.showInformationMessage(DialogMessage.serverExist);
-        } else {
-            await tomcatController.createTomcatServer(serverName, pathPick[0].fsPath);
-        }
-        return serverName;
+    if (!pathPick || pathPick.length <= 0 || !pathPick[0].fsPath) {
+        return;
     }
+    return await tomcatController.createTomcatServer(pathPick[0].fsPath);
 }
 
 async function debugWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {

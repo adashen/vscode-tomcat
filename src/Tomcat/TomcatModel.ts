@@ -14,8 +14,22 @@ export class TomcatModel {
         this.initServerListSync();
     }
 
+    public getServerSet(): TomcatServer[] {
+        return this._serverList;
+    }
+
     public getTomcatServer(serverName: string): TomcatServer | undefined {
         return this._serverList.find((item: TomcatServer) => item.getName() === serverName);
+    }
+
+    public async saveServerList(): Promise<void> {
+        try {
+            await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+            }));
+        } catch (err) {
+            console.error(err.toString());
+        }
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
@@ -23,18 +37,13 @@ export class TomcatModel {
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (oldServer.length > 0) {
-                const catalinaBasePath: string = path.join(tomcatServer.getStoragePath(), oldServer[0].getName());
-                fse.remove(catalinaBasePath);
+                fse.remove(tomcatServer.getStoragePath());
                 this.saveServerList();
                 return true;
             }
         }
 
         return false;
-    }
-
-    public getServerSet(): TomcatServer[] {
-        return this._serverList;
     }
 
     public addServer(tomcatServer: TomcatServer): void {
@@ -70,16 +79,6 @@ export class TomcatModel {
             }
         } catch (err) {
             console.error(err);
-        }
-    }
-
-    private async saveServerList(): Promise<void> {
-        try {
-            await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
-            }));
-        } catch (err) {
-            console.error(err.toString());
         }
     }
 }
