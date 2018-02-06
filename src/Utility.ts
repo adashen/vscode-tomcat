@@ -42,6 +42,21 @@ export namespace Utility {
         });
     }
 
+    export function dismissRestart(): void {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            config.update(Constants.RESTART_CONFIG_ID, false, true);
+        }
+    }
+
+    export function getRestartConfig(): boolean {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            return config.get<boolean>(Constants.RESTART_CONFIG_ID);
+        }
+        return false;
+    }
+
     export function getWorkspace(): string {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
@@ -107,30 +122,25 @@ export namespace Utility {
         return port;
     }/* tslint:enable:no-any */
 
-    export async function setPort(serverXml: string, kind: Constants.PortKind, value: string): Promise<boolean> {
+    export async function setPort(serverXml: string, kind: Constants.PortKind, value: string): Promise<void> {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(DialogMessage.noServer);
         }
         const xml: string = await fse.readFile(serverXml, 'utf8');
-        try {
-            /* tslint:disable:no-any */
-            const jsonObj: any = await parseXml(xml);
-            if (kind === Constants.PortKind.Server) {
-                jsonObj.Server.$.port = value;
-            } else if (kind === Constants.PortKind.Http) {
-                jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                    (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port =  value;
-            } else if (kind === Constants.PortKind.Https) {
-                jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                    (item.$.SSLEnabled.toLowerCase() === 'true')).$.port = value;
-            }
-            const builder: xml2js.Builder = new xml2js.Builder();
-            const newXml: string = builder.buildObject(jsonObj);
-            await fse.writeFile(serverXml, newXml);
-        } catch (err) {
-            return false;
+        /* tslint:disable:no-any */
+        const jsonObj: any = await parseXml(xml);
+        if (kind === Constants.PortKind.Server) {
+            jsonObj.Server.$.port = value;
+        } else if (kind === Constants.PortKind.Http) {
+            jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port = value;
+        } else if (kind === Constants.PortKind.Https) {
+            jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
+                (item.$.SSLEnabled.toLowerCase() === 'true')).$.port = value;
         }
-        return true;
+        const builder: xml2js.Builder = new xml2js.Builder();
+        const newXml: string = builder.buildObject(jsonObj);
+        await fse.writeFile(serverXml, newXml);
     }/* tslint:enable:no-any */
 
     /* tslint:disable:no-any */

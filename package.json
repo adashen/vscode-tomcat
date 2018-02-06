@@ -182,6 +182,11 @@
             "type": "string",
             "default": "<<fill in tomcat servers workspace path>>",
             "description": "Tomcat Servers workspace."
+          },
+          "tomcat.restart_when_http(s)_port_change": {
+            "type": "boolean",
+            "default": true,
+            "description": "Restart Tomcat Server or not when http(s) port changes"
           }
         }
       }

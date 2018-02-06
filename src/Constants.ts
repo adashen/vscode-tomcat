@@ -18,6 +18,11 @@ export const PORT: string = 'port';
 
 export const INVALID_SERVER_DIRECTORY: string = 'Please make sure you select a valid Tomcat Directory.';
 
+// tslint:disable-next-line:no-http-string
+export const UNABLE_SHUTDOWN_URL: string = 'http://tomcat.10.x6.nabble.com/Unable-to-shutdown-Tomcat-td5012627.html';
+
+export const RESTART_CONFIG_ID: string = 'restart_when_http(s)_port_change';
+
 export enum ServerState {
     RunningServer = 'runningserver',
     IdleServer = 'idleserver'

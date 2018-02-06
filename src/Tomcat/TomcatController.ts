@@ -255,15 +255,20 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    const result: MessageItem = await vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.revert);
+                    const result: MessageItem = await vscode.window.showErrorMessage(
+                        DialogMessage.whetherChangeServerPortBack(serverName, serverPort), DialogMessage.revert, DialogMessage.no, DialogMessage.more
+                    );
                     if (result === DialogMessage.revert) {
                         await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
+                    } else if (result === DialogMessage.more) {
+                        opn(Constants.UNABLE_SHUTDOWN_URL);
                     }
-                } else if (
-                    httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
-                    httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)
+                } else if (Utility.getRestartConfig() && (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
+                    httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https))
                 ) {
-                    const item: MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
+                    const item: MessageItem = await vscode.window.showInformationMessage(
+                        DialogMessage.whetherRestartServer(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
+                    );
                     if (item === DialogMessage.yes) {
                         try {
                             await this.stopOrRestartServer(serverInfo, true);
@@ -271,6 +276,8 @@ export class TomcatController {
                             console.error(err.toString());
                             vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
                         }
+                    } else if (item === DialogMessage.never) {
+                        Utility.dismissRestart();
                     }
                 }
             });
