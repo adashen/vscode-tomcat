@@ -23,11 +23,11 @@ export namespace DialogMessage {
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const continueOnExistingServer: string = localize('tomcatExt.continueOnExistingServer', 'This Tomcat Server already exists. Do you want to continue the operation on this server?');
+    export const startServerToBrowseWarPackage: string = localize('tomcatExt.startServerToBrowseWarPackage', 'Start Tomcat Server to browse the war package');
 
     export function whetherChangeServerPortBack(serverName: string, serverPort: string): string {
         return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause it unable to shutdown, Would you like to change it back to {1}?', serverName, serverPort);
     }
-
     export function whetherRestartServer(serverName: string): string {
         return localize('tomcatExt.configChanged', 'server.xml of running server {0} has been changed. Would you like to restart it?', serverName);
     }

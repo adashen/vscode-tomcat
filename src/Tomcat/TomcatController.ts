@@ -13,6 +13,7 @@ import { localize } from '../localize';
 import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
+import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
@@ -55,6 +56,19 @@ export class TomcatController {
             throw new Error(DialogMessage.noServerConfig);
         }
         vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
+    }
+
+    public async browseWarPackage(warPackage: WarPackage): Promise<void> {
+        if (warPackage) {
+            const server: TomcatServer = this._tomcatModel.getTomcatServer(warPackage.serverName);
+            opn(await this.getServerUri(server, warPackage.label));
+            if (!server.isStarted()) {
+                const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServerToBrowseWarPackage, DialogMessage.yes, DialogMessage.no);
+                if (result === DialogMessage.yes) {
+                    this.startServer(server);
+                }
+            }
+        }
     }
 
     public async createTomcatServer(tomcatInstallPath: string): Promise<string> {
@@ -247,28 +261,14 @@ export class TomcatController {
     }
 
     private async startTomcat(serverInfo: TomcatServer, appName: string): Promise<void> {
-        let statusBar: vscode.StatusBarItem;
-        let statusBarCommand: vscode.Disposable;
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
-        const serverUri: string = await this.getServerUri(serverInfo, appName);
         const serverConfig: string = serverInfo.getServerConfigPath();
         const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
         const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
-            if (serverUri) {
-                statusBar = vscode.window.createStatusBarItem();
-                statusBar.command = `open.${serverName}`;
-                statusBar.text = `$(browser) Open ${appName}`;
-                statusBar.tooltip = localize('tomcatExt.open', 'Open: {0}', serverUri);
-                statusBarCommand = vscode.commands.registerCommand(statusBar.command, async () => {
-                    opn(serverUri);
-                });
-                statusBar.show();
-            }
-
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
@@ -299,7 +299,6 @@ export class TomcatController {
             this.startDebugSession(serverInfo);
             await javaProcess;
             this.setStarted(serverInfo, false);
-            Utility.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
@@ -307,7 +306,6 @@ export class TomcatController {
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
-            Utility.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
         }
