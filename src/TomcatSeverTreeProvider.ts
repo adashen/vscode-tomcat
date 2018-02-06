@@ -19,19 +19,6 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
     }
 
     public async getTreeItem(element: TreeItem): Promise<TreeItem> {
-        /* qisun: checking http port is not a valid way to detect the server running or not
-        // update the logic when finding a proper way to check the server real state
-        // currently behavior is ignoring the server state outside vscode
-        // and always stop servers when exiting vscode
-        try {
-            const port: string = await Utility.getHttpPort(treeItem.serverConfig);
-            // tslint:disable-next-line:no-any no-http-string
-            const response: any = await axios.get(`http://localhost:${port}`);
-            element.setStarted(response.status === 200);
-        } catch (err) {
-            element.setStarted(false);
-        }
-        */
         return element;
     }
 
@@ -54,7 +41,7 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
                 const wars: string[] = await fse.readdir(webapps);
                 return wars.map((w: string) => {
                     if (w.toUpperCase() !== 'ROOT') {
-                        return new WarPackage(w, server.getName(), this._context.asAbsolutePath(path.join('resources', 'war.svg')));
+                        return new WarPackage(w, server.getName(), this._context.asAbsolutePath(path.join('resources', 'war.jpg')));
                     }
                 });
             }

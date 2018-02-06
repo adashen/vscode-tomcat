@@ -63,8 +63,10 @@ export class TomcatController {
             const server: TomcatServer = this._tomcatModel.getTomcatServer(warPackage.serverName);
             opn(await this.getServerUri(server, warPackage.label));
             if (!server.isStarted()) {
-                server.outputChannel.appendLine('Start server to see real war package');
-                server.outputChannel.show();
+                const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServerToBrowseWarPackage, DialogMessage.yes, DialogMessage.no);
+                if (result === DialogMessage.yes) {
+                    this.startServer(server);
+                }
             }
         }
     }
