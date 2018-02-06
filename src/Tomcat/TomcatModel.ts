@@ -2,7 +2,6 @@
 
 import * as fse from "fs-extra";
 import * as path from "path";
-import { Utility } from "../Utility";
 import { TomcatServer } from "./TomcatServer";
 
 export class TomcatModel {

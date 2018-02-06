@@ -10,7 +10,6 @@ import * as vscode from "vscode";
 import { MessageItem } from "vscode";
 import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
-import { localize } from '../localize';
 import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
