@@ -31,6 +31,7 @@
     "onCommand:tomcat.config.open",
     "onCommand:tomcat.server.start",
     "onCommand:tomcat.server.restart",
+    "onCommand:tomcat.server.rename",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -90,6 +91,11 @@
         "category": "Tomcat"
       },
       {
+        "command": "tomcat.server.rename",
+        "title": "Rename Tomcat Server",
+        "category": "Tomcat"
+      },
+      {
         "command": "tomcat.server.browse",
         "title": "Open in Browser",
         "category": "Tomcat"
@@ -123,6 +129,10 @@
         },
         {
           "command": "tomcat.tree.refresh",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.rename",
           "when": "false == true"
         }
       ],
@@ -158,19 +168,23 @@
           "group": "tomcat@3"
         },
         {
-          "command": "tomcat.config.open",
+          "command": "tomcat.server.rename",
           "when": "view == tomcatServerExplorer && viewItem == idleserver",
           "group": "tomcat@4"
         },
         {
           "command": "tomcat.config.open",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
-          "group": "tomcat@4"
+          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "group": "tomcat@5"
         },
         {
           "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer",
-          "group": "tomcat@5"
+          "when": "view == tomcatServerExplorer && viewItem",
+          "group": "tomcat@6"
+        },
+        {
+          "command": "tomcat.server.create",
+          "when": "view == tomcatServerExplorer && !viewItem"
         }
       ]
     },
