@@ -14,8 +14,22 @@ export class TomcatModel {
         this.initServerListSync();
     }
 
+    public getServerSet(): TomcatServer[] {
+        return this._serverList;
+    }
+
     public getTomcatServer(serverName: string): TomcatServer | undefined {
         return this._serverList.find((item: TomcatServer) => item.getName() === serverName);
+    }
+
+    public async saveServerList(): Promise<void> {
+        try {
+            await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+            }));
+        } catch (err) {
+            console.error(err.toString());
+        }
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
@@ -32,10 +46,6 @@ export class TomcatModel {
         return false;
     }
 
-    public getServerSet(): TomcatServer[] {
-        return this._serverList;
-    }
-
     public addServer(tomcatServer: TomcatServer): void {
         const index: number = this._serverList.findIndex((item: TomcatServer) => item.getName() === tomcatServer.getName());
         if (index > -1) {
@@ -43,16 +53,6 @@ export class TomcatModel {
         }
         this._serverList.push(tomcatServer);
         this.saveServerList();
-    }
-
-    public async renameServer(tomcatServer: TomcatServer, newName: string): Promise<void> {
-        tomcatServer.setName(newName);
-        const oldStoragePath: string = tomcatServer.getStoragePath();
-        // tslint:disable-next-line:no-unexternalized-strings
-        const newStoragePath: string = path.join(oldStoragePath.substring(0, oldStoragePath.lastIndexOf("\\")), newName);
-        tomcatServer.updateStoragePath(newStoragePath);
-        await fse.rename(oldStoragePath, tomcatServer.getStoragePath());
-        await this.saveServerList();
     }
 
     public saveServerListSync(): void {
@@ -79,16 +79,6 @@ export class TomcatModel {
             }
         } catch (err) {
             console.error(err);
-        }
-    }
-
-    private async saveServerList(): Promise<void> {
-        try {
-            await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
-            }));
-        } catch (err) {
-            console.error(err.toString());
         }
     }
 }

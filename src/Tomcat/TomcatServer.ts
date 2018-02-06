@@ -55,8 +55,9 @@ export class TomcatServer implements vscode.QuickPickItem {
         return this._name;
     }
 
-    public setName(newName: string): void {
+    public rename(newName: string): void {
         this._name = newName;
+        this.label = this._name;
     }
 
     public getInstallPath(): string {

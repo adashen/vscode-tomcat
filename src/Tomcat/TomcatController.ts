@@ -98,7 +98,14 @@ export class TomcatController {
         if (!newName) {
             return;
         }
-        await this._tomcatModel.renameServer(server, newName);
+        const oldStoragePath: string = server.getStoragePath();
+        server.rename(newName);
+        // tslint:disable-next-line:no-unexternalized-strings
+        const newStoragePath: string = path.join(oldStoragePath.substring(0, oldStoragePath.lastIndexOf("\\")), newName);
+        server.updateStoragePath(newStoragePath);
+        await fse.rename(oldStoragePath, server.getStoragePath());
+        await this._tomcatModel.saveServerList();
+        vscode.commands.executeCommand('tomcat.tree.refresh');
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
