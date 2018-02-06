@@ -41,6 +41,7 @@ export class TomcatServer implements vscode.QuickPickItem {
 
     public setStarted(started: boolean): void {
         this._state = started ? ServerState.RunningServer : ServerState.IdleServer;
+        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     public isStarted(): boolean {

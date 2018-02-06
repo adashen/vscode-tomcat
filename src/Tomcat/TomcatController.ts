@@ -32,7 +32,7 @@ export class TomcatController {
         }
 
         if (tomcatServer.isStarted()) {
-            const confirmation: MessageItem | undefined = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
+            const confirmation: MessageItem = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
             if (confirmation !== DialogMessage.yes) {
                 return;
             }
@@ -106,7 +106,6 @@ export class TomcatController {
         await fse.rename(oldStoragePath, server.getStoragePath());
         await this._tomcatModel.saveServerList();
         vscode.commands.executeCommand('tomcat.tree.refresh');
-        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     public async stopOrRestartServer(serverInfo: TomcatServer, restart: boolean = false): Promise<void> {
@@ -148,11 +147,10 @@ export class TomcatController {
         if (serverInfo.isStarted() && ((!serverInfo.isDebugging() && !debug) ||  serverInfo.isDebugging() === debug)) {
             return;
         }
-        let port: number | undefined;
-        let workspaceFolder: vscode.WorkspaceFolder | undefined;
+        let port: number;
+        let workspaceFolder: vscode.WorkspaceFolder;
 
         if (debug) {
-            port = await Utility.getFreePort();
             if (vscode.workspace.workspaceFolders) {
                 workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
                     const relativePath: string = path.relative(f.uri.fsPath, packagePath);
@@ -162,6 +160,7 @@ export class TomcatController {
             if (!workspaceFolder) {
                 throw new Error(DialogMessage.noPackage);
             }
+            port = await Utility.getFreePort();
         }
 
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
@@ -189,11 +188,6 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         return appName;
-    }
-
-    private setStarted(serverInfo: TomcatServer, started: boolean): void {
-        serverInfo.setStarted(started);
-        vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
@@ -288,10 +282,10 @@ export class TomcatController {
             });
 
             const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(serverInfo, true));
-            this.setStarted(serverInfo, true);
+            serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
-            this.setStarted(serverInfo, false);
+            serverInfo.setStarted(false);
             Utility.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
@@ -299,7 +293,7 @@ export class TomcatController {
                 await this.startTomcat(serverInfo, appName);
             }
         } catch (err) {
-            this.setStarted(serverInfo, false);
+            serverInfo.setStarted(false);
             Utility.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
