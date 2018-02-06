@@ -5,13 +5,10 @@ import * as fse from "fs-extra";
 import * as net from "net";
 import * as os from "os";
 import * as path from "path";
-import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
-import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
-import { TomcatServer } from "./Tomcat/TomcatServer";
 
 export namespace Utility {
     export class UserCancelError extends Error {
@@ -70,17 +67,6 @@ export namespace Utility {
             }
         }
         return path.join(defaultStoragePath, 'tomcat');
-    }
-
-    export async function getFreePort(): Promise<number> {
-        return new Promise((resolve: (port: number) => void, reject: (e: Error) => void): void => {
-            portfinder.getPort((err: Error, port: number) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(port);
-            });
-        });
     }
 
     export function getTempStoragePath(): string {

@@ -5,6 +5,7 @@ import * as fse from "fs-extra";
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import * as path from "path";
+import * as portfinder from "portfinder";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
 import * as Constants from "../Constants";
@@ -174,7 +175,7 @@ export class TomcatController {
             if (!workspaceFolder) {
                 throw new Error(DialogMessage.noPackage);
             }
-            port = await Utility.getFreePort();
+            port = await portfinder.getPortPromise();
         }
 
         serverInfo.setDebugInfo(debug, port, workspaceFolder);
