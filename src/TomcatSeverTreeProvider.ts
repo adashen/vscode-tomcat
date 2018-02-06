@@ -49,12 +49,16 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
             });
         } else if (element.contextValue === ServerState.IdleServer || element.contextValue === ServerState.RunningServer) {
             const server: TomcatServer = <TomcatServer>element;
-            const wars: string[] = await fse.readdir(path.join(server.getStoragePath(), server.getName(), 'webapps'));
-            return wars.map((w: string) => {
-                if (w.toUpperCase() !== 'ROOT') {
-                    return new WarPackage(w, server.getName(), this._context.asAbsolutePath(path.join('resources', 'war.svg')));
-                }
-            });
+            const webapps: string = path.join(server.getStoragePath(), server.getName(), 'webapps');
+            if (await fse.pathExists(webapps)) {
+                const wars: string[] = await fse.readdir(webapps);
+                return wars.map((w: string) => {
+                    if (w.toUpperCase() !== 'ROOT') {
+                        return new WarPackage(w, server.getName(), this._context.asAbsolutePath(path.join('resources', 'war.svg')));
+                    }
+                });
+            }
+            return [];
         }
     }
 
