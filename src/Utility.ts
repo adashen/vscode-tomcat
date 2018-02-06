@@ -72,12 +72,6 @@ export namespace Utility {
         return path.join(defaultStoragePath, 'tomcat');
     }
 
-    export function disposeResources(...resources: vscode.Disposable[]): void {
-        if (resources) {
-            resources.forEach((item: vscode.Disposable) => { if (item) { item.dispose(); }});
-        }
-    }
-
     export async function getFreePort(): Promise<number> {
         return new Promise((resolve: (port: number) => void, reject: (e: Error) => void): void => {
             portfinder.getPort((err: Error, port: number) => {
