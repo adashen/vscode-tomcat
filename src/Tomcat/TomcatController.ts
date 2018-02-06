@@ -57,7 +57,8 @@ export class TomcatController {
         vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
     }
 
-    public async createTomcatServer(serverName: string, tomcatInstallPath: string): Promise<void> {
+    public async createTomcatServer(tomcatInstallPath: string): Promise<string> {
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
         const serverConfigFile: string = path.join(tomcatInstallPath, 'conf', 'server.xml');
         const serverWebFile: string = path.join(tomcatInstallPath, 'conf', 'web.xml');
         const serverBootstrapJarFile: string = path.join(tomcatInstallPath, 'bin', 'bootstrap.jar');
@@ -67,13 +68,7 @@ export class TomcatController {
             !await fse.pathExists(serverBootstrapJarFile) || !await fse.pathExists(serverJuliJarFile)) {
             throw new Error(Constants.INVALID_SERVER_DIRECTORY);
         }
-
-        let storagePath: string = Utility.getWorkspace();
-        if (!storagePath) {
-            storagePath = path.join(this._tomcatModel.defaultStoragePath, '/tomcat');
-        }
-
-        const catalinaBasePath: string = path.join(storagePath, serverName);
+        const catalinaBasePath: string = Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
         await Promise.all([
             fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
@@ -84,9 +79,33 @@ export class TomcatController {
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
         ]);
-
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, storagePath);
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
         this._tomcatModel.addServer(tomcatServer);
+        vscode.commands.executeCommand('tomcat.tree.refresh');
+        return serverName;
+    }
+
+    public async renameServer(server: TomcatServer): Promise<void> {
+        const newName: string = await vscode.window.showInputBox({
+            prompt: 'input a new server name',
+            validateInput: (name: string): string => {
+                if (!name.match(/^[\w.-]+$/)) {
+                    return 'please input a valid server name';
+                }
+                return null;
+            }
+        });
+        if (!newName) {
+            return;
+        }
+        const oldStoragePath: string = server.getStoragePath();
+        server.rename(newName);
+        // tslint:disable-next-line:no-unexternalized-strings
+        const newStoragePath: string = path.join(oldStoragePath.substring(0, oldStoragePath.lastIndexOf("\\")), newName);
+        server.updateStoragePath(newStoragePath);
+        await fse.rename(oldStoragePath, server.getStoragePath());
+        await this._tomcatModel.saveServerList();
+        vscode.commands.executeCommand('tomcat.tree.refresh');
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
@@ -164,8 +183,7 @@ export class TomcatController {
 
     private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<string> {
         const appName: string =  path.basename(packagePath, path.extname(packagePath));
-        const serverName: string = serverInfo.getName();
-        const appPath: string = path.join(serverInfo.getStoragePath(), serverName, 'webapps', appName);
+        const appPath: string = path.join(serverInfo.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
@@ -179,8 +197,7 @@ export class TomcatController {
     }
 
     private getJavaArgs(serverInfo: TomcatServer, start: boolean): string[] {
-        const serverName: string = serverInfo.getName();
-        const catalinaBase: string = path.join(serverInfo.getStoragePath(), serverName);
+        const catalinaBase: string = serverInfo.getStoragePath();
         const bootStrap: string = path.join(serverInfo.getInstallPath(), 'bin', 'bootstrap.jar');
         const tomcat: string = path.join(serverInfo.getInstallPath(), 'bin', 'tomcat-juli.jar');
         const sep: string = path.delimiter;
@@ -270,12 +287,7 @@ export class TomcatController {
                         DialogMessage.whetherRestartServer(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
                     );
                     if (item === DialogMessage.yes) {
-                        try {
-                            await this.stopOrRestartServer(serverInfo, true);
-                        } catch (err) {
-                            console.error(err.toString());
-                            vscode.window.showErrorMessage(DialogMessage.getStopFailureMessage(serverName));
-                        }
+                        await this.stopOrRestartServer(serverInfo, true);
                     } else if (item === DialogMessage.never) {
                         Utility.dismissRestart();
                     }
@@ -287,7 +299,7 @@ export class TomcatController {
             this.startDebugSession(serverInfo);
             await javaProcess;
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            Utility.disposeResources(statusBarCommand, statusBar);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
@@ -295,15 +307,9 @@ export class TomcatController {
             }
         } catch (err) {
             this.setStarted(serverInfo, false);
-            this.disposeResources(statusBarCommand, statusBar);
+            Utility.disposeResources(statusBarCommand, statusBar);
             if (watcher) { watcher.close(); }
             throw new Error(err.toString());
-        }
-    }
-
-    private disposeResources(...resources: vscode.Disposable[]): void {
-        if (resources) {
-            resources.forEach((item: vscode.Disposable) => item.dispose());
         }
     }
 }

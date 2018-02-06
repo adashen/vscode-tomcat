@@ -26,7 +26,8 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(tomcatController);
     context.subscriptions.push(tomcatServerTree);
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (element: TomcatServer) => tomcatServerTree.refresh(element)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server) ));
 
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
     initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
@@ -133,15 +134,10 @@ async function createServer(tomcatController: TomcatController): Promise<string>
         canSelectFolders: true,
         openLabel: DialogMessage.selectDirectory
     });
-    if (pathPick && pathPick.length > 0 && pathPick[0].fsPath) {
-        const serverName: string = path.basename(pathPick[0].fsPath);
-        if (tomcatController.getTomcatServer(serverName)) {
-            vscode.window.showInformationMessage(DialogMessage.serverExist);
-        } else {
-            await tomcatController.createTomcatServer(serverName, pathPick[0].fsPath);
-        }
-        return serverName;
+    if (!pathPick || pathPick.length <= 0 || !pathPick[0].fsPath) {
+        return;
     }
+    return await tomcatController.createTomcatServer(pathPick[0].fsPath);
 }
 
 async function debugWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {
