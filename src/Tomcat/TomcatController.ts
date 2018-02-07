@@ -267,11 +267,11 @@ export class TomcatController {
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
                     const result: MessageItem = await vscode.window.showErrorMessage(
-                        DialogMessage.whetherChangeServerPortBack(serverName, serverPort), DialogMessage.revert, DialogMessage.no, DialogMessage.more
+                        DialogMessage.whetherChangeServerPortBack(serverName, serverPort), DialogMessage.yes, DialogMessage.no, DialogMessage.moreInfo
                     );
-                    if (result === DialogMessage.revert) {
+                    if (result === DialogMessage.yes) {
                         await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
-                    } else if (result === DialogMessage.more) {
+                    } else if (result === DialogMessage.moreInfo) {
                         opn(Constants.UNABLE_SHUTDOWN_URL);
                     }
                 } else if (Utility.getRestartConfig() && (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
@@ -283,7 +283,7 @@ export class TomcatController {
                     if (item === DialogMessage.yes) {
                         await this.stopOrRestartServer(serverInfo, true);
                     } else if (item === DialogMessage.never) {
-                        Utility.dismissRestart();
+                        Utility.disableAutoRestart();
                     }
                 }
             });

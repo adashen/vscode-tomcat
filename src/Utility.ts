@@ -41,7 +41,7 @@ export namespace Utility {
         });
     }
 
-    export function dismissRestart(): void {
+    export function disableAutoRestart(): void {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
             config.update(Constants.RESTART_CONFIG_ID, false, true);
@@ -129,12 +129,16 @@ export namespace Utility {
         const jsonObj: any = await parseXml(xml);
         if (kind === Constants.PortKind.Server) {
             jsonObj.Server.$.port = value;
-        } else if (kind === Constants.PortKind.Http) {
-            jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP))).$.port = value;
-        } else if (kind === Constants.PortKind.Https) {
-            jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA).Connector.find((item: any) =>
-                (item.$.SSLEnabled.toLowerCase() === 'true')).$.port = value;
+        } else {
+            const catalinaService: any = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA);
+
+            if (kind === Constants.PortKind.Http) {
+                const httpConnector: any = catalinaService.Connector.find((item: any) => (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP)));
+                httpConnector.$.port = value;
+            } else if (kind === Constants.PortKind.Https) {
+                const httpsConnector: any = catalinaService.Connector.find((item: any) => (item.$.SSLEnabled.toLowerCase() === 'true'));
+                httpsConnector.$.port = value;
+            }
         }
         const builder: xml2js.Builder = new xml2js.Builder();
         const newXml: string = builder.buildObject(jsonObj);
