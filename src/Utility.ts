@@ -8,6 +8,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
+import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 
 export namespace Utility {
@@ -38,6 +39,21 @@ export namespace Utility {
                 resolve();
             });
         });
+    }
+
+    export function disableAutoRestart(): void {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            config.update(Constants.RESTART_CONFIG_ID, false, true);
+        }
+    }
+
+    export function getRestartConfig(): boolean {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            return config.get<boolean>(Constants.RESTART_CONFIG_ID);
+        }
+        return false;
     }
 
     export function getServerStoragePath(defaultStoragePath: string, serverName: string): string {
@@ -82,7 +98,7 @@ export namespace Utility {
 
     export async function getPort(serverXml: string, kind: Constants.PortKind): Promise<string> {
         if (!await fse.pathExists(serverXml)) {
-            throw new Error(localize('tomcatExt.noserver', 'No tomcat server.'));
+            throw new Error(DialogMessage.noServer);
         }
         const xml: string = await fse.readFile(serverXml, 'utf8');
         let port: string;
@@ -102,6 +118,31 @@ export namespace Utility {
             port = undefined;
         }
         return port;
+    }/* tslint:enable:no-any */
+
+    export async function setPort(serverXml: string, kind: Constants.PortKind, value: string): Promise<void> {
+        if (!await fse.pathExists(serverXml)) {
+            throw new Error(DialogMessage.noServer);
+        }
+        const xml: string = await fse.readFile(serverXml, 'utf8');
+        /* tslint:disable:no-any */
+        const jsonObj: any = await parseXml(xml);
+        if (kind === Constants.PortKind.Server) {
+            jsonObj.Server.$.port = value;
+        } else {
+            const catalinaService: any = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA);
+
+            if (kind === Constants.PortKind.Http) {
+                const httpConnector: any = catalinaService.Connector.find((item: any) => (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP)));
+                httpConnector.$.port = value;
+            } else if (kind === Constants.PortKind.Https) {
+                const httpsConnector: any = catalinaService.Connector.find((item: any) => (item.$.SSLEnabled.toLowerCase() === 'true'));
+                httpsConnector.$.port = value;
+            }
+        }
+        const builder: xml2js.Builder = new xml2js.Builder();
+        const newXml: string = builder.buildObject(jsonObj);
+        await fse.writeFile(serverXml, newXml);
     }/* tslint:enable:no-any */
 
     /* tslint:disable:no-any */

@@ -266,12 +266,24 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    vscode.window.showErrorMessage(DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort));
-                } else if (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
-                           httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https)) {
-                    const item: vscode.MessageItem = await vscode.window.showInformationMessage(DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no);
+                    const result: MessageItem = await vscode.window.showErrorMessage(
+                        DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.yes, DialogMessage.no, DialogMessage.moreInfo
+                    );
+                    if (result === DialogMessage.yes) {
+                        await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
+                    } else if (result === DialogMessage.moreInfo) {
+                        opn(Constants.UNABLE_SHUTDOWN_URL);
+                    }
+                } else if (Utility.getRestartConfig() && (httpPort !== await Utility.getPort(serverConfig, Constants.PortKind.Http) ||
+                    httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https))
+                ) {
+                    const item: MessageItem = await vscode.window.showInformationMessage(
+                        DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
+                    );
                     if (item === DialogMessage.yes) {
                         await this.stopOrRestartServer(serverInfo, true);
+                    } else if (item === DialogMessage.never) {
+                        Utility.disableAutoRestart();
                     }
                 }
             });
