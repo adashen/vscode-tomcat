@@ -267,7 +267,7 @@ export class TomcatController {
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
                     const result: MessageItem = await vscode.window.showErrorMessage(
-                        DialogMessage.whetherChangeServerPortBack(serverName, serverPort), DialogMessage.yes, DialogMessage.no, DialogMessage.moreInfo
+                        DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.yes, DialogMessage.no, DialogMessage.moreInfo
                     );
                     if (result === DialogMessage.yes) {
                         await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
@@ -278,7 +278,7 @@ export class TomcatController {
                     httpsPort !== await Utility.getPort(serverConfig, Constants.PortKind.Https))
                 ) {
                     const item: MessageItem = await vscode.window.showInformationMessage(
-                        DialogMessage.whetherRestartServer(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
+                        DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
                     );
                     if (item === DialogMessage.yes) {
                         await this.stopOrRestartServer(serverInfo, true);
