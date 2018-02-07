@@ -1,6 +1,27 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+## 0.5.0
+### Added
+* Validate Tomcat install directory when user creating Tomcat Server
+* Add "Restart Tomcat Server" command
+* Add command palette entry for users to run "Debug on Tomcat Server"
+* Support users to config the Tomcat Servers workspace in settings
+* Add refresh button in Tomcat Server Explorer
+* Support Tomcat Server renaming from Tomcat Server Explorer
+* Show war packages deployed to Tomcat Server in sub-tree in Tomcat Server Explorer
+* Add context command to browse war package
+* Support right-click to Create Tomcat Server in Tomcat Server Explorer
+
+### Changed
+* Support creating multiple Tomcat Servers from same install path
+* Construct the Tomcat Server name automatically base on install path
+* Add option for users to choose never restarting Tomcat Server even if the http(s) port changed
+
+### Fixed
+* Just deploy a war package without restarting a Tomcat Server when users keep runing/debuging new war package on it [#59](https://github.com/adashen/vscode-tomcat/issues/59)
+* Poping up error message with a revert action instead of just restarting Tomcat Server when user change server port of a running server [#28](https://github.com/adashen/vscode-tomcat/issues/28)
+
 ## 0.4.0
 ### Added
 * Add "+" button in Tomcat Server Explorer to create new Tomcat Server
