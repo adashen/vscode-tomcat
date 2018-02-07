@@ -5,7 +5,7 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 ### Added
 * Validate Tomcat install directory when user creating Tomcat Server
 * Add "Restart Tomcat Server" command
-* Add command platte entry for users to run "Debug on Tomcat Server"
+* Add command palette entry for users to run "Debug on Tomcat Server"
 * Support users to config the Tomcat Servers workspace in settings
 * Add refresh button in Tomcat Server Explorer
 * Support Tomcat Server renaming from Tomcat Server Explorer
