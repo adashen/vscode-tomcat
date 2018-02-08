@@ -178,7 +178,7 @@
         },
         {
           "command": "tomcat.server.rename",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@4"
         },
         {

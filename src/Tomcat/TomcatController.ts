@@ -103,7 +103,7 @@ export class TomcatController {
         const newName: string = await vscode.window.showInputBox({
             prompt: 'input a new server name',
             validateInput: (name: string): string => {
-                if (!name.match(/^[\w.-]+$/)) {
+                if (!name.match(/^[\w.-]+$/) || this._tomcatModel.getTomcatServer(name)) {
                     return 'please input a valid server name';
                 }
                 return null;
@@ -112,12 +112,7 @@ export class TomcatController {
         if (!newName) {
             return;
         }
-        const oldStoragePath: string = server.getStoragePath();
         server.rename(newName);
-        // tslint:disable-next-line:no-unexternalized-strings
-        const newStoragePath: string = path.join(oldStoragePath.substring(0, oldStoragePath.lastIndexOf("\\")), newName);
-        server.updateStoragePath(newStoragePath);
-        await fse.rename(oldStoragePath, server.getStoragePath());
         await this._tomcatModel.saveServerList();
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
