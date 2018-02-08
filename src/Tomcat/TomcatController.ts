@@ -103,8 +103,10 @@ export class TomcatController {
         const newName: string = await vscode.window.showInputBox({
             prompt: 'input a new server name',
             validateInput: (name: string): string => {
-                if (!name.match(/^[\w.-]+$/) || this._tomcatModel.getTomcatServer(name)) {
+                if (!name.match(/^[\w.-]+$/)) {
                     return 'please input a valid server name';
+                } else if (this._tomcatModel.getTomcatServer(name)) {
+                    return 'the name was already taken, please re-input';
                 }
                 return null;
             }
