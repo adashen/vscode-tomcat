@@ -92,12 +92,12 @@ export namespace Utility {
     }
 
     export async function validateInstallPath(installPath: string): Promise<boolean> {
-        const configFileExists: boolean = await fse.pathExists(path.join(installPath, 'conf', 'server.xml'));
-        const serverWebFileExists: boolean = await fse.pathExists(path.join(installPath, 'conf', 'web.xml'));
-        const serverBootstrapJarFileExists: boolean = await fse.pathExists(path.join(installPath, 'bin', 'bootstrap.jar'));
-        const serverJuliJarFileExists: boolean = await fse.pathExists(path.join(installPath, 'bin', 'tomcat-juli.jar'));
+        const configFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'conf', 'server.xml'));
+        const serverWebFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'conf', 'web.xml'));
+        const serverBootstrapJarFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'bin', 'bootstrap.jar'));
+        const serverJuliJarFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'bin', 'tomcat-juli.jar'));
 
-        return configFileExists && serverWebFileExists && serverBootstrapJarFileExists && serverJuliJarFileExists;
+        return await configFileExists && await serverWebFileExists && await serverBootstrapJarFileExists && await serverJuliJarFileExists;
     }
 
     export async function needRestart(httpPort: string, httpsPort: string, serverConfog: string): Promise<boolean> {
