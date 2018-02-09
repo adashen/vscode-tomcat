@@ -15,12 +15,6 @@ import { localize } from './localize';
 
 /* tslint:disable:no-any */
 export namespace Utility {
-    export class UserCancelError extends Error {
-        constructor(op: string) {
-            super(localize('tomcatExt.cancel', '{0} was canceled by user', op));
-        }
-    }
-
     export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
@@ -175,9 +169,7 @@ export namespace Utility {
         const jsonObj: {} = await parseXml(xml);
         const builder: xml2js.Builder = new xml2js.Builder();
         const newXml: string = builder.buildObject(jsonObj);
-        if (!await fse.pathExists(target)) {
-            await fse.createFile(target);
-        }
+        await fse.ensureFile(target);
         await fse.writeFile(target, newXml);
     }
 
