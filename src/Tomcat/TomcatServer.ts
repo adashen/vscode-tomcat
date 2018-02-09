@@ -7,7 +7,6 @@ import { Utility } from "../Utility";
 
 export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickItem {
     public needRestart: boolean = false;
-    public newCreated: boolean = false;
     public label: string;
     public description: string;
     public outputChannel: vscode.OutputChannel;
@@ -59,7 +58,7 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
 
     public rename(newName: string): void {
         this._name = newName;
-        this.label = this._name;
+        this.label = newName;
     }
 
     public getInstallPath(): string {
@@ -72,9 +71,5 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
 
     public getStoragePath(): string {
         return this._storagePath;
-    }
-
-    public updateStoragePath(newPath: string): void {
-        this._storagePath = newPath;
     }
 }

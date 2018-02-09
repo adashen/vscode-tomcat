@@ -48,7 +48,7 @@
       },
       {
         "command": "tomcat.server.create",
-        "title": "New Tomcat Server",
+        "title": "Create Tomcat Server",
         "category": "Tomcat",
         "icon": {
           "light": "resources/light/add.svg",
@@ -82,7 +82,7 @@
       },
       {
         "command": "tomcat.config.open",
-        "title": "Open server.xml",
+        "title": "open server config",
         "category": "Tomcat"
       },
       {
@@ -102,8 +102,32 @@
       },
       {
         "command": "tomcat.server.browse",
-        "title": "Open in Browser",
+        "title": "browse",
         "category": "Tomcat"
+      },
+      {
+        "command": "tomcat.server.delete.context",
+        "title": "delete"
+      },
+      {
+        "command": "tomcat.server.start.context",
+        "title": "start"
+      },
+      {
+        "command": "tomcat.server.restart.context",
+        "title": "restart"
+      },
+      {
+        "command": "tomcat.server.rename.context",
+        "title": "rename"
+      },
+      {
+        "command": "tomcat.server.stop.context",
+        "title": "stop"
+      },
+      {
+        "command": "tomcat.war.browse",
+        "title": "browse"
       }
     ],
     "views": {
@@ -137,11 +161,31 @@
           "when": "false == true"
         },
         {
-          "command": "tomcat.server.rename",
+          "command": "tomcat.config.open",
           "when": "false == true"
         },
         {
           "command": "tomcat.war.browse",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.start.context",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.restart.context",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.rename.context",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.delete.context",
+          "when": "false == true"
+        },
+        {
+          "command": "tomcat.server.stop.context",
           "when": "false == true"
         }
       ],
@@ -157,17 +201,17 @@
       ],
       "view/item/context": [
         {
-          "command": "tomcat.server.start",
+          "command": "tomcat.server.start.context",
           "when": "view == tomcatServerExplorer && viewItem == idleserver",
           "group": "tomcat@0"
         },
         {
-          "command": "tomcat.server.stop",
+          "command": "tomcat.server.stop.context",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@1"
         },
         {
-          "command": "tomcat.server.restart",
+          "command": "tomcat.server.restart.context",
           "when": "view == tomcatServerExplorer && viewItem == runningserver",
           "group": "tomcat@2"
         },
@@ -177,28 +221,18 @@
           "group": "tomcat@3"
         },
         {
-          "command": "tomcat.server.rename",
+          "command": "tomcat.server.rename.context",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@4"
         },
         {
-          "command": "tomcat.config.open",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "command": "tomcat.server.delete.context",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@5"
         },
         {
           "command": "tomcat.config.open",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver",
-          "group": "tomcat@5"
-        },
-        {
-          "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
-          "group": "tomcat@6"
-        },
-        {
-          "command": "tomcat.server.delete",
-          "when": "view == tomcatServerExplorer && viewItem == idleserver",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@6"
         },
         {
