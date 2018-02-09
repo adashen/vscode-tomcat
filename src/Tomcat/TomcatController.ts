@@ -6,8 +6,9 @@ import * as fse from "fs-extra";
 import opn = require("opn");
 import * as path from "path";
 import * as portfinder from "portfinder";
-import * as vscode from "vscode";
+import { URL } from "url";
 import { MessageItem } from "vscode";
+import * as vscode from "vscode";
 import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
 import { Utility } from "../Utility";
@@ -53,7 +54,7 @@ export class TomcatController {
                     this.startServer(server);
                 }
             }
-            opn(`${Constants.LOCALHOST}:${httpPort}/${warPackage.label}`);
+            opn(new URL(warPackage.label, `${Constants.LOCALHOST}:${httpPort}`).toString());
         }
     }
 
@@ -183,7 +184,7 @@ export class TomcatController {
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
             const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
-            opn(`${Constants.LOCALHOST}:${httpPort}`);
+            opn(new URL(`${Constants.LOCALHOST}:${httpPort}`).toString());
         }
     }
 
