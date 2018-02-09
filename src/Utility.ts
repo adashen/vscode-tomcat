@@ -53,7 +53,7 @@ export namespace Utility {
     export function browse(localhost: boolean, port: string, subPath?: string, url?: string): void {
         if (localhost) {
             // tslint:disable-next-line:no-http-string
-            opn(`http://localhost:${port}/${subPath ? subPath : ''}`);
+            opn(`http://localhost:${port}/${subPath || ''}`);
         } else {
             opn(url);
         }
@@ -92,13 +92,12 @@ export namespace Utility {
     }
 
     export async function validateInstallPath(installPath: string): Promise<boolean> {
-        const serverConfigFile: string = path.join(installPath, 'conf', 'server.xml');
-        const serverWebFile: string = path.join(installPath, 'conf', 'web.xml');
-        const serverBootstrapJarFile: string = path.join(installPath, 'bin', 'bootstrap.jar');
-        const serverJuliJarFile: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
+        const configFileExists: boolean = await fse.pathExists(path.join(installPath, 'conf', 'server.xml'));
+        const serverWebFileExists: boolean = await fse.pathExists(path.join(installPath, 'conf', 'web.xml'));
+        const serverBootstrapJarFileExists: boolean = await fse.pathExists(path.join(installPath, 'bin', 'bootstrap.jar'));
+        const serverJuliJarFileExists: boolean = await fse.pathExists(path.join(installPath, 'bin', 'tomcat-juli.jar'));
 
-        return (!await fse.pathExists(serverConfigFile) || !await fse.pathExists(serverWebFile) ||
-            !await fse.pathExists(serverBootstrapJarFile) || !await fse.pathExists(serverJuliJarFile));
+        return configFileExists && serverWebFileExists && serverBootstrapJarFileExists && serverJuliJarFileExists;
     }
 
     export async function needRestart(httpPort: string, httpsPort: string, serverConfog: string): Promise<boolean> {

@@ -66,8 +66,9 @@ export class TomcatController {
             return;
         }
         const tomcatInstallPath: string = pathPick[0].fsPath;
-        if (!Utility.validateInstallPath(tomcatInstallPath)) {
-            throw new Error(Constants.INVALID_SERVER_DIRECTORY);
+        if (!await Utility.validateInstallPath(tomcatInstallPath)) {
+            vscode.window.showErrorMessage(Constants.INVALID_SERVER_DIRECTORY);
+            return;
         }
         const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
         const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
