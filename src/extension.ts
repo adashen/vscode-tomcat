@@ -29,186 +29,23 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server) ));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.create', () => { tomcatController.createServer(); }));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.start', (server: TomcatServer) => tomcatController.startServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.restart', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.stop', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.delete', (server: TomcatServer) => tomcatController.deleteServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.browse', (server: TomcatServer) => tomcatController.browseServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.run', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.debug', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri, true)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.config.open', (server: TomcatServer) => tomcatController.openServerConfig(server)));
 
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.create', createServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.start', startServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.restart', restartServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.browse', browseServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.stop', stopServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.server.delete', deleteServer);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.war.run', runWarPackage);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.war.debug', debugWarPackage);
-    initCommand(context, outputChannel, tomcatController, 'tomcat.config.open', openServerConfig);
+    // .context commands are duplicate for better naming the context commands and make it more clear and elegant
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename.context', (server: TomcatServer) => tomcatController.renameServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.start.context', (server: TomcatServer) => tomcatController.startServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.restart.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.stop.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.delete.context', (server: TomcatServer) => tomcatController.deleteServer(server)));
 }
-
-function initCommand<T>(context: vscode.ExtensionContext, output: vscode.OutputChannel, tomcatController: TomcatController,
-                        commandId: string, callback: (tomcatController: TomcatController, input?: T) => Promise<string|void>): void {
-    context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: {}[]) => {
-        try {
-            if (args.length === 0) {
-                await callback(tomcatController);
-            } else {
-                await callback(tomcatController, <T>args[0]);
-            }
-        } catch (error) {
-            if (error instanceof Utility.UserCancelError) {
-                return;
-            }
-
-            output.show();
-            output.appendLine(localize('tomcatExt.error', '{0}', error));
-            vscode.window.showErrorMessage(error.toString());
-        } finally {
-            // todo telemetry;
-        }
-    }));
-}
-
-async function startServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem, true);
-    if (server) {
-        if (server.isStarted()) {
-            vscode.window.showInformationMessage(DialogMessage.serverRunning);
-            return;
-        }
-        await tomcatController.startServer(server);
-    }
-}
-
-async function restartServer(tomcatController: TomcatController, tomcatItem: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (!server) {
-        vscode.window.showInformationMessage(DialogMessage.noServer);
-        return;
-    }
-    if (server.isStarted()) {
-        await tomcatController.stopOrRestartServer(server, true);
-    } else {
-        await tomcatController.startServer(server);
-    }
-}
-
-async function stopServer(tomcatController: TomcatController, tomcatItem?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (!server) {
-        vscode.window.showInformationMessage(DialogMessage.noServer);
-        return;
-    }
-    if (server.isStarted()) {
-        await tomcatController.stopOrRestartServer(server);
-    } else {
-        vscode.window.showInformationMessage(DialogMessage.serverStopped);
-    }
-}
-
-async function browseServer(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        await tomcatController.openServer(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
-    }
-}
-
-async function deleteServer(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        await tomcatController.deleteServer(server);
-    } else {
-        vscode.window.showInformationMessage(DialogMessage.noServer);
-    }
-}
-
-async function openServerConfig(tomcatController: TomcatController, tomcatItem ?: TomcatServer): Promise<void> {
-    const server: TomcatServer = await selectServer(tomcatController, tomcatItem);
-    if (server) {
-        await tomcatController.openConfig(server);
-    } else {
-        await vscode.window.showInformationMessage(DialogMessage.noServer);
-    }
-}
-
-async function createServer(tomcatController: TomcatController): Promise<string> {
-    const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
-        defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
-        canSelectFiles: false,
-        canSelectFolders: true,
-        openLabel: DialogMessage.selectDirectory
-    });
-    if (!pathPick || pathPick.length <= 0 || !pathPick[0].fsPath) {
-        return;
-    }
-    return await tomcatController.createTomcatServer(pathPick[0].fsPath);
-}
-
-async function debugWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await runOnTomcat(tomcatController, true, uri);
-}
-
-async function runWarPackage(tomcatController: TomcatController, uri?: vscode.Uri): Promise<void> {
-    await runOnTomcat(tomcatController, false, uri);
-}
-
-async function selectServer(tomcatController: TomcatController, tomcatServer?: TomcatServer, createIfNoneServer: boolean = false): Promise<TomcatServer> {
-    if (tomcatServer) {
-        return tomcatServer;
-    }
-    let items: vscode.QuickPickItem[] = tomcatController.getServerSet();
-    if ((!items || items.length <= 0) && !createIfNoneServer) {
-        return;
-    }
-    items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
-    const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
-        items,
-        { placeHolder: items && items.length > 0 ? DialogMessage.selectServer : DialogMessage.createServer }
-    );
-
-    if (pick) {
-        if (pick instanceof TomcatServer) {
-            return pick;
-        } else {
-            const newServerName: string = await createServer(tomcatController);
-            const newServer: TomcatServer = tomcatController.getTomcatServer(newServerName);
-            if (newServer) {
-                newServer.newCreated = true;
-                return newServer;
-            }
-        }
-    }
-}
-
-async function runOnTomcat(tomcatController: TomcatController, debug: boolean, uri?: vscode.Uri): Promise<void> {
-    if (!uri) {
-        const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
-            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
-            canSelectFiles: true,
-            canSelectFolders: false,
-            openLabel: DialogMessage.selectWarPackage
-        });
-        if (!dialog || dialog.length <= 0 || !dialog[0].fsPath) {
-            return;
-        }
-        uri = dialog[0];
-    }
-
-    const packagePath: string = uri.fsPath;
-    const originalServerSet: string[] = tomcatController.getServerSet().map((s: TomcatServer) => s.getName());
-    const server: TomcatServer = await selectServer(tomcatController, undefined, true);
-    if (!server) {
-        return;
-    }
-
-    if (server.newCreated && originalServerSet.indexOf(server.getName()) >= 0) {
-        server.newCreated = false;
-        const result: MessageItem = await vscode.window.showWarningMessage(DialogMessage.continueOnExistingServer, DialogMessage.yes, DialogMessage.no);
-        if (result !== DialogMessage.yes) {
-            return;
-        }
-    }
-
-    await tomcatController.runOnServer(server, packagePath, debug);
-}
-
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
