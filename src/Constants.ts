@@ -23,6 +23,9 @@ export const UNABLE_SHUTDOWN_URL: string = 'https://stackoverflow.com/questions/
 
 export const RESTART_CONFIG_ID: string = 'restart_when_http(s)_port_change';
 
+// tslint:disable-next-line:no-http-string
+export const LOCALHOST: string = 'http://localhost';
+
 export enum ServerState {
     RunningServer = 'runningserver',
     IdleServer = 'idleserver'

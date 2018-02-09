@@ -3,8 +3,6 @@
 import * as child_process from "child_process";
 import * as fse from "fs-extra";
 import * as net from "net";
-// tslint:disable-next-line:no-require-imports
-import opn = require("opn");
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -47,15 +45,6 @@ export namespace Utility {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
             config.update(Constants.RESTART_CONFIG_ID, false, true);
-        }
-    }
-
-    export function browse(localhost: boolean, port: string, subPath?: string, url?: string): void {
-        if (localhost) {
-            // tslint:disable-next-line:no-http-string
-            opn(`http://localhost:${port}/${subPath || ''}`);
-        } else {
-            opn(url);
         }
     }
 

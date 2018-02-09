@@ -48,7 +48,7 @@
       },
       {
         "command": "tomcat.server.create",
-        "title": "Create Tomcat Server",
+        "title": "Add Tomcat Server",
         "category": "Tomcat",
         "icon": {
           "light": "resources/light/add.svg",
@@ -82,7 +82,7 @@
       },
       {
         "command": "tomcat.config.open",
-        "title": "open server config",
+        "title": "open server configuration",
         "category": "Tomcat"
       },
       {
@@ -102,7 +102,7 @@
       },
       {
         "command": "tomcat.server.browse",
-        "title": "browse",
+        "title": "open in browser",
         "category": "Tomcat"
       },
       {
@@ -127,7 +127,7 @@
       },
       {
         "command": "tomcat.war.browse",
-        "title": "browse"
+        "title": "open in browser"
       }
     ],
     "views": {

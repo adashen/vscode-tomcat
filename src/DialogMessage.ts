@@ -19,7 +19,7 @@ export namespace DialogMessage {
     export const deleteConfirm: string = localize('tomcatExt.deleteConfirm', 'This Tomcat Server is running, are you sure you want to delete it?');
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
-    export const startServer: string = localize('tomcatExt.startServer', 'Would you like to start Tomcat Server first to browse the war package?');
+    export const startServer: string = localize('tomcatExt.startServer', 'The Tomcat server needs to be started before browsing the war packages. Would you like to start it now?');
 
     export function getServerPortChangeErrorMessage(serverName: string, serverPort: string): string {
         return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause it unable to shutdown. Would you like to change it back to {1}?', serverName, serverPort);
