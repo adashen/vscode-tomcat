@@ -85,7 +85,7 @@ export class TomcatController {
         const catalinaBasePath: string = Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
         await Promise.all([
-            fse.copy(serverConfigFile, path.join(catalinaBasePath, 'conf', 'server.xml')),
+            Utility.copyServerConfig(serverConfigFile,  path.join(catalinaBasePath, 'conf', 'server.xml')),
             fse.copy(serverWebFile, path.join(catalinaBasePath, 'conf', 'web.xml')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),

@@ -11,6 +11,7 @@ import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 
+/* tslint:disable:no-any */
 export namespace Utility {
     export class UserCancelError extends Error {
         constructor(op: string) {
@@ -103,7 +104,6 @@ export namespace Utility {
         const xml: string = await fse.readFile(serverXml, 'utf8');
         let port: string;
         try {
-            /* tslint:disable:no-any */
             const jsonObj: any = await parseXml(xml);
             if (kind === Constants.PortKind.Server) {
                 port = jsonObj.Server.$.port;
@@ -118,14 +118,13 @@ export namespace Utility {
             port = undefined;
         }
         return port;
-    }/* tslint:enable:no-any */
+    }
 
     export async function setPort(serverXml: string, kind: Constants.PortKind, value: string): Promise<void> {
         if (!await fse.pathExists(serverXml)) {
             throw new Error(DialogMessage.noServer);
         }
         const xml: string = await fse.readFile(serverXml, 'utf8');
-        /* tslint:disable:no-any */
         const jsonObj: any = await parseXml(xml);
         if (kind === Constants.PortKind.Server) {
             jsonObj.Server.$.port = value;
@@ -143,9 +142,19 @@ export namespace Utility {
         const builder: xml2js.Builder = new xml2js.Builder();
         const newXml: string = builder.buildObject(jsonObj);
         await fse.writeFile(serverXml, newXml);
-    }/* tslint:enable:no-any */
+    }
 
-    /* tslint:disable:no-any */
+    export async function copyServerConfig(source: string, target: string): Promise<void> {
+        const xml: string = await fse.readFile(source, 'utf8');
+        const jsonObj: {} = await parseXml(xml);
+        const builder: xml2js.Builder = new xml2js.Builder();
+        const newXml: string = builder.buildObject(jsonObj);
+        if (!await fse.pathExists(target)) {
+            await fse.createFile(target);
+        }
+        await fse.writeFile(target, newXml);
+    }
+
     async function parseXml(xml: string): Promise<any> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
             xml2js.parseString(xml, { explicitArray: true }, (err: Error, res: {}) => {
@@ -155,5 +164,5 @@ export namespace Utility {
                 return resolve(res);
             });
         });
-    }/* tslint:enable:no-any */
+    }
 }
