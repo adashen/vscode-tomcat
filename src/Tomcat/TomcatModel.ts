@@ -2,6 +2,7 @@
 
 import * as fse from "fs-extra";
 import * as path from "path";
+import * as vscode from "vscode";
 import { TomcatServer } from "./TomcatServer";
 
 export class TomcatModel {
@@ -26,6 +27,7 @@ export class TomcatModel {
             await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
                 return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
             }));
+            vscode.commands.executeCommand('tomcat.tree.refresh');
         } catch (err) {
             console.error(err.toString());
         }
@@ -38,6 +40,7 @@ export class TomcatModel {
             if (oldServer.length > 0) {
                 fse.remove(tomcatServer.getStoragePath());
                 this.saveServerList();
+                tomcatServer.outputChannel.dispose();
                 return true;
             }
         }

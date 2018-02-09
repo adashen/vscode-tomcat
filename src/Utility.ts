@@ -3,6 +3,8 @@
 import * as child_process from "child_process";
 import * as fse from "fs-extra";
 import * as net from "net";
+// tslint:disable-next-line:no-require-imports
+import opn = require("opn");
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -48,20 +50,21 @@ export namespace Utility {
         }
     }
 
-    export function getRestartConfig(): boolean {
-        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
-        if (config) {
-            return config.get<boolean>(Constants.RESTART_CONFIG_ID);
+    export function browse(localhost: boolean, port: string, subPath?: string, url?: string): void {
+        if (localhost) {
+            // tslint:disable-next-line:no-http-string
+            opn(`http://localhost:${port}/${subPath || ''}`);
+        } else {
+            opn(url);
         }
-        return false;
     }
 
-    export function getServerStoragePath(defaultStoragePath: string, serverName: string): string {
-        return path.join(getWorkspace(defaultStoragePath), serverName);
+    export async function getServerStoragePath(defaultStoragePath: string, serverName: string): Promise<string> {
+        return path.join(await getWorkspace(defaultStoragePath), serverName);
     }
 
     export async function getServerName(installPath: string, defaultStoragePath: string): Promise<string> {
-        const workspace: string = getWorkspace(defaultStoragePath);
+        const workspace: string = await getWorkspace(defaultStoragePath);
         await fse.ensureDir(workspace);
         const fileNames: string[] = await fse.readdir(workspace);
         let serverName: string = path.basename(installPath);
@@ -73,16 +76,39 @@ export namespace Utility {
         return serverName;
     }
 
-    function getWorkspace(defaultStoragePath: string): string {
+    async function getWorkspace(defaultStoragePath: string): Promise<string> {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model
             const workspace: string = config.get<string>('workspace');
-            if (workspace && !workspace.startsWith('<<')) {
+            try {
+                await fse.ensureDir(workspace);
                 return workspace;
+            } catch (err) {
+                return path.join(defaultStoragePath, 'tomcat');
             }
         }
         return path.join(defaultStoragePath, 'tomcat');
+    }
+
+    export async function validateInstallPath(installPath: string): Promise<boolean> {
+        const configFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'conf', 'server.xml'));
+        const serverWebFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'conf', 'web.xml'));
+        const serverBootstrapJarFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'bin', 'bootstrap.jar'));
+        const serverJuliJarFileExists: Promise<boolean> = fse.pathExists(path.join(installPath, 'bin', 'tomcat-juli.jar'));
+
+        return await configFileExists && await serverWebFileExists && await serverBootstrapJarFileExists && await serverJuliJarFileExists;
+    }
+
+    export async function needRestart(httpPort: string, httpsPort: string, serverConfog: string): Promise<boolean> {
+        const newHttpPort: string = await getPort(serverConfog, Constants.PortKind.Http);
+        const newHttpsPort: string = await getPort(serverConfog, Constants.PortKind.Https);
+        let restartConfig: boolean = false;
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            restartConfig = config.get<boolean>(Constants.RESTART_CONFIG_ID);
+        }
+        return restartConfig && (httpPort !== newHttpPort || httpsPort !== newHttpsPort);
     }
 
     export function getTempStoragePath(): string {
