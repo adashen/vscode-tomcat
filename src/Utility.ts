@@ -36,6 +36,13 @@ export namespace Utility {
         });
     }
 
+    export async function openFile(file: string): Promise<void> {
+        if (!await fse.pathExists(file)) {
+            throw new Error(localize('tomcatExt.fileNotExist', `File ${file} does not exist.`));
+        }
+        vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
+    }
+
     export function disableAutoRestart(): void {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {

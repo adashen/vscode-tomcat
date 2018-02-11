@@ -2,7 +2,9 @@
 
 import * as fse from "fs-extra";
 import * as path from "path";
+import * as readline from "readline";
 import * as vscode from "vscode";
+import * as Constants from "../Constants";
 import { TomcatServer } from "./TomcatServer";
 
 export class TomcatModel {
@@ -31,6 +33,54 @@ export class TomcatModel {
         } catch (err) {
             console.error(err.toString());
         }
+    }
+
+    public async updateVMOptions(serverName: string) : Promise<void> {
+        const server: TomcatServer = this.getTomcatServer(serverName);
+        const installPath: string = server.getInstallPath();
+        const catalinaBase: string = path.join(server.getStoragePath());
+        const bootStrap: string = path.join(installPath, 'bin', 'bootstrap.jar');
+        const tomcat: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
+        let result: string[] = [
+            `${Constants.CLASS_PATH_KEY} ${bootStrap}${path.delimiter}${tomcat}`,
+            `${Constants.CATALINA_BASE_KEY}=${catalinaBase}`,
+            `${Constants.CATALINA_HOME_KEY}=${installPath}`
+        ];
+
+        if (!await fse.pathExists(server.vmOptionFile)) {
+            server.vmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+            return;
+        }
+        await new Promise((resolve: () => void): void => {
+            const lineReader: readline.ReadLine = readline.createInterface({
+                input: fse.createReadStream(server.vmOptionFile),
+                crlfDelay: Infinity
+            });
+            lineReader.on('line', (line: string) => {
+                if (line.startsWith('-')) {
+                    Constants.JVM_DEFAULT_OPTIONS_KEYS.forEach((key: string) => {
+                        if (line.startsWith(key)) {
+                            return;
+                        }
+                    });
+                    result = result.concat(line);
+                }
+            });
+            lineReader.on('close', () => {
+                let isTempDirConfigured: boolean = false;
+                result.forEach((r: string) => {
+                    if (r.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0) {
+                        isTempDirConfigured = true;
+                        return;
+                    }
+                });
+                if (!isTempDirConfigured) {
+                    result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}=${path.join(catalinaBase, 'temp')}`);
+                }
+                server.vmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+                resolve();
+            });
+        });
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
