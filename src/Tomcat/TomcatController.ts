@@ -58,6 +58,13 @@ export class TomcatController {
         }
     }
 
+    public async deleteWarPackage(warPackage: WarPackage): Promise<void> {
+        if (warPackage) {
+            await fse.remove(warPackage.storagePath);
+            vscode.commands.executeCommand('tomcat.tree.refresh');
+        }
+    }
+
     public async createServer(): Promise<TomcatServer> {
         const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
@@ -232,6 +239,7 @@ export class TomcatController {
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
         await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
+        vscode.commands.executeCommand('tomcat.tree.refresh');
         return appName;
     }
 
