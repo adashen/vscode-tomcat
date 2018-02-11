@@ -128,6 +128,10 @@
       {
         "command": "tomcat.war.browse",
         "title": "Open in Browser"
+      },
+      {
+        "command": "tomcat.war.delete",
+        "title": "Delete"
       }
     ],
     "views": {
@@ -187,6 +191,10 @@
         {
           "command": "tomcat.server.stop.context",
           "when": "false == true"
+        },
+        {
+          "command": "tomcat.war.delete",
+          "when": "false == true"
         }
       ],
       "explorer/context": [
@@ -237,11 +245,17 @@
         },
         {
           "command": "tomcat.war.browse",
-          "when": "view == tomcatServerExplorer && viewItem == war"
+          "when": "view == tomcatServerExplorer && viewItem == war",
+          "group": "war@0"
         },
         {
           "command": "tomcat.server.create",
           "when": "view == tomcatServerExplorer && !viewItem"
+        },
+        {
+          "command": "tomcat.war.delete",
+          "when": "view == tomcatServerExplorer && viewItem == war",
+          "group": "war@1"
         }
       ]
     },
