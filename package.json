@@ -48,7 +48,7 @@
       },
       {
         "command": "tomcat.server.create",
-        "title": "Create Tomcat Server",
+        "title": "Add Tomcat Server",
         "category": "Tomcat",
         "icon": {
           "light": "resources/light/add.svg",
@@ -82,7 +82,7 @@
       },
       {
         "command": "tomcat.config.open",
-        "title": "open server config",
+        "title": "Open Server Configuration",
         "category": "Tomcat"
       },
       {
@@ -102,32 +102,32 @@
       },
       {
         "command": "tomcat.server.browse",
-        "title": "browse",
+        "title": "Open in Browser",
         "category": "Tomcat"
       },
       {
         "command": "tomcat.server.delete.context",
-        "title": "delete"
+        "title": "Delete"
       },
       {
         "command": "tomcat.server.start.context",
-        "title": "start"
+        "title": "Start"
       },
       {
         "command": "tomcat.server.restart.context",
-        "title": "restart"
+        "title": "Restart"
       },
       {
         "command": "tomcat.server.rename.context",
-        "title": "rename"
+        "title": "Rename"
       },
       {
         "command": "tomcat.server.stop.context",
-        "title": "stop"
+        "title": "Stop"
       },
       {
         "command": "tomcat.war.browse",
-        "title": "browse"
+        "title": "Open in Browser"
       }
     ],
     "views": {

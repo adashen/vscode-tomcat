@@ -2,10 +2,13 @@
 
 import * as chokidar from "chokidar";
 import * as fse from "fs-extra";
+// tslint:disable-next-line:no-require-imports
+import opn = require("opn");
 import * as path from "path";
 import * as portfinder from "portfinder";
-import * as vscode from "vscode";
+import { URL } from "url";
 import { MessageItem } from "vscode";
+import * as vscode from "vscode";
 import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
 import { Utility } from "../Utility";
@@ -51,7 +54,7 @@ export class TomcatController {
                     this.startServer(server);
                 }
             }
-            Utility.browse(true, httpPort, warPackage.label);
+            opn(new URL(warPackage.label, `${Constants.LOCALHOST}:${httpPort}`).toString());
         }
     }
 
@@ -181,7 +184,7 @@ export class TomcatController {
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
             const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
-            Utility.browse(true, httpPort);
+            opn(new URL(`${Constants.LOCALHOST}:${httpPort}`).toString());
         }
     }
 
@@ -292,7 +295,7 @@ export class TomcatController {
                     if (result === DialogMessage.yes) {
                         await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
                     } else if (result === DialogMessage.moreInfo) {
-                        Utility.browse(false, undefined, undefined, Constants.UNABLE_SHUTDOWN_URL);
+                        opn(Constants.UNABLE_SHUTDOWN_URL);
                     }
                 } else if (await Utility.needRestart(httpPort, httpsPort, serverConfig)) {
                     const item: MessageItem = await vscode.window.showInformationMessage(
