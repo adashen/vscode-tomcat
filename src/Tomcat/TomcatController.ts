@@ -326,10 +326,6 @@ export class TomcatController {
             vscode.window.showInformationMessage(DialogMessage.noServer);
             return;
         }
-        const server: TomcatServer = tomcatServer ? tomcatServer : await this.selectServer();
-        if (!server) {
-            return;
-        }
-        return server;
+        return tomcatServer ? tomcatServer : await this.selectServer();
     }
 }
