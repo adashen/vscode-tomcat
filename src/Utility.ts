@@ -145,7 +145,7 @@ export namespace Utility {
             const catalinaService: any = jsonObj.Server.Service.find((item: any) => item.$.name === Constants.CATALINA);
 
             if (kind === Constants.PortKind.Http) {
-                const httpConnector: any = catalinaService.Connector.find((item: any) => (item.$.protocol === undefined || item.$.protocol.startsWith(Constants.HTTP)));
+                const httpConnector: any = catalinaService.Connector.find((item: any) => (!item.$.protocol || item.$.protocol.startsWith(Constants.HTTP)));
                 httpConnector.$.port = value;
             } else if (kind === Constants.PortKind.Https) {
                 const httpsConnector: any = catalinaService.Connector.find((item: any) => (item.$.SSLEnabled.toLowerCase() === 'true'));
