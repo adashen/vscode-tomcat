@@ -261,12 +261,12 @@
           "when": "view == tomcatServerExplorer && !viewItem"
         },
         {
-          "command": "tomcat.war.delete",
+          "command": "tomcat.war.reveal",
           "when": "view == tomcatServerExplorer && viewItem == war",
           "group": "war@1"
         },
         {
-          "command": "tomcat.war.reveal",
+          "command": "tomcat.war.delete",
           "when": "view == tomcatServerExplorer && viewItem == war",
           "group": "war@2"
         }
