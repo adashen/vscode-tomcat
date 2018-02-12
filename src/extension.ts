@@ -41,6 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.config.open', (server: TomcatServer) => tomcatController.openServerConfig(server)));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.delete', (warPackage: WarPackage) => tomcatController.deleteWarPackage(warPackage)));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.customizevmoption', (server: TomcatServer) => tomcatController.customizeVMOptions(server)));
+    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.reveal', (warPackage: WarPackage) => tomcatController.reveralWarPackage(warPackage)));
 
     // .context commands are duplicate for better naming the context commands and make it more clear and elegant
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename.context', (server: TomcatServer) => tomcatController.renameServer(server)));

@@ -136,6 +136,10 @@
       {
         "command": "tomcat.war.delete",
         "title": "Delete"
+      },
+      {
+        "command": "tomcat.war.reveal",
+        "title": "Reveal in Explorer"
       }
     ],
     "views": {
@@ -203,6 +207,10 @@
         {
           "command": "tomcat.server.customizevmoption",
           "when": "false == true"
+        },
+        {
+          "command": "tomcat.war.reveal",
+          "when": "false == true"
         }
       ],
       "explorer/context": [
@@ -269,6 +277,11 @@
           "command": "tomcat.war.delete",
           "when": "view == tomcatServerExplorer && viewItem == war",
           "group": "war@1"
+        },
+        {
+          "command": "tomcat.war.reveal",
+          "when": "view == tomcatServerExplorer && viewItem == war",
+          "group": "war@2"
         }
       ]
     },
