@@ -78,7 +78,7 @@ export class TomcatController {
             canSelectFolders: true,
             openLabel: DialogMessage.selectDirectory
         });
-        if (!pathPick || pathPick.length <= 0 || !pathPick[0].fsPath) {
+        if (Utility.isEmpty(pathPick) || !pathPick[0].fsPath) {
             return;
         }
         const tomcatInstallPath: string = pathPick[0].fsPath;
@@ -155,7 +155,7 @@ export class TomcatController {
                 canSelectFolders: false,
                 openLabel: DialogMessage.selectWarPackage
             });
-            if (!dialog || dialog.length <= 0 || !dialog[0].fsPath) {
+            if (Utility.isEmpty(dialog) || !dialog[0].fsPath) {
                 return;
             }
             uri = dialog[0];
@@ -211,7 +211,7 @@ export class TomcatController {
 
     private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
         let items: vscode.QuickPickItem[] = this._tomcatModel.getServerSet();
-        if ((!items || items.length <= 0) && !createIfNoneServer) {
+        if (Utility.isEmpty(items) && !createIfNoneServer) {
             return;
         }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
@@ -341,7 +341,7 @@ export class TomcatController {
         }
     }
     private async precheck(tomcatServer: TomcatServer): Promise<TomcatServer> {
-        if (!this._tomcatModel.getServerSet() || this._tomcatModel.getServerSet().length <= 0) {
+        if (Utility.isEmpty(this._tomcatModel.getServerSet())) {
             vscode.window.showInformationMessage(DialogMessage.noServer);
             return;
         }
