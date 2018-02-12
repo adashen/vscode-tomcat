@@ -210,11 +210,13 @@ export class TomcatController {
     }
 
     public dispose(): void {
-        this.stopServers();
-        this._tomcatModel.saveServerListSync();
         this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
+            if (element.isStarted()) {
+                this.stopOrRestartServer(element);
+            }
             element.outputChannel.dispose();
         });
+        this._tomcatModel.saveServerListSync();
     }
 
     private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
@@ -237,16 +239,7 @@ export class TomcatController {
         }
     }
 
-    private stopServers(): void {
-        const serverList: TomcatServer[] = this._tomcatModel.getServerSet();
-        serverList.forEach((server: TomcatServer) => {
-            if (server.isStarted()) {
-                this.stopOrRestartServer(server);
-            }
-        });
-    }
-
-    private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<string> {
+    private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<void> {
         const appName: string =  path.basename(packagePath, path.extname(packagePath));
         const appPath: string = path.join(serverInfo.getStoragePath(), 'webapps', appName);
 
@@ -254,7 +247,6 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
         vscode.commands.executeCommand('tomcat.tree.refresh');
-        return appName;
     }
 
     private startDebugSession(server: TomcatServer): void {
@@ -294,7 +286,7 @@ export class TomcatController {
                         opn(Constants.UNABLE_SHUTDOWN_URL);
                     }
                 } else if (await Utility.needRestart(httpPort, httpsPort, serverConfig)) {
-                    const item: MessageItem = await vscode.window.showInformationMessage(
+                    const item: MessageItem = await vscode.window.showWarningMessage(
                         DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
                     );
 
