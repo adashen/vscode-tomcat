@@ -13,6 +13,10 @@ import { localize } from './localize';
 
 /* tslint:disable:no-any */
 export namespace Utility {
+
+    export function isEmpty<T>(array: T[]): boolean {
+        return !array || array.length <= 0;
+    }
     export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
