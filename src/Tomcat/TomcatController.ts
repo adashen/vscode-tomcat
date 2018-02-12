@@ -65,6 +65,12 @@ export class TomcatController {
         }
     }
 
+    public reveralWarPackage(warPackage: WarPackage): void {
+        if (warPackage) {
+            opn(warPackage.storagePath);
+        }
+    }
+
     public async createServer(): Promise<TomcatServer> {
         const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
