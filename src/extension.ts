@@ -19,13 +19,13 @@ export function activate(context: vscode.ExtensionContext): void {
     if (!storagePath) {
         storagePath = Utility.getTempStoragePath();
     }
-    const outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel('Tomcat');
     const tomcatModel: TomcatModel = new TomcatModel(storagePath);
     const tomcatServerTree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatModel);
     const tomcatController: TomcatController = new TomcatController(tomcatModel, context.extensionPath);
 
     context.subscriptions.push(tomcatController);
     context.subscriptions.push(tomcatServerTree);
+
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
     context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
