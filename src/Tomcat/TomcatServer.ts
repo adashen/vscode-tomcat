@@ -22,7 +22,7 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
         super(_name);
         this.label = _name;
         this.outputChannel = vscode.window.createOutputChannel(`tomcat_${this._name}`);
-        this.vmOptionFile = path.join(this._storagePath, Constants.VM_OPTION_FILE);
+        this.vmOptionFile = path.join(this._storagePath, Constants.JVM_OPTION_FILE);
     }
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {

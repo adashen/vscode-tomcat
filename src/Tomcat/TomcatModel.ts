@@ -42,7 +42,7 @@ export class TomcatModel {
         const bootStrap: string = path.join(installPath, 'bin', 'bootstrap.jar');
         const tomcat: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
         let result: string[] = [
-            `${Constants.CLASS_PATH_KEY} ${bootStrap}${path.delimiter}${tomcat}`,
+            `${Constants.CLASS_PATH_KEY} ${[bootStrap, tomcat].join(path.delimiter)}`,
             `${Constants.CATALINA_BASE_KEY}=${catalinaBase}`,
             `${Constants.CATALINA_HOME_KEY}=${installPath}`
         ];
@@ -67,14 +67,10 @@ export class TomcatModel {
                 }
             });
             lineReader.on('close', () => {
-                let isTempDirConfigured: boolean = false;
-                result.forEach((r: string) => {
-                    if (r.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0) {
-                        isTempDirConfigured = true;
-                        return;
-                    }
+                const tmpDirConfiguration: string = result.find((element: string) => {
+                    return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
                 });
-                if (!isTempDirConfigured) {
+                if (!tmpDirConfiguration || tmpDirConfiguration.length <= 0) {
                     result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}=${path.join(catalinaBase, 'temp')}`);
                 }
                 server.vmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);

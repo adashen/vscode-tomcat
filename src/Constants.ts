@@ -26,7 +26,7 @@ export const RESTART_CONFIG_ID: string = 'restart_when_http(s)_port_change';
 // tslint:disable-next-line:no-http-string
 export const LOCALHOST: string = 'http://localhost';
 
-export const VM_OPTION_FILE: string = 'jvm.options';
+export const JVM_OPTION_FILE: string = 'jvm.options';
 
 export const DEBUG_ARGUMENT_KEY: string = '-agentlib:jdwp=transport=dt_socket,suspend=n,server=y,address=localhost:';
 
