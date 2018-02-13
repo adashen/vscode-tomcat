@@ -5,6 +5,7 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { MessageItem } from "vscode";
+import { Session, TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 import { TomcatController } from "./Tomcat/TomcatController";
@@ -14,8 +15,9 @@ import { WarPackage } from "./Tomcat/WarPackage";
 import { TomcatSeverTreeProvider } from "./TomcatSeverTreeProvider";
 import { Utility } from "./Utility";
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
     let storagePath: string = context.storagePath;
+    await TelemetryWrapper.initilizeFromJsonFile(context.asAbsolutePath('package.json'));
     if (!storagePath) {
         storagePath = Utility.getTempStoragePath();
     }
@@ -27,27 +29,27 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(tomcatServerTree);
 
     context.subscriptions.push(vscode.window.registerTreeDataProvider('tomcatServerExplorer', tomcatServerTree));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.create', () => { tomcatController.createServer(); }));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.start', (server: TomcatServer) => tomcatController.startServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.restart', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.stop', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.delete', (server: TomcatServer) => tomcatController.deleteServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.browse', (server: TomcatServer) => tomcatController.browseServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.run', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.debug', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri, true)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.config.open', (server: TomcatServer) => tomcatController.openServerConfig(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.delete', (warPackage: WarPackage) => tomcatController.deleteWarPackage(warPackage)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.war.reveal', (warPackage: WarPackage) => tomcatController.reveralWarPackage(warPackage)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.create', () => tomcatController.createServer()));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.start', (server: TomcatServer) => tomcatController.startServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.restart', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.stop', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.delete', (server: TomcatServer) => tomcatController.deleteServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.browse', (server: TomcatServer) => tomcatController.browseServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.war.run', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.war.debug', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.config.open', (server: TomcatServer) => tomcatController.openServerConfig(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.war.delete', (warPackage: WarPackage) => tomcatController.deleteWarPackage(warPackage)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.war.reveal', (warPackage: WarPackage) => tomcatController.reveralWarPackage(warPackage)));
 
     // .context commands are duplicate for better naming the context commands and make it more clear and elegant
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.rename.context', (server: TomcatServer) => tomcatController.renameServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.start.context', (server: TomcatServer) => tomcatController.startServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.restart.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.stop.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
-    context.subscriptions.push(vscode.commands.registerCommand('tomcat.server.delete.context', (server: TomcatServer) => tomcatController.deleteServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.rename.context', (server: TomcatServer) => tomcatController.renameServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.start.context', (server: TomcatServer) => tomcatController.startServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.restart.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.stop.context', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
+    context.subscriptions.push(TelemetryWrapper.registerCommand('tomcat.server.delete.context', (server: TomcatServer) => tomcatController.deleteServer(server)));
 }
 // tslint:disable-next-line:no-empty
 export function deactivate(): void {}
