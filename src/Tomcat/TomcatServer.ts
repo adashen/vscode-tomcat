@@ -10,8 +10,8 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
     public needRestart: boolean = false;
     public label: string;
     public description: string;
-    public vmOptions: string[];
-    public vmOptionFile: string;
+    public jvmOptions: string[];
+    public jvmOptionFile: string;
     public outputChannel: vscode.OutputChannel;
     private _state: ServerState = ServerState.IdleServer;
     private _isDebugging: boolean = false;
@@ -23,7 +23,7 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
         super(_name);
         this.label = _name;
         this.outputChannel = vscode.window.createOutputChannel(`tomcat_${this._name}`);
-        this.vmOptionFile = path.join(this._storagePath, Constants.JVM_OPTION_FILE);
+        this.jvmOptionFile = path.join(this._storagePath, Constants.JVM_OPTION_FILE);
         this._configurationPath = path.join(this._storagePath, 'conf', 'server.xml');
     }
 

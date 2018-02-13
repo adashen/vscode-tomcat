@@ -100,14 +100,14 @@ export class TomcatController {
         return tomcatServer;
     }
 
-    public async customizeVMOptions(tomcatServer: TomcatServer): Promise<void> {
+    public async customizeJVMOptions(tomcatServer: TomcatServer): Promise<void> {
         if (!tomcatServer) {
             return;
         }
-        if (!await fse.pathExists(tomcatServer.vmOptionFile)) {
+        if (!await fse.pathExists(tomcatServer.jvmOptionFile)) {
             await fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(tomcatServer.getStoragePath(), 'jvm.options'));
         }
-        Utility.openFile(tomcatServer.vmOptionFile);
+        Utility.openFile(tomcatServer.jvmOptionFile);
     }
 
     public async renameServer(tomcatServer: TomcatServer): Promise<void> {
@@ -138,7 +138,7 @@ export class TomcatController {
                 vscode.window.showInformationMessage(DialogMessage.serverStopped);
                 return;
             }
-            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...server.vmOptions.concat('stop'));
+            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
             server.needRestart = restart;
         }
     }
@@ -272,7 +272,7 @@ export class TomcatController {
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
-            await this._tomcatModel.updateVMOptions(serverName);
+            await this._tomcatModel.updateJVMOptions(serverName);
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
@@ -298,7 +298,7 @@ export class TomcatController {
                 }
             });
 
-            let startAgruments: string[] = serverInfo.vmOptions;
+            let startAgruments: string[] = serverInfo.jvmOptions;
             if (serverInfo.getDebugPort()) {
                 startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}:${serverInfo.getDebugPort()}`].concat(startAgruments);
             }

@@ -110,8 +110,8 @@
         "category": "Tomcat"
       },
       {
-        "command": "tomcat.server.customizevmoption",
-        "title": "Customize VM Options"
+        "command": "tomcat.server.customizejvmoptions",
+        "title": "Customize JVM Options"
       },
       {
         "command": "tomcat.server.delete.context",
@@ -209,7 +209,7 @@
           "when": "false == true"
         },
         {
-          "command": "tomcat.server.customizevmoption",
+          "command": "tomcat.server.customizejvmoptions",
           "when": "false == true"
         },
         {
@@ -264,7 +264,7 @@
           "group": "tomcat@6"
         },
         {
-          "command": "tomcat.server.customizevmoption",
+          "command": "tomcat.server.customizejvmoptions",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@7"
         },

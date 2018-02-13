@@ -36,7 +36,7 @@ export class TomcatModel {
         }
     }
 
-    public async updateVMOptions(serverName: string) : Promise<void> {
+    public async updateJVMOptions(serverName: string) : Promise<void> {
         const server: TomcatServer = this.getTomcatServer(serverName);
         const installPath: string = server.getInstallPath();
         const catalinaBase: string = path.join(server.getStoragePath());
@@ -48,13 +48,13 @@ export class TomcatModel {
             `${Constants.CATALINA_HOME_KEY}=${installPath}`
         ];
 
-        if (!await fse.pathExists(server.vmOptionFile)) {
-            server.vmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+        if (!await fse.pathExists(server.jvmOptionFile)) {
+            server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
             return;
         }
         await new Promise((resolve: () => void): void => {
             const lineReader: readline.ReadLine = readline.createInterface({
-                input: fse.createReadStream(server.vmOptionFile),
+                input: fse.createReadStream(server.jvmOptionFile),
                 crlfDelay: Infinity
             });
             lineReader.on('line', (line: string) => {
@@ -74,7 +74,7 @@ export class TomcatModel {
                 if (!tmpDirConfiguration || tmpDirConfiguration.length <= 0) {
                     result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}=${path.join(catalinaBase, 'temp')}`);
                 }
-                server.vmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+                server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
                 resolve();
             });
         });
