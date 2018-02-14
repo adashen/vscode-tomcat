@@ -22,7 +22,6 @@ export class TomcatController {
     }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
-        Utility.initTelemetrySteps();
         const server: TomcatServer = await this.precheck(tomcatServer);
         if (server) {
             if (server.isStarted()) {
@@ -32,41 +31,34 @@ export class TomcatController {
                     return;
                 }
                 Utility.trackTelemetryStep('stop');
-                await this.doStopOrRestartServer(server);
+                await this.stopOrRestartServer(server);
             }
             Utility.trackTelemetryStep('delete');
             this._tomcatModel.deleteServer(server);
         }
     }
 
-    public stopOrRestartServer(tomcatServer: TomcatServer, restart: boolean = false): void {
-        Utility.initTelemetrySteps();
-        this.doStopOrRestartServer(tomcatServer, restart);
-    }
-
     public async openServerConfig(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
-            Utility.initTelemetrySteps();
             const configFile: string = tomcatServer.getServerConfigPath();
             if (!await fse.pathExists(configFile)) {
                 Utility.trackTelemetryStep('no configuration');
                 throw new Error(DialogMessage.noServerConfig);
             }
-            Utility.trackTelemetryStep('show configuration');
+            Utility.trackTelemetryStep('open configuration');
             vscode.window.showTextDocument(vscode.Uri.file(configFile), { preview: false });
         }
     }
 
     public async browseWarPackage(warPackage: WarPackage): Promise<void> {
         if (warPackage) {
-            Utility.initTelemetrySteps();
             const server: TomcatServer = this._tomcatModel.getTomcatServer(warPackage.serverName);
             const httpPort: string = await Utility.getPort(server.getServerConfigPath(), Constants.PortKind.Http);
             if (!server.isStarted()) {
                 const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServer, DialogMessage.yes, DialogMessage.no);
                 if (result === DialogMessage.yes) {
                     Utility.trackTelemetryStep('start server');
-                    this.doStartServer(server);
+                    this.startServer(server);
                 }
             }
             Utility.trackTelemetryStep('browse war');
@@ -76,7 +68,6 @@ export class TomcatController {
 
     public async deleteWarPackage(warPackage: WarPackage): Promise<void> {
         if (warPackage) {
-            Utility.initTelemetrySteps();
             Utility.trackTelemetryStep('delete war');
             await fse.remove(warPackage.storagePath);
             vscode.commands.executeCommand('tomcat.tree.refresh');
@@ -85,19 +76,49 @@ export class TomcatController {
 
     public reveralWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
-            Utility.initTelemetrySteps();
             Utility.trackTelemetryStep('reveal war in explorer');
             opn(warPackage.storagePath);
         }
     }
 
-    public createServer(): Promise<TomcatServer> {
-        Utility.initTelemetrySteps();
-        return this.doCreateServer();
+    public async createServer(): Promise<TomcatServer> {
+        Utility.trackTelemetryStep('select install path');
+        const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
+            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
+            canSelectFiles: false,
+            canSelectFolders: true,
+            openLabel: DialogMessage.selectDirectory
+        });
+        if (Utility.isEmpty(pathPick) || !pathPick[0].fsPath) {
+            return;
+        }
+        const tomcatInstallPath: string = pathPick[0].fsPath;
+        if (!await Utility.validateInstallPath(tomcatInstallPath)) {
+            vscode.window.showErrorMessage(Constants.INVALID_SERVER_DIRECTORY);
+            Utility.trackTelemetryStep('install path invalid');
+            return;
+        }
+        Utility.trackTelemetryStep('construct server name');
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
+        const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
+        await fse.remove(catalinaBasePath);
+        Utility.trackTelemetryStep('copy files');
+        await Promise.all([
+            Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'),  path.join(catalinaBasePath, 'conf', 'server.xml')),
+            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
+            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
+            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'work'))
+        ]);
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
+        Utility.trackTelemetryStep('add server');
+        this._tomcatModel.addServer(tomcatServer);
+        return tomcatServer;
     }
 
     public async renameServer(tomcatServer: TomcatServer): Promise<void> {
-        Utility.initTelemetrySteps();
         const server: TomcatServer = await this.precheck(tomcatServer);
         if (server) {
             const newName: string = await vscode.window.showInputBox({
@@ -119,13 +140,32 @@ export class TomcatController {
         }
     }
 
-    public startServer(tomcatServer: TomcatServer): void {
-        Utility.initTelemetrySteps();
-        this.doStartServer(tomcatServer);
+    public async stopOrRestartServer(tomcatServer: TomcatServer, restart: boolean = false): Promise<void> {
+        const server: TomcatServer = await this.precheck(tomcatServer);
+        if (server) {
+            if (!server.isStarted()) {
+                vscode.window.showInformationMessage(DialogMessage.serverStopped);
+                return;
+            }
+            Utility.trackTelemetryStep(`${restart ? 'restart' : 'stop'}`);
+            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(server, false));
+            server.needRestart = restart;
+        }
+    }
+
+    public async startServer(tomcatServer: TomcatServer): Promise<void> {
+        const server: TomcatServer = tomcatServer ? tomcatServer : await this.selectServer(true);
+        if (server) {
+            if (server.isStarted()) {
+                vscode.window.showInformationMessage(DialogMessage.serverRunning);
+                return;
+            }
+            Utility.trackTelemetryStep('start');
+            await this.startTomcat(server);
+        }
     }
 
     public async runOrDebugOnServer(uri?: vscode.Uri, debug?: boolean): Promise<void> {
-        Utility.initTelemetrySteps();
         if (!uri) {
             Utility.trackTelemetryStep('select war');
             const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
@@ -172,7 +212,7 @@ export class TomcatController {
         server.setDebugInfo(debug, port, workspaceFolder);
         if (server.isStarted()) {
             Utility.trackTelemetryStep('restart');
-            await this.doStopOrRestartServer(server, true);
+            await this.stopOrRestartServer(server, true);
         } else {
             Utility.trackTelemetryStep('start');
             await this.startTomcat(server);
@@ -181,7 +221,6 @@ export class TomcatController {
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
-            Utility.initTelemetrySteps();
             Utility.trackTelemetryStep('get http port');
             const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
             Utility.trackTelemetryStep('browse server');
@@ -192,73 +231,11 @@ export class TomcatController {
     public dispose(): void {
         this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
             if (element.isStarted()) {
-                this.doStopOrRestartServer(element);
+                this.stopOrRestartServer(element);
             }
             element.outputChannel.dispose();
         });
         this._tomcatModel.saveServerListSync();
-    }
-
-    private async doStopOrRestartServer(tomcatServer: TomcatServer, restart: boolean = false): Promise<void> {
-        const server: TomcatServer = await this.precheck(tomcatServer);
-        if (server) {
-            if (!server.isStarted()) {
-                vscode.window.showInformationMessage(DialogMessage.serverStopped);
-                return;
-            }
-            Utility.trackTelemetryStep(`${restart ? 'restart' : 'stop'}`);
-            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(server, false));
-            server.needRestart = restart;
-        }
-    }
-
-    private async doStartServer(tomcatServer: TomcatServer): Promise<void> {
-        const server: TomcatServer = tomcatServer ? tomcatServer : await this.selectServer(true);
-        if (server) {
-            if (server.isStarted()) {
-                vscode.window.showInformationMessage(DialogMessage.serverRunning);
-                return;
-            }
-            Utility.trackTelemetryStep('start');
-            await this.startTomcat(server);
-        }
-    }
-
-    private async doCreateServer(): Promise<TomcatServer> {
-        Utility.trackTelemetryStep('select tomcat install path');
-        const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
-            defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
-            canSelectFiles: false,
-            canSelectFolders: true,
-            openLabel: DialogMessage.selectDirectory
-        });
-        if (Utility.isEmpty(pathPick) || !pathPick[0].fsPath) {
-            return;
-        }
-        const tomcatInstallPath: string = pathPick[0].fsPath;
-        if (!await Utility.validateInstallPath(tomcatInstallPath)) {
-            Utility.trackTelemetryStep('install path validation failed');
-            vscode.window.showErrorMessage(Constants.INVALID_SERVER_DIRECTORY);
-            return;
-        }
-        Utility.trackTelemetryStep('construct server name');
-        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
-        const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
-        await fse.remove(catalinaBasePath);
-        Utility.trackTelemetryStep('copy files');
-        await Promise.all([
-            Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'),  path.join(catalinaBasePath, 'conf', 'server.xml')),
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
-            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
-            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
-            fse.mkdirs(path.join(catalinaBasePath, 'work'))
-        ]);
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
-        this._tomcatModel.addServer(tomcatServer);
-        Utility.trackTelemetryStep('add server');
-        return tomcatServer;
     }
 
     private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
@@ -278,7 +255,7 @@ export class TomcatController {
                 return pick;
             } else {
                 Utility.trackTelemetryStep('create server');
-                return await this.doCreateServer();
+                return await this.createServer();
             }
         }
     }
@@ -368,7 +345,7 @@ export class TomcatController {
 
                     if (item === DialogMessage.yes) {
                         Utility.trackTelemetryStep('restart');
-                        await this.doStopOrRestartServer(serverInfo, true);
+                        await this.stopOrRestartServer(serverInfo, true);
                     } else if (item === DialogMessage.never) {
                         Utility.trackTelemetryStep('disable auto restart');
                         Utility.disableAutoRestart();
