@@ -46,7 +46,7 @@ export namespace Utility {
             throw new Error(localize('tomcatExt.fileNotExist', `File ${file} does not exist.`));
         }
         vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
-
+    }
     export function trackTelemetryStep(step: string): void {
         const session: Session = TelemetryWrapper.currentSession();
         if (session && session.extraProperties) { session.extraProperties.finishedSteps.push(step); }

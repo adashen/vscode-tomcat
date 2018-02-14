@@ -120,13 +120,13 @@ export class TomcatController {
     }
 
     public async customizeJVMOptions(tomcatServer: TomcatServer): Promise<void> {
-        if (!tomcatServer) {
-            return;
+        if (tomcatServer) {
+            if (!await fse.pathExists(tomcatServer.jvmOptionFile)) {
+                await fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(tomcatServer.getStoragePath(), 'jvm.options'));
+            }
+            Utility.trackTelemetryStep('customize jvm options');
+            Utility.openFile(tomcatServer.jvmOptionFile);
         }
-        if (!await fse.pathExists(tomcatServer.jvmOptionFile)) {
-            await fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(tomcatServer.getStoragePath(), 'jvm.options'));
-        }
-        Utility.openFile(tomcatServer.jvmOptionFile);
     }
 
     public async renameServer(tomcatServer: TomcatServer): Promise<void> {
