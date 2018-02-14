@@ -147,7 +147,7 @@ export class TomcatController {
                 vscode.window.showInformationMessage(DialogMessage.serverStopped);
                 return;
             }
-            Utility.trackTelemetryStep(`${restart ? 'restart' : 'stop'}`);
+            Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
             await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...this.getJavaArgs(server, false));
             server.needRestart = restart;
         }
