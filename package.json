@@ -167,47 +167,47 @@
       "commandPalette": [
         {
           "command": "tomcat.server.browse",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.tree.refresh",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.config.open",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.war.browse",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.server.start.context",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.server.restart.context",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.server.rename.context",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.server.delete.context",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.server.stop.context",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.war.delete",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.war.reveal",
-          "when": "false == true"
+          "when": "never"
         }
       ],
       "explorer/context": [
