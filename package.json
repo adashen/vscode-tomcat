@@ -210,7 +210,7 @@
         },
         {
           "command": "tomcat.server.customizejvmoptions",
-          "when": "false == true"
+          "when": "never"
         },
         {
           "command": "tomcat.war.reveal",
@@ -254,17 +254,17 @@
           "group": "tomcat@4"
         },
         {
-          "command": "tomcat.server.delete.context",
+          "command": "tomcat.config.open",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@5"
         },
         {
-          "command": "tomcat.config.open",
+          "command": "tomcat.server.customizejvmoptions",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@6"
         },
         {
-          "command": "tomcat.server.customizejvmoptions",
+          "command": "tomcat.server.delete.context",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@7"
         },
