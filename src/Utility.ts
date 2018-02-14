@@ -6,6 +6,7 @@ import * as net from "net";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
+import { Session, TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
@@ -45,6 +46,16 @@ export namespace Utility {
             throw new Error(localize('tomcatExt.fileNotExist', `File ${file} does not exist.`));
         }
         vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
+
+    export function trackTelemetryStep(step: string): void {
+        const session: Session = TelemetryWrapper.currentSession();
+        if (session && session.extraProperties) { session.extraProperties.finishedSteps.push(step); }
+        TelemetryWrapper.info(step);
+    }
+
+    export function initTelemetrySteps(): void {
+        const session: Session = TelemetryWrapper.currentSession();
+        if (session && session.extraProperties) { session.extraProperties.finishedSteps = []; }
     }
 
     export function disableAutoRestart(): void {
