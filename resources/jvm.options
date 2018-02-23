@@ -1,0 +1,10 @@
+# custom Tomcat Server JVM options
+
+# All configurations start with '-' will be loaded during stating JVM
+# Don't tamper with any configuration unless you understand what you are doing
+
+# Xms represents the initial size of total heap space
+# Xmx represents the maximum size of total heap space
+
+#-Xms${heap.min}
+#-Xmx${heap.max}

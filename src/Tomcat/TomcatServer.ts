@@ -2,6 +2,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
+import * as Constants from "../Constants";
 import { ServerState } from "../Constants";
 import { Utility } from "../Utility";
 
@@ -9,18 +10,20 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
     public needRestart: boolean = false;
     public label: string;
     public description: string;
+    public jvmOptions: string[];
+    public jvmOptionFile: string;
     public outputChannel: vscode.OutputChannel;
     private _state: ServerState = ServerState.IdleServer;
     private _isDebugging: boolean = false;
     private _debugPort: number;
     private _debugWorkspace: vscode.WorkspaceFolder;
-
     private _configurationPath: string;
 
     constructor(private _name: string, private _installPath: string, private _storagePath: string) {
         super(_name);
         this.label = _name;
         this.outputChannel = vscode.window.createOutputChannel(`tomcat_${this._name}`);
+        this.jvmOptionFile = path.join(this._storagePath, Constants.JVM_OPTION_FILE);
         this._configurationPath = path.join(this._storagePath, 'conf', 'server.xml');
     }
 
