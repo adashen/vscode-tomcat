@@ -338,7 +338,7 @@ export class TomcatController {
                 }
             });
 
-            let startAgruments: string[] = serverInfo.jvmOptions.slice(0, serverInfo.jvmOptions.length);
+            let startAgruments: string[] = serverInfo.jvmOptions.slice();
             if (serverInfo.getDebugPort()) {
                 startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startAgruments);
             }
