@@ -30,10 +30,8 @@ export class TomcatController {
                     Utility.trackTelemetryStep('cancel');
                     return;
                 }
-                Utility.trackTelemetryStep('stop');
                 await this.stopOrRestartServer(server);
             }
-            Utility.trackTelemetryStep('delete');
             this._tomcatModel.deleteServer(server);
         }
     }
@@ -68,7 +66,6 @@ export class TomcatController {
 
     public async deleteWarPackage(warPackage: WarPackage): Promise<void> {
         if (warPackage) {
-            Utility.trackTelemetryStep('delete war');
             await fse.remove(warPackage.storagePath);
             vscode.commands.executeCommand('tomcat.tree.refresh');
         }
@@ -76,7 +73,6 @@ export class TomcatController {
 
     public reveralWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
-            Utility.trackTelemetryStep('reveal war in explorer');
             opn(warPackage.storagePath);
         }
     }
@@ -124,7 +120,6 @@ export class TomcatController {
             if (!await fse.pathExists(tomcatServer.jvmOptionFile)) {
                 await fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(tomcatServer.getStoragePath(), 'jvm.options'));
             }
-            Utility.trackTelemetryStep('customize jvm options');
             Utility.openFile(tomcatServer.jvmOptionFile);
         }
     }
@@ -171,7 +166,6 @@ export class TomcatController {
                 vscode.window.showInformationMessage(DialogMessage.serverRunning);
                 return;
             }
-            Utility.trackTelemetryStep('start');
             await this.startTomcat(server);
         }
     }
@@ -329,7 +323,6 @@ export class TomcatController {
                     );
 
                     if (item === DialogMessage.yes) {
-                        Utility.trackTelemetryStep('restart');
                         await this.stopOrRestartServer(serverInfo, true);
                     } else if (item === DialogMessage.never) {
                         Utility.trackTelemetryStep('disable auto restart');
@@ -338,12 +331,12 @@ export class TomcatController {
                 }
             });
 
-            let startAgruments: string[] = serverInfo.jvmOptions.slice();
+            let startArguments: string[] = serverInfo.jvmOptions.slice();
             if (serverInfo.getDebugPort()) {
-                startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startAgruments);
+                startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
-            startAgruments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startAgruments);
+            startArguments.push('start');
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
