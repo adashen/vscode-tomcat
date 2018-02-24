@@ -26,6 +26,8 @@ export const CATALINA_HOME_KEY: string = '-Dcatalina.home';
 
 export const JAVA_IO_TEMP_DIR_KEY: string = '-Djava.io.tmpdir';
 
+export const ENCODING: string = '-Dfile.encoding=UTF8';
+
 export const BOOTSTRAP_FILE: string = 'org.apache.catalina.startup.Bootstrap';
 
 export const JVM_DEFAULT_OPTIONS_KEYS: string[] = [CLASS_PATH_KEY, CATALINA_BASE_KEY, CATALINA_HOME_KEY];

@@ -338,9 +338,9 @@ export class TomcatController {
                 }
             });
 
-            let startAgruments: string[] = serverInfo.jvmOptions;
+            let startAgruments: string[] = serverInfo.jvmOptions.slice(0, serverInfo.jvmOptions.length);
             if (serverInfo.getDebugPort()) {
-                startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}:${serverInfo.getDebugPort()}`].concat(startAgruments);
+                startAgruments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startAgruments);
             }
             startAgruments.push('start');
             const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startAgruments);
