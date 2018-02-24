@@ -45,7 +45,8 @@ export class TomcatModel {
         let result: string[] = [
             `${Constants.CLASS_PATH_KEY} ${[bootStrap, tomcat].join(path.delimiter)}`,
             `${Constants.CATALINA_BASE_KEY}=${catalinaBase}`,
-            `${Constants.CATALINA_HOME_KEY}=${installPath}`
+            `${Constants.CATALINA_HOME_KEY}=${installPath}`,
+            `${Constants.ENCODING}`
         ];
 
         if (!await fse.pathExists(server.jvmOptionFile)) {
