@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+## 0.6.0
+### Added
+* Add "Reveal in Explorer" context command to war packages in Tomcat Exploer
+* Add "Delete" context command to war packages in Tomcat Explorer
+* Add support for users to customize JVM options
+
+### Changed
+* Update context commands names
+* Format the server.xml during creating Tomcat Server
+
 ## 0.5.0
 ### Added
 * Validate Tomcat install directory when user creating Tomcat Server
