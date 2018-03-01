@@ -87,11 +87,9 @@ export namespace Utility {
         if (config) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model
             const workspace: string = config.get<string>('workspace');
-            try {
+            if (workspace && workspace !== '') {
                 await fse.ensureDir(workspace);
                 return workspace;
-            } catch (err) {
-                return path.join(defaultStoragePath, 'tomcat');
             }
         }
         return path.join(defaultStoragePath, 'tomcat');

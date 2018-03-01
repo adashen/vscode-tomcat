@@ -296,7 +296,7 @@
         "properties": {
           "tomcat.workspace": {
             "type": "string",
-            "default": "<<fill in tomcat servers workspace path>>",
+            "default": "",
             "description": "Tomcat Servers workspace."
           },
           "tomcat.restart_when_http(s)_port_change": {
