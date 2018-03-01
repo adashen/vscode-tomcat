@@ -1,7 +1,9 @@
 # custom Tomcat Server JVM options
 
-# All configurations start with '-' will be loaded during stating JVM
-# Don't tamper with any configuration unless you understand what you are doing
+# All configurations start with '-' will be loaded during stating JVM.
+# You need to restart the server for the configurations to take effect.
+# Useful link: https://docs.oracle.com/cd/E15523_01/web.1111/e13814/jvm_tuning.htm#PERFM150
+# Useful tool: http://jvmmemory.com/
 
 # Xms represents the initial size of total heap space
 # Xmx represents the maximum size of total heap space
