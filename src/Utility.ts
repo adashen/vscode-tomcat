@@ -5,6 +5,7 @@ import * as fse from "fs-extra";
 import * as net from "net";
 import * as os from "os";
 import * as path from "path";
+import * as readline from "readline";
 import * as vscode from "vscode";
 import { Session, TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
 import * as xml2js from "xml2js";
@@ -113,6 +114,25 @@ export namespace Utility {
             restartConfig = config.get<boolean>(Constants.RESTART_CONFIG_ID);
         }
         return restartConfig && (httpPort !== newHttpPort || httpsPort !== newHttpsPort);
+    }
+
+    export async function readFileLineByLine(file: string, filterFunction?: (value: string) => boolean): Promise<string[]> {
+        let result: string[] = [];
+        await new Promise((resolve: () => void): void => {
+            const lineReader: readline.ReadLine = readline.createInterface({
+                input: fse.createReadStream(file),
+                crlfDelay: Infinity
+            });
+            lineReader.on('line', (line: string) => {
+                if (!filterFunction || filterFunction(line)) {
+                    result = result.concat(line);
+                }
+            });
+            lineReader.on('close', () => {
+                resolve();
+            });
+        });
+        return result;
     }
 
     export function getTempStoragePath(): string {
