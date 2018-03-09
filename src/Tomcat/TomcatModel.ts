@@ -44,9 +44,9 @@ export class TomcatModel {
         const tomcat: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
         let result: string[] = [
             `${Constants.CLASS_PATH_KEY} "${[bootStrap, tomcat].join(path.delimiter)}"`,
-            `"${Constants.CATALINA_BASE_KEY}=${catalinaBase}"`,
-            `"${Constants.CATALINA_HOME_KEY}=${installPath}"`,
-            `"${Constants.ENCODING}"`
+            `${Constants.CATALINA_BASE_KEY}="${catalinaBase}"`,
+            `${Constants.CATALINA_HOME_KEY}="${installPath}"`,
+            `${Constants.ENCODING}`
         ];
 
         if (!await fse.pathExists(server.jvmOptionFile)) {
@@ -73,7 +73,7 @@ export class TomcatModel {
                     return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
                 });
                 if (!tmpDirConfiguration || tmpDirConfiguration.length <= 0) {
-                    result = result.concat(`"${Constants.JAVA_IO_TEMP_DIR_KEY}=${path.join(catalinaBase, 'temp')}"`);
+                    result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(catalinaBase, 'temp')}"`);
                 }
                 server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
                 resolve();
