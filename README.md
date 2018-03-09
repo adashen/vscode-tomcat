@@ -8,9 +8,13 @@
 * Run war package on Tomcat Server
 * Debug war package on Tomcat Server
 * Open server page in browser to check all deployed war packages
+* View all deployed war packages in Tomcat Explorer
 * Open war package page in browser
 * Stop Tomcat Server
 * Rename Tomcat Server
+* Customize JVM Options when starting Tomcat Server
+* Reveal deployed war packages in explorer
+* Delete deployed war package
 
 ## Prerequisites
 * [Apache Tomcat](http://tomcat.apache.org/)
