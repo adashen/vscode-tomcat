@@ -2,7 +2,6 @@
 
 import * as fse from "fs-extra";
 import * as path from "path";
-import * as readline from "readline";
 import * as vscode from "vscode";
 import * as Constants from "../Constants";
 import { Utility } from "../Utility";
@@ -53,32 +52,27 @@ export class TomcatModel {
             server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
             return;
         }
-        await new Promise((resolve: () => void): void => {
-            const lineReader: readline.ReadLine = readline.createInterface({
-                input: fse.createReadStream(server.jvmOptionFile),
-                crlfDelay: Infinity
-            });
-            lineReader.on('line', (line: string) => {
-                if (line.startsWith('-')) {
-                    Constants.JVM_DEFAULT_OPTIONS_KEYS.forEach((key: string) => {
-                        if (line.startsWith(key)) {
-                            return;
-                        }
-                    });
-                    result = result.concat(line);
+        const filterFunction: (para: string) => boolean = (para: string): boolean => {
+            if (!para.startsWith('-')) {
+                return false;
+            }
+            let valid: boolean = true;
+            Constants.JVM_DEFAULT_OPTIONS_KEYS.forEach((key: string) => {
+                if (para.startsWith(key)) {
+                    valid = false;
+                    return;
                 }
             });
-            lineReader.on('close', () => {
-                const tmpDirConfiguration: string = result.find((element: string) => {
-                    return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
-                });
-                if (!tmpDirConfiguration || tmpDirConfiguration.length <= 0) {
-                    result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(catalinaBase, 'temp')}"`);
-                }
-                server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
-                resolve();
-            });
+            return valid;
+        };
+        result = result.concat(await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction));
+        const tmpDirConfiguration: string = result.find((element: string) => {
+            return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
         });
+        if (!tmpDirConfiguration) {
+            result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(catalinaBase, 'temp')}"`);
+        }
+        server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
