@@ -22,9 +22,8 @@
 			File f = new File(file);
 			String webappsPath = f.getParent();
 			File webapps = new File(webappsPath);
-			String serverName = webapps.getParentFile().getName();
 		%>
-			<div class="row"><h2>War Packages Deployed on <%=serverName %>:</h2></div>
+			<div class="row"><h2>War Packages Deployed on this Tomcat Server:</h2></div>
 			<div class="row" style="font-size: 22px;">
 				<ul class="list-group">
 				<%
