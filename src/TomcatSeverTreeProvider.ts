@@ -39,11 +39,22 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
             const webapps: string = path.join(server.getStoragePath(), 'webapps');
             const iconPath: string = this._context.asAbsolutePath(path.join('resources', 'war.jpg'));
             if (await fse.pathExists(webapps)) {
-                const wars: string[] = await fse.readdir(webapps);
-                return wars.map((w: string) => {
+                let wars: string[] = await fse.readdir(webapps);
+                let temp: fse.Stats;
+                // show war packages with no extension if there is one
+                // and no need to show war packages if its unzipped folder exists
+                wars = wars.filter((w: string) => {
                     if (w.toUpperCase() !== 'ROOT') {
-                        return new WarPackage(w, server.getName(), iconPath, path.join(webapps, w));
+                        temp = fse.statSync(path.join(webapps, w));
+                        if (temp.isDirectory() || (temp.isFile() && w.endsWith('.war'))) {
+                            return w;
+                        }
                     }
+                }).map((w: string) => {
+                    return w.endsWith('.war') ? w.substring(0, w.indexOf('.war')) : w;
+                });
+                return [...new Set([...wars])].map((w: string) => {
+                    return new WarPackage(w, server.getName(), iconPath, path.join(webapps, w));
                 });
             }
             return [];
