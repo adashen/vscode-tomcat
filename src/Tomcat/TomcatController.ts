@@ -252,6 +252,21 @@ export class TomcatController {
         if (_.isEmpty(items) && !createIfNoneServer) {
             return;
         }
+        if (items.length === 1) {
+            const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+            const autoSelect: string = config.get<string>(Constants.AUTO_SELECT_SERVER);
+            if (autoSelect === '') {
+                const autoSelectConfirm: MessageItem = await vscode.window.showInformationMessage(DialogMessage.autoSelectServer, DialogMessage.yes, DialogMessage.no, DialogMessage.never);
+                if (autoSelectConfirm === DialogMessage.yes) {
+                    Utility.setAutoSelectServer();
+                    return <TomcatServer>items[0];
+                } else if (autoSelectConfirm === DialogMessage.never) {
+                    Utility.disableAutoSelectServer();
+                }
+            } else if (autoSelect.toLowerCase() === 'yes') {
+                return <TomcatServer>items[0];
+            }
+        }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
         const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
             items,

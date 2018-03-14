@@ -62,6 +62,20 @@ export namespace Utility {
         }
     }
 
+    export function setAutoSelectServer(): void {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            config.update(Constants.AUTO_SELECT_SERVER, 'yes', true);
+        }
+    }
+
+    export function disableAutoSelectServer(): void {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            config.update(Constants.AUTO_SELECT_SERVER, 'never', true);
+        }
+    }
+
     export async function getServerStoragePath(defaultStoragePath: string, serverName: string): Promise<string> {
         return path.join(await getWorkspace(defaultStoragePath), serverName);
     }

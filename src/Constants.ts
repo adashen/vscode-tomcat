@@ -11,6 +11,8 @@ export const UNABLE_SHUTDOWN_URL: string = 'https://stackoverflow.com/questions/
 
 export const RESTART_CONFIG_ID: string = 'restart_when_http(s)_port_change';
 
+export const AUTO_SELECT_SERVER: string = 'auto_select_server';
+
 // tslint:disable-next-line:no-http-string
 export const LOCALHOST: string = 'http://localhost';
 
