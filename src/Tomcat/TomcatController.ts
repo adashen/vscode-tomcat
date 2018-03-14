@@ -2,6 +2,7 @@
 
 import * as chokidar from "chokidar";
 import * as fse from "fs-extra";
+import * as _ from "lodash";
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import * as path from "path";
@@ -85,7 +86,7 @@ export class TomcatController {
             canSelectFolders: true,
             openLabel: DialogMessage.selectDirectory
         });
-        if (Utility.isEmpty(pathPick) || !pathPick[0].fsPath) {
+        if (_.isEmpty(pathPick) || !pathPick[0].fsPath) {
             return;
         }
         const tomcatInstallPath: string = pathPick[0].fsPath;
@@ -182,7 +183,7 @@ export class TomcatController {
                 canSelectFolders: false,
                 openLabel: DialogMessage.selectWarPackage
             });
-            if (Utility.isEmpty(dialog) || !dialog[0].fsPath) {
+            if (_.isEmpty(dialog) || !dialog[0].fsPath) {
                 return;
             }
             uri = dialog[0];
@@ -248,13 +249,13 @@ export class TomcatController {
 
     private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
         let items: vscode.QuickPickItem[] = this._tomcatModel.getServerSet();
-        if (Utility.isEmpty(items) && !createIfNoneServer) {
+        if (_.isEmpty(items) && !createIfNoneServer) {
             return;
         }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
         const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
             items,
-            { placeHolder: createIfNoneServer && items && items.length === 1 ? DialogMessage.createServer : DialogMessage.selectServer }
+            { placeHolder: createIfNoneServer && items.length === 1 ? DialogMessage.createServer : DialogMessage.selectServer }
         );
 
         if (pick) {
@@ -357,7 +358,7 @@ export class TomcatController {
         }
     }
     private async precheck(tomcatServer: TomcatServer): Promise<TomcatServer> {
-        if (Utility.isEmpty(this._tomcatModel.getServerSet())) {
+        if (_.isEmpty(this._tomcatModel.getServerSet())) {
             vscode.window.showInformationMessage(DialogMessage.noServer);
             return;
         }
