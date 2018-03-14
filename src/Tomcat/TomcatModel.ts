@@ -1,6 +1,7 @@
 'use strict';
 
 import * as fse from "fs-extra";
+import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as Constants from "../Constants";
@@ -79,7 +80,7 @@ export class TomcatModel {
         const index: number = this._serverList.findIndex((item: TomcatServer) => item.getName() === tomcatServer.getName());
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
-            if (!Utility.isEmpty(oldServer)) {
+            if (!_.isEmpty(oldServer)) {
                 fse.remove(tomcatServer.getStoragePath());
                 this.saveServerList();
                 tomcatServer.outputChannel.dispose();
@@ -113,7 +114,7 @@ export class TomcatModel {
         try {
             if (fse.existsSync(this._serversJsonFile)) {
                 const objArray: {}[] = fse.readJsonSync(this._serversJsonFile);
-                if (!Utility.isEmpty(objArray)) {
+                if (!_.isEmpty(objArray)) {
                     this._serverList = this._serverList.concat(objArray.map(
                         (obj: { _name: string, _installPath: string, _storagePath: string }) => {
                             return new TomcatServer(obj._name, obj._installPath, obj._storagePath);
