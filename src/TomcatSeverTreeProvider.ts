@@ -1,9 +1,11 @@
 'use strict';
 
 import * as fse from "fs-extra";
+import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import { TreeItem } from "vscode";
+import * as Constants from "./Constants";
 import { ServerState } from "./Constants";
 import { TomcatModel } from "./Tomcat/TomcatModel";
 import { TomcatServer } from "./Tomcat/TomcatServer";
@@ -39,11 +41,24 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
             const webapps: string = path.join(server.getStoragePath(), 'webapps');
             const iconPath: string = this._context.asAbsolutePath(path.join('resources', 'war.jpg'));
             if (await fse.pathExists(webapps)) {
-                const wars: string[] = await fse.readdir(webapps);
-                return wars.map((w: string) => {
+                const wars: string[] = [];
+                let temp: fse.Stats;
+                let fileExtension: string;
+                // show war packages with no extension if there is one
+                // and no need to show war packages if its unzipped folder exists
+                const promises: Promise<void>[] = (await fse.readdir(webapps)).map(async (w: string) => {
                     if (w.toUpperCase() !== 'ROOT') {
-                        return new WarPackage(w, server.getName(), iconPath, path.join(webapps, w));
+                        temp = await fse.stat(path.join(webapps, w));
+                        fileExtension = path.extname(path.join(webapps, w));
+                        if (temp.isDirectory() || (temp.isFile() && fileExtension === Constants.WAR_FILE_EXTENSION)) {
+                            wars.push(fileExtension === Constants.WAR_FILE_EXTENSION ? path.basename(w, fileExtension) : w);
+                        }
                     }
+                });
+                await Promise.all(promises);
+                // tslint:disable-next-line:underscore-consistent-invocation
+                return _.uniq(wars).map((w: string) => {
+                    return new WarPackage(w, server.getName(), iconPath, path.join(webapps, w));
                 });
             }
             return [];
