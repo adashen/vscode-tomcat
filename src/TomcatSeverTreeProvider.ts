@@ -51,7 +51,7 @@ export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem
                         temp = await fse.stat(path.join(webapps, w));
                         fileExtension = path.extname(path.join(webapps, w));
                         if (temp.isDirectory() || (temp.isFile() && fileExtension === Constants.WAR_FILE_EXTENSION)) {
-                            wars.push(fileExtension === Constants.WAR_FILE_EXTENSION ? w.substring(0, w.indexOf(fileExtension)) : w);
+                            wars.push(fileExtension === Constants.WAR_FILE_EXTENSION ? path.basename(w, fileExtension) : w);
                         }
                     }
                 });
