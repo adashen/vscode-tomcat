@@ -20,7 +20,6 @@ export namespace DialogMessage {
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const startServer: string = localize('tomcatExt.startServer', 'The Tomcat server needs to be started before browsing the war packages. Would you like to start it now?');
-    export const autoSelectServer: string = localize('tomcatExt.autoSelectServer', 'Would you like to just run operation on the server without prompting to select if there is only one Tomcat Server?');
 
     export function getServerPortChangeErrorMessage(serverName: string, serverPort: string): string {
         return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause it unable to shutdown. Would you like to change it back to {1}?', serverName, serverPort);

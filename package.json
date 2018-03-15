@@ -303,10 +303,6 @@
             "type": "boolean",
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
-          },
-          "tomcat.auto_select_server": {
-            "type": "string",
-            "description": "Auto select the server if there is only one Tomcat Server"
           }
         }
       }
