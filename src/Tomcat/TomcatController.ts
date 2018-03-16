@@ -252,6 +252,9 @@ export class TomcatController {
         if (_.isEmpty(items) && !createIfNoneServer) {
             return;
         }
+        if (items.length === 1) {
+            return <TomcatServer>items[0];
+        }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
         const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
             items,
