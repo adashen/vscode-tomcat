@@ -3,7 +3,7 @@
 
 
 ## Features
-* Create Tomcat Server from Tomcat Install Path
+* Add Tomcat Server from Tomcat Install Path
 * Start/Restart Tomcat Server from VSCode
 * Run war package on Tomcat Server
 * Debug war package on Tomcat Server
@@ -22,13 +22,13 @@
 
 ## Usage
 
-* Create New Tomcat Server, right-click and start it. Find a war package, right-click to run it on Tomcat Server.
+* Add New Tomcat Server, right-click and start it. Find a war package, right-click to run it on Tomcat Server.
 
 ![start and run](resources/start_run_war.gif)
 
 * Debug war package on Tomcat Server
 
-Right-click a war package to debug it on Tomcat Server, if there is no server ready, just create a new one.
+Right-click a war package to debug it on Tomcat Server, if there is no server ready, just add a new one from Tomcat directory.
 Set a breakpoint, and trigger it.
 
 ![debug](resources/debug.gif)

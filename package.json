@@ -25,7 +25,7 @@
   "activationEvents": [
     "onCommand:tomcat.tree.refresh",
     "onCommand:tomcat.config.open",
-    "onCommand:tomcat.server.create",
+    "onCommand:tomcat.server.add",
     "onCommand:tomcat.server.stop",
     "onCommand:tomcat.server.delete",
     "onCommand:tomcat.server.start",
@@ -52,7 +52,7 @@
         }
       },
       {
-        "command": "tomcat.server.create",
+        "command": "tomcat.server.add",
         "title": "Add Tomcat Server",
         "category": "Tomcat",
         "icon": {
@@ -163,7 +163,7 @@
           "group": "navigation@0"
         },
         {
-          "command": "tomcat.server.create",
+          "command": "tomcat.server.add",
           "when": "view == tomcatServerExplorer",
           "group": "navigation@1"
         }
@@ -275,7 +275,7 @@
           "group": "war@0"
         },
         {
-          "command": "tomcat.server.create",
+          "command": "tomcat.server.add",
           "when": "view == tomcatServerExplorer && !viewItem"
         },
         {
