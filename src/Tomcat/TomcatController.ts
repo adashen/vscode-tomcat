@@ -78,7 +78,7 @@ export class TomcatController {
         }
     }
 
-    public async createServer(): Promise<TomcatServer> {
+    public async addServer(): Promise<TomcatServer> {
         Utility.trackTelemetryStep('select install path');
         const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
@@ -256,10 +256,10 @@ export class TomcatController {
             Utility.trackTelemetryStep('auto select the only server');
             return <TomcatServer>items[0];
         }
-        items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;
+        items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.addServer}`, description: '' }) : items;
         const pick: vscode.QuickPickItem = await vscode.window.showQuickPick(
             items,
-            { placeHolder: createIfNoneServer && items.length === 1 ? DialogMessage.createServer : DialogMessage.selectServer }
+            { placeHolder: createIfNoneServer && items.length === 1 ? DialogMessage.addServer : DialogMessage.selectServer }
         );
 
         if (pick) {
@@ -267,8 +267,8 @@ export class TomcatController {
                 Utility.trackTelemetryStep('select server');
                 return pick;
             } else {
-                Utility.trackTelemetryStep('create server');
-                return await this.createServer();
+                Utility.trackTelemetryStep('add server');
+                return await this.addServer();
             }
         }
     }

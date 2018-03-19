@@ -34,12 +34,12 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 
 ## 0.4.0
 ### Added
-* Add "+" button in Tomcat Server Explorer to create new Tomcat Server
-* Add option to create new Tomcat Server to start if there is no server to start
+* Add "+" button in Tomcat Server Explorer to add new Tomcat Server
+* Add option to add new Tomcat Server to start if there is no server to start
 * Add context command "Delete Tomcat Server" for running server in Tomcat Server Explorer
 
 ### Changed
-* Browse directly to select Tomcat Directory and create Tomcat Server without clicking "Browse..."
+* Browse directly to select Tomcat Directory and add Tomcat Server without clicking "Browse..."
 * Prompt information message to confirm continuing operations when user creating same Tomcat Server
 
 ### Fixed

@@ -28,7 +28,7 @@
 
 * Debug war package on Tomcat Server
 
-Right-click a war package to debug it on Tomcat Server, if there is no server ready, just create a new one.
+Right-click a war package to debug it on Tomcat Server, if there is no server ready, just add a new one from Tomcat directory.
 Set a breakpoint, and trigger it.
 
 ![debug](resources/debug.gif)

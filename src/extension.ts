@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(registerCommandWrapper('tomcat.tree.refresh', (server: TomcatServer) => tomcatServerTree.refresh(server)));
     context.subscriptions.push(registerCommandWrapper('tomcat.war.browse', (war: WarPackage) => tomcatController.browseWarPackage(war)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.rename', (server: TomcatServer) => tomcatController.renameServer(server)));
-    context.subscriptions.push(registerCommandWrapper('tomcat.server.create', () => tomcatController.createServer()));
+    context.subscriptions.push(registerCommandWrapper('tomcat.server.add', () => tomcatController.addServer()));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.start', (server: TomcatServer) => tomcatController.startServer(server)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.restart', (server: TomcatServer) => tomcatController.stopOrRestartServer(server, true)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.stop', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
