@@ -253,6 +253,7 @@ export class TomcatController {
             return;
         }
         if (items.length === 1) {
+            Utility.trackTelemetryStep('auto select the only server');
             return <TomcatServer>items[0];
         }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.createServer}`, description: '' }) : items;

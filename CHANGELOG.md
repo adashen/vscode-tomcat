@@ -21,7 +21,7 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 * Support Tomcat Server renaming from Tomcat Server Explorer
 * Show war packages deployed to Tomcat Server in sub-tree in Tomcat Server Explorer
 * Add context command to browse war package
-* Support right-click to Create Tomcat Server in Tomcat Server Explorer
+* Support right-click to Add Tomcat Server in Tomcat Server Explorer
 
 ### Changed
 * Support creating multiple Tomcat Servers from same install path
