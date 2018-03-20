@@ -20,7 +20,11 @@ import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
+        let configuration = vscode.workspace.getConfiguration('java') ;
+        this.javaExec = configuration.get('home') + '/bin/java' ;
     }
+
+    private javaExec: string ;
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
         const server: TomcatServer = await this.precheck(tomcatServer);
@@ -155,7 +159,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.executeCMD(server.outputChannel, this.javaExec, { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
@@ -344,7 +348,9 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startArguments);
+            
+
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, this.javaExec, { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
