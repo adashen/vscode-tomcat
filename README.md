@@ -2,39 +2,31 @@
 [![Build Status](https://travis-ci.org/adashen/vscode-tomcat.svg?branch=master)](https://travis-ci.org/adashen/vscode-tomcat)
 
 
+## Prerequisites
+* [Apache Tomcat](http://tomcat.apache.org/)
+* [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
+
+## Usage
+
+![start and run](resources/Tomcat_Usage.gif)
+
 ## Features
 * Add Tomcat Server from Tomcat Install Path
 * Start/Restart Tomcat Server from VSCode
 * Run war package on Tomcat Server
 * Debug war package on Tomcat Server
-* Open server page in browser to check all deployed war packages
+* Open server homepage in browser to check all deployed war packages
 * View all deployed war packages in Tomcat Explorer
-* Open war package page in browser
+* Open war package homepage in browser
 * Stop Tomcat Server
 * Rename Tomcat Server
 * Customize JVM Options when starting Tomcat Server
-* Reveal deployed war packages in explorer
+* Reveal deployed war packages in file explorer
 * Delete deployed war package
 
 ## Prerequisites
 * [Apache Tomcat](http://tomcat.apache.org/)
 * [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) (for debuging war package)
-
-## Usage
-
-* Add New Tomcat Server, right-click and start it. Find a war package, right-click to run it on Tomcat Server.
-
-![start and run](resources/start_run_war.gif)
-
-* Debug war package on Tomcat Server
-
-Right-click a war package to debug it on Tomcat Server, if there is no server ready, just add a new one from Tomcat directory.
-Set a breakpoint, and trigger it.
-
-![debug](resources/debug.gif)
-
-* Rename Tomcat Server
- ![rename](resources/rename.gif)
 
 ## Contributing
 
