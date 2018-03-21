@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+## 0.7.0
+### Added
+* Support automaticaly run operations aginst the server when there is only one Tomcat Server in work space
+### Fixed
+* Fix issue [#145](https://github.com/adashen/vscode-tomcat/issues/145)
+* Fix issue [#144](https://github.com/adashen/vscode-tomcat/issues/144)
+* Fix issue [#148](https://github.com/adashen/vscode-tomcat/issues/148)
+
+### Changed
+* Update the server home page header
+* Provide a centralized usage demo in the beginning of README
+
+## 0.6.1
+### Hot Fix
+* Fix issue [#138](https://github.com/adashen/vscode-tomcat/issues/138)
+
 ## 0.6.0
 ### Added
 * Add "Reveal in Explorer" context command to war packages in Tomcat Exploer
