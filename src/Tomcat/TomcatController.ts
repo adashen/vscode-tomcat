@@ -19,12 +19,14 @@ import { TomcatServer } from "./TomcatServer";
 import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
-    constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
-        let configuration = vscode.workspace.getConfiguration('java') ;
-        this.javaExec = configuration.get('home') + '/bin/java' ;
-    }
 
-    private javaExec: string ;
+    private _javaExec: string ;
+
+    constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
+        // tslint:disable-next-line:no-backbone-get-set-outside-model
+        const javaHome: string = vscode.workspace.getConfiguration('java').get('home') ;
+        this._javaExec = `${javaHome}/bin/java` ;
+    }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
         const server: TomcatServer = await this.precheck(tomcatServer);
@@ -159,7 +161,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(server.outputChannel, this.javaExec, { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.executeCMD(server.outputChannel, this._javaExec, { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
@@ -348,9 +350,8 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            
 
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, this.javaExec, { shell: true }, ...startArguments);
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, this._javaExec, { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
