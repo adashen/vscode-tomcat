@@ -20,12 +20,16 @@ import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
 
-    private _javaExec: string ;
+    private _javaExec: string = 'java';
 
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const javaHome: string = vscode.workspace.getConfiguration('java').get('home') ;
-        this._javaExec = `${javaHome}/bin/java` ;
+        // If java.home is defined in workspace configuration use this value for the java executable
+        // else use the path to locate the java executable.
+        if ( vscode.workspace.getConfiguration('java').has('home') === true ) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const javaHome: string = vscode.workspace.getConfiguration('java').get('home') ;
+            this._javaExec = `${javaHome}/bin/java` ;
+        }
     }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
