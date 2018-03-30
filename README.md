@@ -1,11 +1,6 @@
 # Tomcat for Visual Studio Code
 [![Build Status](https://travis-ci.org/adashen/vscode-tomcat.svg?branch=master)](https://travis-ci.org/adashen/vscode-tomcat)
 
-
-## Prerequisites
-* [Apache Tomcat](http://tomcat.apache.org/)
-* [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
-
 ## Usage
 
 ![start and run](resources/Tomcat_Usage.gif)
