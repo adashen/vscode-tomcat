@@ -72,7 +72,7 @@ export class TomcatController {
         }
     }
 
-    public reveralWarPackage(warPackage: WarPackage): void {
+    public revealWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
             opn(warPackage.storagePath);
         }
@@ -230,6 +230,13 @@ export class TomcatController {
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
+            if (!tomcatServer.isStarted()) {
+                const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServer, DialogMessage.yes, DialogMessage.no);
+                if (result === DialogMessage.yes) {
+                    Utility.trackTelemetryStep('start server');
+                    this.startServer(tomcatServer);
+                }
+            }
             Utility.trackTelemetryStep('get http port');
             const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
             Utility.trackTelemetryStep('browse server');

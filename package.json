@@ -246,7 +246,7 @@
         },
         {
           "command": "tomcat.server.browse",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@3"
         },
         {
