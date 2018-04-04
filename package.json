@@ -245,12 +245,12 @@
           "group": "tomcat@2"
         },
         {
-          "command": "tomcat.server.browse",
-          "when": "view == tomcatServerExplorer && viewItem == runningserver",
+          "command": "tomcat.server.rename.context",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@3"
         },
         {
-          "command": "tomcat.server.rename.context",
+          "command": "tomcat.server.browse",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@4"
         },

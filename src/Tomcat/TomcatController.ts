@@ -72,7 +72,7 @@ export class TomcatController {
         }
     }
 
-    public reveralWarPackage(warPackage: WarPackage): void {
+    public revealWarPackage(warPackage: WarPackage): void {
         if (warPackage) {
             opn(warPackage.storagePath);
         }
@@ -101,7 +101,7 @@ export class TomcatController {
         await fse.remove(catalinaBasePath);
         Utility.trackTelemetryStep('copy files');
         await Promise.all([
-            Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'),  path.join(catalinaBasePath, 'conf', 'server.xml')),
+            Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml')),
             fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
@@ -230,6 +230,13 @@ export class TomcatController {
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
+            if (!tomcatServer.isStarted()) {
+                const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServer, DialogMessage.yes, DialogMessage.cancel);
+                if (result !== DialogMessage.yes) {
+                    return;
+                }
+                this.startServer(tomcatServer);
+            }
             Utility.trackTelemetryStep('get http port');
             const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
             Utility.trackTelemetryStep('browse server');
@@ -274,13 +281,13 @@ export class TomcatController {
     }
 
     private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<void> {
-        const appName: string =  path.basename(packagePath, path.extname(packagePath));
+        const appName: string = path.basename(packagePath, path.extname(packagePath));
         const appPath: string = path.join(serverInfo.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
         Utility.trackTelemetryStep('deploy war');
-        await Utility.executeCMD(serverInfo.outputChannel, 'jar', {cwd: appPath}, 'xvf', `${packagePath}`);
+        await Utility.executeCMD(serverInfo.outputChannel, 'jar', { cwd: appPath }, 'xvf', `${packagePath}`);
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
