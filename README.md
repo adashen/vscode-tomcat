@@ -3,7 +3,7 @@
 
 ## Usage
 
-![start and run](resources/Tomcat_Usage.gif)
+![start and run](resources/Tomcat.gif)
 
 ## Features
 * Add Tomcat Server from Tomcat Install Path
