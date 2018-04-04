@@ -1,6 +1,6 @@
 {
   "name": "vscode-tomcat",
-  "displayName": "Tomcat",
+  "displayName": "Tomcat for Java",
   "description": "%extension.description%",
   "version": "0.7.0",
   "publisher": "adashen",
