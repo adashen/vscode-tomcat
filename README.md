@@ -1,18 +1,26 @@
 # Tomcat for Visual Studio Code
 [![Build Status](https://travis-ci.org/adashen/vscode-tomcat.svg?branch=master)](https://travis-ci.org/adashen/vscode-tomcat)
 
+## Java Server Extension Pack
+- [ **Tomcat** ] (https://marketplace.visualstudio.com/items?itemName=adashen.vscode-tomcat)
+
+- [ Jetty ] (https://marketplace.visualstudio.com/items?itemName=summersun.vscode-jetty)
+
+- [ Wildfly ]
+  - TBD
+
 ## Usage
 
 ![start and run](resources/Tomcat_Usage.gif)
 
 ## Features
-* Add Tomcat Server from Tomcat Install Path
-* Start/Restart Tomcat Server from VSCode
-* Run war package on Tomcat Server
-* Debug war package on Tomcat Server
-* Open server homepage in browser to check all deployed war packages
-* View all deployed war packages in Tomcat Explorer
-* Open war package homepage in browser
+* Add Tomcat Server from Install Path
+* Start/Restart Tomcat Server
+* Run war package
+* Debug war package
+* Open server homepage
+* View all deployed war packages
+* Open war package homepage
 * Stop Tomcat Server
 * Rename Tomcat Server
 * Customize JVM Options when starting Tomcat Server
