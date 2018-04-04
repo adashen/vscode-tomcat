@@ -2,11 +2,11 @@
 [![Build Status](https://travis-ci.org/adashen/vscode-tomcat.svg?branch=master)](https://travis-ci.org/adashen/vscode-tomcat)
 
 ## Java Server Extension Pack
-- [Tomcat] (https://marketplace.visualstudio.com/items?itemName=adashen.vscode-tomcat)
+- [ **Tomcat** ] (https://marketplace.visualstudio.com/items?itemName=adashen.vscode-tomcat)
 
-- [Jetty] (https://marketplace.visualstudio.com/items?itemName=summersun.vscode-jetty)
+- [ Jetty ] (https://marketplace.visualstudio.com/items?itemName=summersun.vscode-jetty)
 
-- [Wildfly]
+- [ Wildfly ]
   - TBD
 
 ## Usage
