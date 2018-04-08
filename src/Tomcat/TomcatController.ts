@@ -101,8 +101,7 @@ export class TomcatController {
         await fse.remove(catalinaBasePath);
         Utility.trackTelemetryStep('copy files');
         await Promise.all([
-            Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml')),
-            fse.copy(path.join(tomcatInstallPath, 'conf', 'web.xml'), path.join(catalinaBasePath, 'conf', 'web.xml')),
+            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf')),
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
@@ -110,6 +109,7 @@ export class TomcatController {
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
         ]);
+        await Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml'));
         const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
         Utility.trackTelemetryStep('add server');
         this._tomcatModel.addServer(tomcatServer);
