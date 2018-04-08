@@ -6,7 +6,6 @@ import * as _ from "lodash";
 // tslint:disable-next-line:no-require-imports
 import opn = require("opn");
 import * as path from "path";
-import * as portfinder from "portfinder";
 import { URL } from "url";
 import { MessageItem } from "vscode";
 import * as vscode from "vscode";
@@ -215,7 +214,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep('get debug port');
-            port = await portfinder.getPortPromise();
+            port = await Utility.getFreePort();
         }
 
         server.setDebugInfo(debug, port, workspaceFolder);

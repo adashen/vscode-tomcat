@@ -189,6 +189,24 @@ export namespace Utility {
         await fse.writeFile(serverXml, newXml);
     }
 
+    export async function getFreePort(): Promise<number> {
+        return await new Promise((resolve: (port: number) => void, reject: (e: Error) => void): void => {
+            const server: net.Server = net.createServer();
+            let port: number = 0;
+            server.on('listening', () => {
+                port = server.address().port;
+                server.close();
+            });
+            server.on('close', () => {
+                return resolve(port);
+            });
+            server.on('error', (err: Error) => {
+                return reject(new Error(err.toString()));
+            });
+            server.listen(0, '127.0.0.1');
+        });
+    }
+
     export async function copyServerConfig(source: string, target: string): Promise<void> {
         const xml: string = await fse.readFile(source, 'utf8');
         const jsonObj: {} = await parseXml(xml);
