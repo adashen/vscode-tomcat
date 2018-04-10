@@ -32,6 +32,7 @@
     "onCommand:tomcat.server.restart",
     "onCommand:tomcat.server.rename",
     "onCommand:tomcat.server.browse",
+    "onCommand:tomcat.server.debug",
     "onCommand:tomcat.war.run",
     "onCommand:tomcat.war.debug",
     "onCommand:tomcat.war.browse",
@@ -109,6 +110,10 @@
         "command": "tomcat.server.browse",
         "title": "Open in Browser",
         "category": "Tomcat"
+      },
+      {
+        "command": "tomcat.server.debug",
+        "title": "Debug War Package"
       },
       {
         "command": "tomcat.server.customizejvmoptions",
@@ -216,6 +221,10 @@
         {
           "command": "tomcat.war.reveal",
           "when": "never"
+        },
+        {
+          "command": "tomcat.server.debug",
+          "when": "never"
         }
       ],
       "explorer/context": [
@@ -265,9 +274,14 @@
           "group": "tomcat@6"
         },
         {
-          "command": "tomcat.server.delete.context",
+          "command": "tomcat.server.debug",
           "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
           "group": "tomcat@7"
+        },
+        {
+          "command": "tomcat.server.delete.context",
+          "when": "view == tomcatServerExplorer && viewItem && viewItem != war",
+          "group": "tomcat@8"
         },
         {
           "command": "tomcat.war.browse",

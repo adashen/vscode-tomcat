@@ -20,7 +20,7 @@ suite('Error input', () => {
   });
   test('runOnServer', async () => {
     try {
-      await tomcatModel.runOrDebugOnServer();
+      await tomcatModel.runOrDebugOnServer(undefined);
     } catch (error) {
       assert.equal(error.toString(), `Error: ${DialogMessage.noServer}`);
     }

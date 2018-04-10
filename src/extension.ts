@@ -38,6 +38,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(registerCommandWrapper('tomcat.server.stop', (server: TomcatServer) => tomcatController.stopOrRestartServer(server)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.delete', (server: TomcatServer) => tomcatController.deleteServer(server)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.browse', (server: TomcatServer) => tomcatController.browseServer(server)));
+    context.subscriptions.push(registerCommandWrapper('tomcat.server.debug', (server: TomcatServer) => tomcatController.runOrDebugOnServer(undefined, true, server)));
     context.subscriptions.push(registerCommandWrapper('tomcat.war.run', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri)));
     context.subscriptions.push(registerCommandWrapper('tomcat.war.debug', (uri: vscode.Uri) => tomcatController.runOrDebugOnServer(uri, true)));
     context.subscriptions.push(registerCommandWrapper('tomcat.config.open', (server: TomcatServer) => tomcatController.openServerConfig(server)));
