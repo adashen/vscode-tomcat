@@ -83,7 +83,6 @@ export class TomcatModel {
             if (!_.isEmpty(oldServer)) {
                 fse.remove(tomcatServer.getStoragePath());
                 this.saveServerList();
-                tomcatServer.outputChannel.dispose();
                 return true;
             }
         }

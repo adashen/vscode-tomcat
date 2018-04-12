@@ -15,16 +15,16 @@ import { localize } from './localize';
 
 /* tslint:disable:no-any */
 export namespace Utility {
-    export async function executeCMD(outputPane: vscode.OutputChannel, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
             const p: child_process.ChildProcess = child_process.spawn(command, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
-                outputPane.append(data.toString()));
+                outputPane.append(`[${serverName}]: ${data.toString()}`));
             p.stderr.on('data', (data: string | Buffer) => {
                 stderr = stderr.concat(data.toString());
-                outputPane.append(data.toString());
+                outputPane.append(`[${serverName}]: ${data.toString()}`);
             });
             p.on('error', (err: Error) => {
                 reject(err);
