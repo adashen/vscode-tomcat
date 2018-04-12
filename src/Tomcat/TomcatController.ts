@@ -19,7 +19,17 @@ import { TomcatServer } from "./TomcatServer";
 import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
+
+    private _javaExec: string = 'java';
+
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
+        // If java.home is defined in workspace configuration use this value for the java executable
+        // else use the path to locate the java executable.
+        if ( vscode.workspace.getConfiguration('java').has('home') === true ) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model
+            const javaHome: string = vscode.workspace.getConfiguration('java').get('home') ;
+            this._javaExec = `${javaHome}/bin/java` ;
+        }
     }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
@@ -155,7 +165,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.executeCMD(server.outputChannel, this._javaExec, { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
@@ -353,7 +363,8 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startArguments);
+
+            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, this._javaExec, { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
