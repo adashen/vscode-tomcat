@@ -19,7 +19,9 @@ import { TomcatServer } from "./TomcatServer";
 import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
+    private _outputChannel: vscode.OutputChannel;
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
+        this._outputChannel = vscode.window.createOutputChannel('vscode-tomcat');
     }
 
     public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
@@ -131,7 +133,7 @@ export class TomcatController {
             const newName: string = await vscode.window.showInputBox({
                 prompt: 'input a new server name',
                 validateInput: (name: string): string => {
-                    if (!name.match(/^[\w.-]+$/)) {
+                    if (name && !name.match(/^[\w.-]+$/)) {
                         return 'please input a valid server name';
                     } else if (this._tomcatModel.getTomcatServer(name)) {
                         return 'the name was already taken, please re-input';
@@ -155,7 +157,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(server.outputChannel, 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.executeCMD(this._outputChannel, tomcatServer.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
@@ -251,7 +253,7 @@ export class TomcatController {
             if (element.isStarted()) {
                 this.stopOrRestartServer(element);
             }
-            element.outputChannel.dispose();
+            this._outputChannel.dispose();
         });
         this._tomcatModel.saveServerListSync();
     }
@@ -289,7 +291,7 @@ export class TomcatController {
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
         Utility.trackTelemetryStep('deploy war');
-        await Utility.executeCMD(serverInfo.outputChannel, 'jar', { cwd: appPath }, 'xvf', `${packagePath}`);
+        await Utility.executeCMD(this._outputChannel, 'jar',  serverInfo.getName(), { cwd: appPath }, 'xvf', `${packagePath}`);
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
@@ -353,7 +355,7 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(serverInfo.outputChannel, 'java', { shell: true }, ...startArguments);
+            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), 'java', { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(serverInfo);
             await javaProcess;
