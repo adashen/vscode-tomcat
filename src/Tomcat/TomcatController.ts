@@ -174,7 +174,7 @@ export class TomcatController {
         }
     }
 
-    public async runOrDebugOnServer(uri?: vscode.Uri, debug?: boolean): Promise<void> {
+    public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
         if (!uri) {
             Utility.trackTelemetryStep('select war');
             const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
@@ -190,7 +190,9 @@ export class TomcatController {
         }
 
         const packagePath: string = uri.fsPath;
-        const server: TomcatServer = await this.selectServer(true);
+        if (!server) {
+            server = await this.selectServer(true);
+        }
         if (!server) {
             Utility.trackTelemetryStep('cancel');
             return;
