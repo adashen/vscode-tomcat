@@ -291,7 +291,7 @@ export class TomcatController {
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
         Utility.trackTelemetryStep('deploy war');
-        await Utility.executeCMD(this._outputChannel, 'jar',  serverInfo.getName(), { cwd: appPath }, 'xvf', `${packagePath}`);
+        await Utility.executeCMD(this._outputChannel, serverInfo.getName(), 'jar', { cwd: appPath }, 'xvf', `${packagePath}`);
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 
