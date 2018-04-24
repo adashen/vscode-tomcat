@@ -18,6 +18,22 @@
 * Customize JVM Options when starting Tomcat Server
 * Reveal deployed war packages in file explorer
 * Delete deployed war package
+* Build, Run/Debug code from button
+
+## Package Settings
+* "tomcat.build.warFile" 
+* "tomcat.build.browse.onDeploy"
+* "tomcat.build.args"
+* "tomcat.build.command"
+
+### Example
+```
+    "tomcat.build.warFile":"web.war",
+    "tomcat.build.browse.onDeploy":true,
+    "tomcat.build.args":"clean package",
+    "tomcat.build.command":"mvn"
+```
+
 
 ## Prerequisites
 * [Apache Tomcat](http://tomcat.apache.org/)
