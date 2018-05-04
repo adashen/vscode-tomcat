@@ -79,6 +79,11 @@ export namespace Utility {
         return serverName;
     }
 
+    export function getWorkspaceFonfiguration<T>(value: string): T {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        return config.get<T>(value);
+    }
+
     async function getWorkspace(defaultStoragePath: string): Promise<string> {
         const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
         if (config) {
