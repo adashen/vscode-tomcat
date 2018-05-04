@@ -157,7 +157,7 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(this._outputChannel, tomcatServer.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
