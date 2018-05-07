@@ -21,10 +21,10 @@ export namespace Utility {
             let stderr: string = '';
             const p: child_process.ChildProcess = child_process.spawn(command, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
-                outputPane.append(`[${serverName}]: ${data.toString()}`));
+                outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
                 stderr = stderr.concat(data.toString());
-                outputPane.append(`[${serverName}]: ${data.toString()}`);
+                outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString());
             });
             p.on('error', (err: Error) => {
                 reject(err);

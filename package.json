@@ -38,6 +38,7 @@
     "onCommand:tomcat.war.browse",
     "onCommand:tomcat.war.reveal",
     "onCommand:tomcat.war.delete",
+    "onCommand:tomcat.workspace.package",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -114,6 +115,11 @@
       {
         "command": "tomcat.server.debug",
         "title": "Debug War Package"
+      },
+      {
+        "command": "tomcat.workspace.package",
+        "title": "Create War Package of Current Folder",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.server.customizejvmoptions",

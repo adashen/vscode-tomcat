@@ -248,6 +248,11 @@ export class TomcatController {
         }
     }
 
+    public async createWarPackage(): Promise<void> {
+        const name: string = vscode.workspace.name;
+        await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath }, 'cvf', ...[`${name}.war`, '*']);
+    }
+
     public dispose(): void {
         this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
             if (element.isStarted()) {
