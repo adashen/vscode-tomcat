@@ -7,7 +7,7 @@
   "aiKey": "174d54c8-21db-4808-8a41-1ddb08d97147",
   "icon": "resources/icon.png",
   "engines": {
-    "vscode": "^1.17.0"
+    "vscode": "^1.21.0"
   },
   "repository": {
     "type": "git",
@@ -337,17 +337,17 @@
     "tslint": "tslint -t verbose src/**/*.ts"
   },
   "devDependencies": {
-    "typescript": "^2.6.1",
-    "vscode": "^1.0.0",
-    "mocha": "^2.3.3",
-    "tslint": "^5.8.0",
-    "tslint-microsoft-contrib": "5.0.1",
+    "@types/chokidar": "^1.7.5",
+    "@types/fs-extra": "^4.0.8",
+    "@types/mocha": "^2.2.48",
     "@types/node": "7.0.43",
-    "@types/mocha": "^2.2.32",
-    "@types/fs-extra": "^4.0.3",
     "@types/opn": "^5.1.0",
-    "@types/chokidar": "^1.7.4",
-    "@types/xml2js": "^0.4.2"
+    "@types/xml2js": "^0.4.2",
+    "mocha": "^2.3.3",
+    "tslint": "^5.10.0",
+    "tslint-microsoft-contrib": "5.0.1",
+    "typescript": "^2.8.3",
+    "vscode": "^1.1.17"
   },
   "dependencies": {
     "chokidar": "^1.7.0",
