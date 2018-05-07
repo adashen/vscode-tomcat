@@ -38,7 +38,7 @@
     "onCommand:tomcat.war.browse",
     "onCommand:tomcat.war.reveal",
     "onCommand:tomcat.war.delete",
-    "onCommand:tomcat.workspace.package",
+    "onCommand:tomcat.package",
     "onView:tomcatServerExplorer"
   ],
   "main": "./out/src/extension",
@@ -117,8 +117,8 @@
         "title": "Debug War Package"
       },
       {
-        "command": "tomcat.workspace.package",
-        "title": "Create War Package of Current Folder",
+        "command": "tomcat.package",
+        "title": "Generate War Package from Current Folder",
         "category": "Tomcat"
       },
       {

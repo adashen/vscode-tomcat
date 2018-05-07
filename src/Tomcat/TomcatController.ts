@@ -248,7 +248,7 @@ export class TomcatController {
         }
     }
 
-    public async createWarPackage(): Promise<void> {
+    public async generateWarPackage(): Promise<void> {
         const name: string = vscode.workspace.name;
         await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath }, 'cvf', ...[`${name}.war`, '*']);
     }

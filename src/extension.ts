@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(registerCommandWrapper('tomcat.war.delete', (warPackage: WarPackage) => tomcatController.deleteWarPackage(warPackage)));
     context.subscriptions.push(registerCommandWrapper('tomcat.war.reveal', (warPackage: WarPackage) => tomcatController.revealWarPackage(warPackage)));
     context.subscriptions.push(registerCommandWrapper('tomcat.server.customizejvmoptions', (server: TomcatServer) => tomcatController.customizeJVMOptions(server)));
-    context.subscriptions.push(registerCommandWrapper('tomcat.workspace.package', () => tomcatController.createWarPackage()));
+    context.subscriptions.push(registerCommandWrapper('tomcat.package', () => tomcatController.generateWarPackage()));
 
     // .context commands are duplicate for better naming the context commands and make it more clear and elegant
     context.subscriptions.push(registerCommandWrapper('tomcat.server.rename.context', (server: TomcatServer) => tomcatController.renameServer(server)));
