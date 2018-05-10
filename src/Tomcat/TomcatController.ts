@@ -250,7 +250,7 @@ export class TomcatController {
 
     public async generateWarPackage(): Promise<void> {
         const name: string = vscode.workspace.name;
-        await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath }, 'cvf', ...[`${name}.war`, '*']);
+        await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath, shell: true }, 'cvf', ...[`"${name}.war"`, '*']);
     }
 
     public dispose(): void {
