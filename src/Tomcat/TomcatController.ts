@@ -306,7 +306,7 @@ export class TomcatController {
         }
         const config: vscode.DebugConfiguration = {
             type: 'java',
-            name: 'Tomcat Debug (Attach)',
+            name: `${Constants.DEBUG_SESSION_NAME}_${server.basePathName}`,
             request: 'attach',
             hostName: 'localhost',
             port: server.getDebugPort()

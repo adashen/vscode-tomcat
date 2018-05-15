@@ -12,6 +12,7 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
     public description: string;
     public jvmOptions: string[];
     public jvmOptionFile: string;
+    public basePathName: string;
     private _state: ServerState = ServerState.IdleServer;
     private _isDebugging: boolean = false;
     private _debugPort: number;
@@ -21,8 +22,9 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
     constructor(private _name: string, private _installPath: string, private _storagePath: string) {
         super(_name);
         this.label = _name;
-        this.jvmOptionFile = path.join(this._storagePath, Constants.JVM_OPTION_FILE);
-        this._configurationPath = path.join(this._storagePath, 'conf', 'server.xml');
+        this.jvmOptionFile = path.join(_storagePath, Constants.JVM_OPTION_FILE);
+        this._configurationPath = path.join(_storagePath, 'conf', 'server.xml');
+        this.basePathName = path.basename(_storagePath);
     }
 
     public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
