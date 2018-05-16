@@ -15,6 +15,11 @@ export class TomcatModel {
     constructor(public defaultStoragePath: string) {
         this._serversJsonFile = path.join(defaultStoragePath, 'servers.json');
         this.initServerListSync();
+        vscode.debug.onDidTerminateDebugSession((session: vscode.DebugSession) => {
+            if (session && session.name && session.name.startsWith(Constants.DEBUG_SESSION_NAME)) {
+                this.clearServerDebugInfo(session.name.split('_').pop());
+            }
+        });
     }
 
     public getServerSet(): TomcatServer[] {
@@ -122,6 +127,13 @@ export class TomcatModel {
             }
         } catch (err) {
             console.error(err);
+        }
+    }
+
+    private clearServerDebugInfo(basePathName: string): void {
+        const server: TomcatServer = this._serverList.find((s: TomcatServer) => { return s.basePathName === basePathName; });
+        if (server) {
+            server.clearDebugInfo();
         }
     }
 }
