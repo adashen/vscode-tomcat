@@ -66,13 +66,13 @@ export namespace Utility {
         return path.join(await getWorkspace(defaultStoragePath), serverName);
     }
 
-    export async function getServerName(installPath: string, defaultStoragePath: string): Promise<string> {
+    export async function getServerName(installPath: string, defaultStoragePath: string, existingServerNames: string[]): Promise<string> {
         const workspace: string = await getWorkspace(defaultStoragePath);
         await fse.ensureDir(workspace);
         const fileNames: string[] = await fse.readdir(workspace);
         let serverName: string = path.basename(installPath);
         let index: number = 1;
-        while (fileNames.indexOf(serverName) >= 0) {
+        while (fileNames.indexOf(serverName) >= 0 || existingServerNames.indexOf(serverName) >= 0) {
             serverName = path.basename(installPath).concat(`-${index}`);
             index += 1;
         }

@@ -98,7 +98,8 @@ export class TomcatController {
             return;
         }
         Utility.trackTelemetryStep('construct server name');
-        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
+        const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames);
         const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
         Utility.trackTelemetryStep('copy files');
