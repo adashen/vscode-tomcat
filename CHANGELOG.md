@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+## 0.9.0
+### Added
+* Add command "Generate War Package from Current Folder"
+### Fixed
+* Fix issue [#177](https://github.com/adashen/vscode-tomcat/issues/177)
+* Fix issue [#181](https://github.com/adashen/vscode-tomcat/issues/181)
+* Fix issue [#185](https://github.com/adashen/vscode-tomcat/issues/185)
+* Fix issue [#186](https://github.com/adashen/vscode-tomcat/issues/186)
+
 ## 0.8.0
 ### Added
 * Enabel "Open in Browser" command for idle server too
