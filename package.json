@@ -158,14 +158,23 @@
         "title": "Reveal in Explorer"
       }
     ],
-    "views": {
-      "explorer": [
-        {
-          "id": "tomcatServerExplorer",
-          "name": "Tomcat Servers"
-        }
-      ]
-    },
+    "viewsContainers": {
+			"activitybar": [
+				{
+					"id": "tomcatServer",
+					"title": "Tomcat Servers",
+					"icon": "resources/Tomcat_logo.svg"
+				}
+			]
+		},
+		"views": {
+			"tomcatServer": [
+				{
+					"id": "tomcatServerExplorer",
+					"name": "Tomcat Servers"
+				}
+			]
+		},
     "menus": {
       "view/title": [
         {
