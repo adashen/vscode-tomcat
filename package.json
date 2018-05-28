@@ -13,14 +13,8 @@
     "type": "git",
     "url": "https://github.com/adashen/vscode-tomcat"
   },
-  "categories": [
-    "Programming Languages",
-    "Other"
-  ],
-  "keywords": [
-    "Java",
-    "Tomcat"
-  ],
+  "categories": ["Programming Languages", "Other"],
+  "keywords": ["Java", "Tomcat"],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
     "onCommand:tomcat.tree.refresh",
@@ -158,8 +152,17 @@
         "title": "Reveal in Explorer"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tomcatServer",
+          "title": "Tomcat Servers",
+          "icon": "resources/Tomcat_logo.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "tomcatServer": [
         {
           "id": "tomcatServerExplorer",
           "name": "Tomcat Servers"
@@ -322,7 +325,8 @@
           "tomcat.restart_when_http(s)_port_change": {
             "type": "boolean",
             "default": true,
-            "description": "Restart Tomcat Server or not when http(s) port changes"
+            "description":
+              "Restart Tomcat Server or not when http(s) port changes"
           }
         }
       }
