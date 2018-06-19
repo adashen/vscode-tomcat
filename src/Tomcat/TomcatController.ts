@@ -1,6 +1,7 @@
 'use strict';
 
 import * as chokidar from "chokidar";
+import * as fs from "fs";
 import * as fse from "fs-extra";
 import * as _ from "lodash";
 // tslint:disable-next-line:no-require-imports
@@ -192,38 +193,18 @@ export class TomcatController {
             uri = dialog[0];
         }
 
-        const packagePath: string = uri.fsPath;
-        if (!server) {
-            server = await this.selectServer(true);
-        }
-        if (!server) {
-            Utility.trackTelemetryStep('cancel');
+        if (!await this.validateWebappPath(uri.fsPath)) {
             return;
         }
-        await this.deployPackage(server, packagePath);
+        server = !server ? await this.selectServer(true) : server;
+        if (!server) {
+            return;
+        }
+        await this.deployWebapp(server, uri.fsPath);
         if (server.isStarted() && ((!server.isDebugging() && !debug) || server.isDebugging() === debug)) {
             return;
         }
-        let port: number;
-        let workspaceFolder: vscode.WorkspaceFolder;
-
-        if (debug) {
-            if (vscode.workspace.workspaceFolders) {
-                workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
-                    const relativePath: string = path.relative(f.uri.fsPath, packagePath);
-                    return relativePath === '' || (!relativePath.startsWith('..') && relativePath !== packagePath);
-                });
-            }
-            if (!workspaceFolder) {
-                Utility.trackTelemetryStep('no proper workspace folder');
-                vscode.window.showErrorMessage(DialogMessage.noPackage);
-                return;
-            }
-            Utility.trackTelemetryStep('get debug port');
-            port = await portfinder.getPortPromise();
-        }
-
-        server.setDebugInfo(debug, port, workspaceFolder);
+        await this.setDebugInfo(server, uri, debug);
         if (server.isStarted()) {
             Utility.trackTelemetryStep('restart');
             await this.stopOrRestartServer(server, true);
@@ -264,6 +245,54 @@ export class TomcatController {
         this._tomcatModel.saveServerListSync();
     }
 
+    private async validateWebappPath(webappPath: string): Promise<boolean> {
+        if (!await fse.pathExists(webappPath)) {
+            return false;
+        }
+        const stat: fs.Stats = await new Promise((resolve: (r: fs.Stats) => void, reject: (E: Error) => void): void => {
+            fs.lstat(webappPath, (err: Error, res: fs.Stats) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(res);
+            });
+        });
+        if (stat.isFile() && !webappPath.endsWith('.war')) {
+            vscode.window.showErrorMessage(DialogMessage.invalidWarFile);
+            return false;
+        }
+        if (stat.isDirectory() && !await fse.pathExists(path.join(webappPath, 'WEB-INF', 'web.xml'))) {
+            vscode.window.showErrorMessage(DialogMessage.invalidWebappFolder);
+            return false;
+        }
+        return true;
+    }
+
+    private async setDebugInfo(server: TomcatServer, uri: vscode.Uri, debug: boolean): Promise<void> {
+        if (!server || !uri) {
+            return;
+        }
+        let port: number;
+        let workspaceFolder: vscode.WorkspaceFolder;
+        if (debug) {
+            if (vscode.workspace.workspaceFolders) {
+                workspaceFolder = vscode.workspace.workspaceFolders.find((f: vscode.WorkspaceFolder): boolean => {
+                    const relativePath: string = path.relative(f.uri.fsPath, uri.fsPath);
+                    return relativePath === '' || (!relativePath.startsWith('..') && relativePath !== uri.fsPath);
+                });
+            }
+            if (!workspaceFolder) {
+                Utility.trackTelemetryStep('no proper workspace folder');
+                vscode.window.showErrorMessage(DialogMessage.noPackage);
+                return;
+            }
+            Utility.trackTelemetryStep('get debug port');
+            port = await portfinder.getPortPromise();
+        }
+
+        server.setDebugInfo(debug, port, workspaceFolder);
+    }
+
     private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
         let items: vscode.QuickPickItem[] = this._tomcatModel.getServerSet();
         if (_.isEmpty(items) && !createIfNoneServer) {
@@ -290,14 +319,22 @@ export class TomcatController {
         }
     }
 
-    private async deployPackage(serverInfo: TomcatServer, packagePath: string): Promise<void> {
-        const appName: string = path.basename(packagePath, path.extname(packagePath));
-        const appPath: string = path.join(serverInfo.getStoragePath(), 'webapps', appName);
+    private async deployWebapp(server: TomcatServer, webappPath: string): Promise<void> {
+        if (!server || !await fse.pathExists(webappPath)) {
+            return;
+        }
+        const appName: string = path.basename(webappPath, path.extname(webappPath));
+        const appPath: string = path.join(server.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
-        Utility.trackTelemetryStep('deploy war');
-        await Utility.executeCMD(this._outputChannel, serverInfo.getName(), 'jar', { cwd: appPath }, 'xvf', `${packagePath}`);
+        if (webappPath.endsWith('.war')) {
+            Utility.trackTelemetryStep('deploy war');
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, 'xvf', `${webappPath}`);
+        } else {
+            Utility.trackTelemetryStep('deploy web app folder');
+            await fse.copy(webappPath, appPath);
+        }
         vscode.commands.executeCommand('tomcat.tree.refresh');
     }
 

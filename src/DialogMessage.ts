@@ -20,6 +20,8 @@ export namespace DialogMessage {
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const startServer: string = localize('tomcatExt.startServer', 'The Tomcat server needs to be started before browsing. Would you like to start it now?');
+    export const invalidWebappFolder: string = localize('tomcatExt.invalidWebappFolder', 'The folder is not a valid web app to run on Tomcat Server.');
+    export const invalidWarFile: string = localize('tomcatExt.invalidWarFile', 'Please select a .war file.');
 
     export function getServerPortChangeErrorMessage(serverName: string, serverPort: string): string {
         return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause it unable to shutdown. Would you like to change it back to {1}?', serverName, serverPort);
