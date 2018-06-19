@@ -21,10 +21,10 @@ export namespace Utility {
             let stderr: string = '';
             const p: child_process.ChildProcess = child_process.spawn(command, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
-                outputPane.append(`[${serverName}]: ${data.toString()}`));
+                outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
                 stderr = stderr.concat(data.toString());
-                outputPane.append(`[${serverName}]: ${data.toString()}`);
+                outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString());
             });
             p.on('error', (err: Error) => {
                 reject(err);
@@ -66,13 +66,13 @@ export namespace Utility {
         return path.join(await getWorkspace(defaultStoragePath), serverName);
     }
 
-    export async function getServerName(installPath: string, defaultStoragePath: string): Promise<string> {
+    export async function getServerName(installPath: string, defaultStoragePath: string, existingServerNames: string[]): Promise<string> {
         const workspace: string = await getWorkspace(defaultStoragePath);
         await fse.ensureDir(workspace);
         const fileNames: string[] = await fse.readdir(workspace);
         let serverName: string = path.basename(installPath);
         let index: number = 1;
-        while (fileNames.indexOf(serverName) >= 0) {
+        while (fileNames.indexOf(serverName) >= 0 || existingServerNames.indexOf(serverName) >= 0) {
             serverName = path.basename(installPath).concat(`-${index}`);
             index += 1;
         }

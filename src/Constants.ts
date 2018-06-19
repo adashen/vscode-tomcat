@@ -32,6 +32,8 @@ export const BOOTSTRAP_FILE: string = 'org.apache.catalina.startup.Bootstrap';
 
 export const WAR_FILE_EXTENSION: string = '.war';
 
+export const DEBUG_SESSION_NAME: string = 'Tomcat Debug (Attach)';
+
 export const JVM_DEFAULT_OPTIONS_KEYS: string[] = [CLASS_PATH_KEY, CATALINA_BASE_KEY, CATALINA_HOME_KEY];
 
 export enum ServerState {

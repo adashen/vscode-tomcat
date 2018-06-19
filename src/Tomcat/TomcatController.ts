@@ -100,7 +100,8 @@ export class TomcatController {
             return;
         }
         Utility.trackTelemetryStep('construct server name');
-        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath);
+        const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames);
         const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
         Utility.trackTelemetryStep('copy files');
@@ -159,11 +160,11 @@ export class TomcatController {
                 return;
             }
             Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
-            await Utility.executeCMD(this._outputChannel, tomcatServer.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
             if (!restart) {
                 server.clearDebugInfo();
             }
             server.needRestart = restart;
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
         }
     }
 
@@ -264,6 +265,11 @@ export class TomcatController {
         }
     }
 
+    public async generateWarPackage(): Promise<void> {
+        const name: string = vscode.workspace.name;
+        await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath, shell: true }, 'cvf', ...[`"${name}.war"`, '*']);
+    }
+
     public dispose(): void {
         this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
             if (element.isStarted()) {
@@ -317,7 +323,7 @@ export class TomcatController {
         }
         const config: vscode.DebugConfiguration = {
             type: 'java',
-            name: 'Tomcat Debug (Attach)',
+            name: `${Constants.DEBUG_SESSION_NAME}_${server.basePathName}`,
             request: 'attach',
             hostName: 'localhost',
             port: server.getDebugPort()
