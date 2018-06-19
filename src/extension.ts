@@ -21,7 +21,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     if (!storagePath) {
         storagePath = Utility.getTempStoragePath();
     }
-
     const tomcatModel: TomcatModel = new TomcatModel(storagePath);
     const tomcatServerTree: TomcatSeverTreeProvider = new TomcatSeverTreeProvider(context, tomcatModel);
     const tomcatController: TomcatController = new TomcatController(tomcatModel, context.extensionPath);

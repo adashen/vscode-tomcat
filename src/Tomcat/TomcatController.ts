@@ -9,7 +9,7 @@ import * as path from "path";
 import * as portfinder from "portfinder";
 import { URL } from "url";
 import { MessageItem } from "vscode";
-import { workspace } from 'vscode';
+import { workspace } from "vscode";
 import * as vscode from "vscode";
 import { TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
 import * as Constants from "../Constants";
@@ -21,12 +21,11 @@ import { WarPackage } from "./WarPackage";
 
 export class TomcatController {
     private _outputChannel: vscode.OutputChannel;
-
     constructor(private _tomcatModel: TomcatModel, private _extensionPath: string) {
         this._outputChannel = vscode.window.createOutputChannel('vscode-tomcat');
     }
 
-        public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
+    public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
         const server: TomcatServer = await this.precheck(tomcatServer);
         if (server) {
             if (server.isStarted()) {
@@ -42,7 +41,7 @@ export class TomcatController {
     }
 
     public async openServerConfig(tomcatServer: TomcatServer): Promise<void> {
-       if (tomcatServer) {
+        if (tomcatServer) {
             const configFile: string = tomcatServer.getServerConfigPath();
             if (!await fse.pathExists(configFile)) {
                 Utility.trackTelemetryStep('no configuration');
@@ -394,7 +393,6 @@ export class TomcatController {
             vscode.window.showErrorMessage(err.toString());
         }
     }
-
     private async precheck(tomcatServer: TomcatServer): Promise<TomcatServer> {
         if (_.isEmpty(this._tomcatModel.getServerSet())) {
             vscode.window.showInformationMessage(DialogMessage.noServer);
