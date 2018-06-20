@@ -27,8 +27,8 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
         this.basePathName = path.basename(_storagePath);
     }
 
-    public setDebugInfo(debugging: boolean, port: number, workspace: vscode.WorkspaceFolder): void {
-        this._isDebugging = debugging;
+    public setDebugInfo(port: number, workspace: vscode.WorkspaceFolder): void {
+        this._isDebugging = true;
         this._debugPort = port;
         this._debugWorkspace = workspace;
     }
