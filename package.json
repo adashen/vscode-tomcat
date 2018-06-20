@@ -13,8 +13,14 @@
     "type": "git",
     "url": "https://github.com/adashen/vscode-tomcat"
   },
-  "categories": ["Programming Languages", "Other"],
-  "keywords": ["Java", "Tomcat"],
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "Java",
+    "Tomcat"
+  ],
   "homepage": "https://github.com/adashen/vscode-tomcat/blob/master/README.md",
   "activationEvents": [
     "onCommand:tomcat.tree.refresh",
@@ -29,6 +35,8 @@
     "onCommand:tomcat.server.debug",
     "onCommand:tomcat.war.run",
     "onCommand:tomcat.war.debug",
+    "onCommand:tomcat.build.deploy.war.debug",
+    "onCommand:tomcat.build.deploy.war",
     "onCommand:tomcat.war.browse",
     "onCommand:tomcat.war.reveal",
     "onCommand:tomcat.war.delete",
@@ -38,6 +46,24 @@
   "main": "./out/src/extension",
   "contributes": {
     "commands": [
+      {
+        "command": "tomcat.build.deploy.war.debug",
+        "title": "Run Debug",
+        "icon": {
+          "light": "./resources/light/run_debug.png",
+          "dark": "./resources/dark/run_debug.png"
+        },
+        "category": "Tomcat"
+      },
+      {
+        "command": "tomcat.build.deploy.war",
+        "title": "Run",
+        "icon": {
+          "light": "./resources/light/run.png",
+          "dark": "./resources/dark/run.png"
+        },
+        "category": "Tomcat"
+      },
       {
         "command": "tomcat.tree.refresh",
         "title": "Refresh Tomcat Server Tree",
@@ -246,6 +272,16 @@
           "when": "explorerResourceIsFolder == false && resourceExtname == .war"
         }
       ],
+      "editor/title": [
+        {
+          "command": "tomcat.build.deploy.war.debug",
+          "group": "navigation"
+        },
+        {
+          "command": "tomcat.build.deploy.war",
+          "group": "navigation"
+        }
+      ],
       "view/item/context": [
         {
           "command": "tomcat.server.start.context",
@@ -322,11 +358,30 @@
             "default": "",
             "description": "Tomcat Servers workspace."
           },
+          "tomcat.build.warFile": {
+            "type": "string",
+            "default": "",
+            "description": "Tomcat generated .war file"
+          },
+          "tomcat.build.browse.onDeploy": {
+            "type": "boolean",
+            "default": false,
+            "description": "View in browser on deploy"
+          },
+          "tomcat.build.args": {
+            "type": "string",
+            "default": "",
+            "description": "build arguments (package,install,clean ...)"
+          },
+          "tomcat.build.command": {
+            "type": "string",
+            "default": "",
+            "description": "build system (mvn ...)"
+          },
           "tomcat.restart_when_http(s)_port_change": {
             "type": "boolean",
             "default": true,
-            "description":
-              "Restart Tomcat Server or not when http(s) port changes"
+            "description": "Restart Tomcat Server or not when http(s) port changes"
           }
         }
       }
@@ -360,6 +415,7 @@
     "opn": "^5.1.0 ",
     "portfinder": "^1.0.13",
     "readline": "^1.3.0",
+    "vsce": "^1.39.0",
     "vscode-extension-telemetry-wrapper": "^0.2.0",
     "vscode-nls": "^2.0.2",
     "xml2js": "^0.4.19"

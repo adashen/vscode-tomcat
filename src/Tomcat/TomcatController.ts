@@ -9,6 +9,7 @@ import * as path from "path";
 import * as portfinder from "portfinder";
 import { URL } from "url";
 import { MessageItem } from "vscode";
+import { workspace } from "vscode";
 import * as vscode from "vscode";
 import { TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
 import * as Constants from "../Constants";
@@ -174,6 +175,20 @@ export class TomcatController {
                 return;
             }
             await this.startTomcat(server);
+        }
+    }
+
+    public async buildAndDebugWar(debug: boolean, server?: TomcatServer): Promise<void> {
+        if (!server) {
+            server = await this.selectServer(true);
+        }
+        let warFile: string = Utility.getWorkspaceFonfiguration<string>('build.warFile');
+        warFile = warFile.split('.')[0];
+        await Utility.executeCMD(this._outputChannel, 'build', Utility.getWorkspaceFonfiguration<string>('build.command'), { shell: true, cwd: vscode.workspace.rootPath }, Utility.getWorkspaceFonfiguration<string>('build.args'));
+        await this.runOrDebugOnServer(vscode.Uri.parse(`${vscode.workspace.rootPath}/${warFile}.war`), debug, server);
+        await this.stopOrRestartServer(server, true);
+        if (Utility.getWorkspaceFonfiguration<boolean>('build.browse.onDeploy')) {
+            this.browseWarPackage(new WarPackage(warFile, server.getName(), '', ''));
         }
     }
 
