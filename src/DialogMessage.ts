@@ -22,11 +22,15 @@ export namespace DialogMessage {
     export const startServer: string = localize('tomcatExt.startServer', 'The Tomcat server needs to be started before browsing. Would you like to start it now?');
     export const invalidWebappFolder: string = localize('tomcatExt.invalidWebappFolder', 'The folder is not a valid web app to run on Tomcat Server.');
     export const invalidWarFile: string = localize('tomcatExt.invalidWarFile', 'Please select a .war file.');
+    export const pickFolderToGenerateWar: string = localize('tomcatExt.pickFolderToGenerateWar', 'Please select the folder(s) you want to generate war package');
 
     export function getServerPortChangeErrorMessage(serverName: string, serverPort: string): string {
         return localize('tomcatExt.serverPortChangeError', 'Changing the server port of a running server {0} will cause it unable to shutdown. Would you like to change it back to {1}?', serverName, serverPort);
     }
     export function getConfigChangedMessage(serverName: string): string {
         return localize('tomcatExt.configChanged', 'server.xml of running server {0} has been changed. Would you like to restart it?', serverName);
+    }
+    export function getWarGeneratedInfo(count: number): string {
+        return localize('tomcatExt.warGenerated', '{0} war package(s) was generated.', count);
     }
 }

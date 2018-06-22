@@ -7,7 +7,7 @@
   "aiKey": "174d54c8-21db-4808-8a41-1ddb08d97147",
   "icon": "resources/icon.png",
   "engines": {
-    "vscode": "^1.21.0"
+    "vscode": "^1.22.0"
   },
   "repository": {
     "type": "git",
@@ -373,7 +373,7 @@
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "5.0.1",
     "typescript": "^2.8.3",
-    "vscode": "^1.1.17"
+    "vscode": "^1.1.18"
   },
   "dependencies": {
     "chokidar": "^1.7.0",
