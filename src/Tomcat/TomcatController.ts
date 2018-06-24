@@ -235,8 +235,27 @@ export class TomcatController {
     }
 
     public async generateWarPackage(): Promise<void> {
-        const name: string = vscode.workspace.name;
-        await Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: vscode.workspace.rootPath, shell: true }, 'cvf', ...[`"${name}.war"`, '*']);
+        const folders: vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders;
+        if (folders && folders.length > 0) {
+            let items: vscode.QuickPickItem[];
+            if (folders.length > 1) {
+                items = await vscode.window.showQuickPick(
+                    folders.map((w: vscode.WorkspaceFolder) => {
+                        return { label: w.name, description: w.uri.fsPath };
+                    }),
+                    { placeHolder: DialogMessage.pickFolderToGenerateWar, canPickMany: true }
+                );
+            } else {
+                items.push({
+                    label: folders[0].name,
+                    description: folders[0].uri.fsPath
+                });
+            }
+            await Promise.all(items.map((i: vscode.QuickPickItem) => {
+                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, 'cvf', ...[`"${i.label}.war"`, '*']);
+            }));
+            vscode.window.showInformationMessage(DialogMessage.getWarGeneratedInfo(items.length));
+        }
     }
 
     public dispose(): void {
