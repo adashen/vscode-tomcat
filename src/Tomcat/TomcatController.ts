@@ -237,7 +237,7 @@ export class TomcatController {
     public async generateWarPackage(): Promise<void> {
         const folders: vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders;
         if (folders && folders.length > 0) {
-            let items: vscode.QuickPickItem[];
+            let items: vscode.QuickPickItem[] = [];
             if (folders.length > 1) {
                 items = await vscode.window.showQuickPick(
                     folders.map((w: vscode.WorkspaceFolder) => {
