@@ -10,6 +10,8 @@
 * Start/Restart Tomcat Server from VSCode
 * Run war package on Tomcat Server
 * Debug war package on Tomcat Server
+* Run exploaded war on Tomcat Server
+* Debug exploaded war on Tomcat Server
 * Open server homepage in browser to check all deployed war packages
 * View all deployed war packages in Tomcat Explorer
 * Open war package homepage in browser
