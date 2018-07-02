@@ -3,8 +3,8 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 
 # 0.10.0
 ### Added
-* Support right click on exploaded war folder to run it directory Tomcat Server
-* Support right click on exploaded war folder to debug it directory on Tomcat Server
+* Support right click on exploded war folder to run it directory Tomcat Server
+* Support right click on exploded war folder to debug it directory on Tomcat Server
 ### Fixed
 * Fix issue [#177](https://github.com/adashen/vscode-tomcat/issues/206)
 
