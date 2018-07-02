@@ -2,7 +2,7 @@
   "name": "vscode-tomcat",
   "displayName": "Tomcat for Java",
   "description": "%extension.description%",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "publisher": "adashen",
   "aiKey": "174d54c8-21db-4808-8a41-1ddb08d97147",
   "icon": "resources/icon.png",
