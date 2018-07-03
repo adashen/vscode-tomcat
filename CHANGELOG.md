@@ -19,7 +19,7 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 
 ## 0.8.0
 ### Added
-* Enabel "Open in Browser" command for idle server too
+* Enable "Open in Browser" command for idle server too
 * Support right click on server to select a war package to debug
 ### Fixed
 * Fix issue [#168](https://github.com/adashen/vscode-tomcat/issues/162)
