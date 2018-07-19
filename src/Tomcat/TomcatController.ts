@@ -338,11 +338,14 @@ export class TomcatController {
         }
     }
 
-    private async deployWebapp(server: TomcatServer, webappPath: string): Promise<void> {
+    private async deployWebapp(
+        server: TomcatServer, 
+        webappPath: string, 
+        appName: string = path.basename(webappPath, path.extname(webappPath))
+    ): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
-        const appName: string = path.basename(webappPath, path.extname(webappPath));
         const appPath: string = path.join(server.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
@@ -361,6 +364,32 @@ export class TomcatController {
         return path.extname(filePath).toLocaleLowerCase() === '.war';
     }
 
+    private async determineAppName(webappPath: string, server: TomcatServer): Promise<string> {
+        const defaultName = path.basename(webappPath, path.extname(webappPath));
+        let appName = defaultName;
+        let folderLocation: string;
+        let isWar = false;
+        if (this.isWarFile(webappPath)) {
+            isWar = true;
+            const workingDirectory=path.join(this._extensionPath,'tmp');
+            await Utility.executeCMD(this._outputChannel, server.getName(),'jar', {cwd: workingDirectory}, 'xvf', `${defaultName}`);
+            folderLocation = path.join(workingDirectory,defaultName);
+        }
+        else {
+            folderLocation=webappPath;
+        }
+        if (await fse.pathExists(path.join(folderLocation,'META-INF','context.xml'))) {
+            
+        }
+        if (isWar) {
+            fse.rmdir(folderLocation);
+        }
+        return Promise.resolve(appName);
+        
+        
+    }
+
+    private readContext
     private startDebugSession(server: TomcatServer): void {
         if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
             return;
