@@ -341,11 +341,11 @@ export class TomcatController {
     private async deployWebapp(
         server: TomcatServer, 
         webappPath: string, 
-        appName: string = path.basename(webappPath, path.extname(webappPath))
     ): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
+        const appName = await this.determineAppName(webappPath, server);
         const appPath: string = path.join(server.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
@@ -379,7 +379,12 @@ export class TomcatController {
             folderLocation=webappPath;
         }
         if (await fse.pathExists(path.join(folderLocation,'META-INF','context.xml'))) {
-            
+          const xml = fs.readFileSync(path.join(folderLocation,'META-INT','context.xml'), 'utf8');
+          const jsonFromXml = await Utility.parseXml(xml);
+          if (jsonFromXml && jsonFromXml['Context'] && jsonFromXml['Context']['path']!== undefined) {
+              const rawPath = jsonFromXml['Context']['path'];
+              appName = this.parseContextPathToFolderName(rawPath);
+          }
         }
         if (isWar) {
             fse.rmdir(folderLocation);
@@ -389,7 +394,14 @@ export class TomcatController {
         
     }
 
-    private readContext
+    private parseContextPathToFolderName(context: String) {
+        if (context === '/' || context === '') {
+            return 'ROOT'
+        }
+        const replacedSlashes = context.replace('/','#');
+        return replacedSlashes.startsWith('#') ? replacedSlashes.substring(1) : replacedSlashes;
+    }
+
     private startDebugSession(server: TomcatServer): void {
         if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
             return;
