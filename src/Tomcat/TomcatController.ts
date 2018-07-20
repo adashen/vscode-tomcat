@@ -339,13 +339,13 @@ export class TomcatController {
     }
 
     private async deployWebapp(
-        server: TomcatServer, 
-        webappPath: string, 
+        server: TomcatServer,
+        webappPath: string
     ): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
-        const appName = await this.determineAppName(webappPath, server);
+        const appName: string = await this.determineAppName(webappPath, server);
         const appPath: string = path.join(server.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
@@ -365,40 +365,35 @@ export class TomcatController {
     }
 
     private async determineAppName(webappPath: string, server: TomcatServer): Promise<string> {
-        const defaultName = path.basename(webappPath, path.extname(webappPath));
-        let appName = defaultName;
+        const defaultName: string = path.basename(webappPath, path.extname(webappPath));
+        let appName: string = defaultName;
         let folderLocation: string;
-        let isWar = false;
         if (this.isWarFile(webappPath)) {
-            isWar = true;
-            const workingDirectory=path.join(this._extensionPath,'tmp');
-            await Utility.executeCMD(this._outputChannel, server.getName(),'jar', {cwd: workingDirectory}, 'xvf', `${defaultName}`);
-            folderLocation = path.join(workingDirectory,defaultName);
+            folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
+            if (fse.pathExistsSync(folderLocation)) {
+                fse.removeSync(folderLocation);
+            }
+            fse.mkdirSync(folderLocation);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
+        } else {
+            folderLocation = webappPath;
         }
-        else {
-            folderLocation=webappPath;
+        if (await fse.pathExists(path.join(folderLocation, 'META-INF', 'context.xml'))) {
+            const xml: string = fs.readFileSync(path.join(folderLocation, 'META-INF', 'context.xml'), 'utf8');
+            const jsonFromXml: any = await Utility.parseXml(xml);
+            if (jsonFromXml && jsonFromXml.Context && jsonFromXml.Context.$ && jsonFromXml.Context.$.path !== undefined) {
+                const rawPath: string = jsonFromXml.Context.$.path;
+                appName = this.parseContextPathToFolderName(rawPath);
+            }
         }
-        if (await fse.pathExists(path.join(folderLocation,'META-INF','context.xml'))) {
-          const xml = fs.readFileSync(path.join(folderLocation,'META-INT','context.xml'), 'utf8');
-          const jsonFromXml = await Utility.parseXml(xml);
-          if (jsonFromXml && jsonFromXml['Context'] && jsonFromXml['Context']['path']!== undefined) {
-              const rawPath = jsonFromXml['Context']['path'];
-              appName = this.parseContextPathToFolderName(rawPath);
-          }
-        }
-        if (isWar) {
-            fse.rmdir(folderLocation);
-        }
-        return Promise.resolve(appName);
-        
-        
+        return appName;
     }
 
-    private parseContextPathToFolderName(context: String) {
+    private parseContextPathToFolderName(context: string): string {
         if (context === '/' || context === '') {
-            return 'ROOT'
+            return 'ROOT';
         }
-        const replacedSlashes = context.replace('/','#');
+        const replacedSlashes: string = context.replace('/', '#');
         return replacedSlashes.startsWith('#') ? replacedSlashes.substring(1) : replacedSlashes;
     }
 
