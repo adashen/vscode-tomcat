@@ -338,7 +338,7 @@ export class TomcatController {
         }
     }
 
-    private async deployWebapp(server: TomcatServer,webappPath: string): Promise<void> {
+    private async deployWebapp(server: TomcatServer, webappPath: string): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
