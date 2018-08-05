@@ -338,10 +338,7 @@ export class TomcatController {
         }
     }
 
-    private async deployWebapp(
-        server: TomcatServer,
-        webappPath: string
-    ): Promise<void> {
+    private async deployWebapp(server: TomcatServer,webappPath: string): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
@@ -364,16 +361,17 @@ export class TomcatController {
         return path.extname(filePath).toLocaleLowerCase() === '.war';
     }
 
+    /* tslint:disable:no-any */
     private async determineAppName(webappPath: string, server: TomcatServer): Promise<string> {
         const defaultName: string = path.basename(webappPath, path.extname(webappPath));
         let appName: string = defaultName;
         let folderLocation: string;
         if (this.isWarFile(webappPath)) {
             folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
-            if (fse.pathExistsSync(folderLocation)) {
-                fse.removeSync(folderLocation);
+            if (await fse.pathExists(folderLocation)) {
+                await fse.remove(folderLocation);
             }
-            fse.mkdirSync(folderLocation);
+            await fse.mkdir(folderLocation);
             await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
         } else {
             folderLocation = webappPath;
@@ -381,7 +379,7 @@ export class TomcatController {
         if (await fse.pathExists(path.join(folderLocation, 'META-INF', 'context.xml'))) {
             const xml: string = fs.readFileSync(path.join(folderLocation, 'META-INF', 'context.xml'), 'utf8');
             const jsonFromXml: any = await Utility.parseXml(xml);
-            if (jsonFromXml && jsonFromXml.Context && jsonFromXml.Context.$ && jsonFromXml.Context.$.path !== undefined) {
+            if (jsonFromXml && jsonFromXml.Context && jsonFromXml.Context.$) {
                 const rawPath: string = jsonFromXml.Context.$.path;
                 appName = this.parseContextPathToFolderName(rawPath);
             }
