@@ -367,7 +367,7 @@ export class TomcatController {
         let appName: string = defaultName;
         let folderLocation: string;
         if (this.isWarFile(webappPath)) {
-            folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName); 
+            folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
             await fse.remove(folderLocation);
             await fse.mkdir(folderLocation);
             await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
