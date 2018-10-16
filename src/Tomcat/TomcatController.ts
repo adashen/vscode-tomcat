@@ -384,6 +384,7 @@ export class TomcatController {
         }
         return appName;
     }
+    /* tsline:enable:no-any */
 
     private parseContextPathToFolderName(context: string): string {
         if (context === '/' || context === '') {
