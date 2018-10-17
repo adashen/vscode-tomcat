@@ -198,7 +198,7 @@ export namespace Utility {
         await fse.writeFile(target, newXml);
     }
 
-    async function parseXml(xml: string): Promise<any> {
+    export async function parseXml(xml: string): Promise<any> {
         return new Promise((resolve: (obj: {}) => void, reject: (e: Error) => void): void => {
             xml2js.parseString(xml, { explicitArray: true }, (err: Error, res: {}) => {
                 if (err) {

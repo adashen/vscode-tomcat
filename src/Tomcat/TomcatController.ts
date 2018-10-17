@@ -342,7 +342,7 @@ export class TomcatController {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
-        const appName: string = path.basename(webappPath, path.extname(webappPath));
+        const appName: string = await this.determineAppName(webappPath, server);
         const appPath: string = path.join(server.getStoragePath(), 'webapps', appName);
 
         await fse.remove(appPath);
@@ -359,6 +359,39 @@ export class TomcatController {
 
     private isWarFile(filePath: string): boolean {
         return path.extname(filePath).toLocaleLowerCase() === '.war';
+    }
+
+    /* tslint:disable:no-any */
+    private async determineAppName(webappPath: string, server: TomcatServer): Promise<string> {
+        const defaultName: string = path.basename(webappPath, path.extname(webappPath));
+        let appName: string = defaultName;
+        let folderLocation: string;
+        if (this.isWarFile(webappPath)) {
+            folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
+            await fse.remove(folderLocation);
+            await fse.mkdir(folderLocation);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
+        } else {
+            folderLocation = webappPath;
+        }
+        if (await fse.pathExists(path.join(folderLocation, 'META-INF', 'context.xml'))) {
+            const xml: string = fs.readFileSync(path.join(folderLocation, 'META-INF', 'context.xml'), 'utf8');
+            const jsonFromXml: any = await Utility.parseXml(xml);
+            if (jsonFromXml && jsonFromXml.Context && jsonFromXml.Context.$) {
+                const rawPath: string = jsonFromXml.Context.$.path;
+                appName = this.parseContextPathToFolderName(rawPath);
+            }
+        }
+        return appName;
+    }
+    /* tsline:enable:no-any */
+
+    private parseContextPathToFolderName(context: string): string {
+        if (context === '/' || context === '') {
+            return 'ROOT';
+        }
+        const replacedSlashes: string = context.replace('/', '#');
+        return replacedSlashes.startsWith('#') ? replacedSlashes.substring(1) : replacedSlashes;
     }
 
     private startDebugSession(server: TomcatServer): void {
