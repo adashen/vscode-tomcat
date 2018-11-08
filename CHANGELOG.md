@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+# 0.11.0
+### Added
+* Support to use the context.xml if present
+
 # 0.10.0
 ### Added
 * Support right click on exploded war folder to run it directory Tomcat Server
