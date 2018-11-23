@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+# 0.11.1
+### Fixed
+Account for case when looking at context XML [#218](https://github.com/adashen/vscode-tomcat/issues/#218)
+
 # 0.11.0
 ### Added
 * Support to use the context.xml if present
