@@ -181,6 +181,7 @@ export class TomcatController {
     }
 
     public async debugDefaultOnServer(server?: TomcatServer) {
+
         // get default debug target from configuration
         console.log("Starting a default debug session");
         let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("debug.defaultTarget");
@@ -195,6 +196,20 @@ export class TomcatController {
             return;
         }
         console.log("starting debug with ${uri}");
+
+        server = !server ? await this.selectServer(true) : server;
+        if (!server) {
+            return;
+        }
+
+        // FIXME This is a workaround for overwriting wars on debug server.
+        // during testing tomcat server sometimes prevented unzipped was folder
+        // from being deleted.
+        if (server.isStarted()) {
+            Utility.trackTelemetryStep('stop');
+            await this.stopOrRestartServer(server, false);
+        }
+
         this.runOrDebugOnServer(uri, true, server);
     }
 
@@ -238,7 +253,7 @@ export class TomcatController {
             Utility.trackTelemetryStep('start');
             await this.startTomcat(server);
         }
-
+        console.log("webapp deployed");
     }
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
@@ -434,13 +449,13 @@ export class TomcatController {
             hostName: 'localhost',
             port: server.getDebugPort(),
             preLaunchTask: WorkSpaceConfig.get("preLaunchTask")
-        };        
+        };
         Utility.trackTelemetryStep('start debug');
         setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
-        
+
         let webAddressToOpen: string = WorkSpaceConfig.get("webAddressToOpen");
         if (webAddressToOpen != undefined) {
-            if(webAddressToOpen.search("^.*\:\/\/") != 0)
+            if (webAddressToOpen.search("^.*\:\/\/") != 0)
                 webAddressToOpen = "http://" + webAddressToOpen;
             let uri = vscode.Uri.parse(webAddressToOpen);
             vscode.env.openExternal(uri);
