@@ -183,7 +183,7 @@ export class TomcatController {
     public async debugDefaultOnServer(server?: TomcatServer) {
         // get default debug target from configuration
         console.log("Starting a default debug session");
-        let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("defaultDebugTarget");
+        let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("debug.defaultTarget");
         console.log("getting uri from workspace configuration: ${confPath}");
         let uri = (await vscode.workspace.findFiles(confPath))[0];
         if (uri == undefined) {

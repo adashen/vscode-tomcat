@@ -355,7 +355,7 @@
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
           },
-          "tomcat.defaultDebugTarget": {
+          "tomcat.debug.defaultTarget": {
             "type": "string",
             "default": "",
             "description": "Default war to load for debugging"
