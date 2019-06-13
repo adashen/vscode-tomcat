@@ -199,6 +199,8 @@ export class TomcatController {
     }
 
     public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
+
+
         if (!uri) {
             Utility.trackTelemetryStep('select war');
             const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
@@ -236,6 +238,7 @@ export class TomcatController {
             Utility.trackTelemetryStep('start');
             await this.startTomcat(server);
         }
+
     }
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
@@ -421,15 +424,27 @@ export class TomcatController {
         if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
             return;
         }
+
+        let WorkSpaceConfig = vscode.workspace.getConfiguration("tomcat.debug");
+
         const config: vscode.DebugConfiguration = {
             type: 'java',
             name: `${Constants.DEBUG_SESSION_NAME}_${server.basePathName}`,
             request: 'attach',
             hostName: 'localhost',
-            port: server.getDebugPort()
-        };
+            port: server.getDebugPort(),
+            preLaunchTask: WorkSpaceConfig.get("preLaunchTask")
+        };        
         Utility.trackTelemetryStep('start debug');
         setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
+        
+        let webAddressToOpen: string = WorkSpaceConfig.get("webAddressToOpen");
+        if (webAddressToOpen != undefined) {
+            if(webAddressToOpen.search("^.*\:\/\/") != 0)
+                webAddressToOpen = "http://" + webAddressToOpen;
+            let uri = vscode.Uri.parse(webAddressToOpen);
+            vscode.env.openExternal(uri);
+        }
     }
 
     private async startTomcat(serverInfo: TomcatServer): Promise<void> {

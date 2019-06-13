@@ -359,6 +359,16 @@
             "type": "string",
             "default": "",
             "description": "Default war to load for debugging"
+          },
+          "tomcat.debug.webAddressToOpen": {
+            "type": "string",
+            "default": "",
+            "description": "If set, will open this webpage in default browser when debugging"
+          },
+          "tomcat.debug.preLaunchTask": {
+            "type": "string",
+            "default": "",
+            "description": "Same as preLaunchTask for debug."
           }
         }
       }
