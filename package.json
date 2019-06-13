@@ -65,7 +65,7 @@
         }
       },
       {
-        "command": "tomcat.server.defaultDebug",
+        "command": "tomcat.server.debugDefault",
         "title": "Debug default war on server",
         "category": "Tomcat"
       },
