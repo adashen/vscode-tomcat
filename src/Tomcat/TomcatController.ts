@@ -18,6 +18,8 @@ import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
 import { WarPackage } from "./WarPackage";
+import { isNull, log } from "util";
+import { O_WRONLY } from "constants";
 
 export class TomcatController {
     private _outputChannel: vscode.OutputChannel;
@@ -176,6 +178,24 @@ export class TomcatController {
             }
             await this.startTomcat(server);
         }
+    }
+
+    public async debugDefaultOnServer(server?: TomcatServer) {
+        // get default debug target from configuration
+        console.log("Starting a default debug session");
+        let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("defaultDebugTarget");
+        console.log("getting uri from workspace configuration: ${confPath}");
+        let uri = (await vscode.workspace.findFiles(confPath))[0];
+        if (uri == undefined) {
+            vscode.window.showWarningMessage("Default debug target is missing from cofiguration");
+            return
+        }
+        if (!await this.isWebappPathValid(uri.fsPath)) {
+            vscode.window.showWarningMessage("Default debug target is not valid");
+            return;
+        }
+        console.log("starting debug with ${uri}");
+        this.runOrDebugOnServer(uri, true, server);
     }
 
     public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {

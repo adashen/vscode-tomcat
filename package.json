@@ -7,7 +7,7 @@
   "aiKey": "174d54c8-21db-4808-8a41-1ddb08d97147",
   "icon": "resources/icon.png",
   "engines": {
-    "vscode": "^1.22.0"
+    "vscode": "^1.31.0"
   },
   "repository": {
     "type": "git",
@@ -63,6 +63,11 @@
           "light": "resources/light/add.svg",
           "dark": "resources/dark/add.svg"
         }
+      },
+      {
+        "command": "tomcat.server.defaultDebug",
+        "title": "Debug default war on server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.war.run",
@@ -349,6 +354,11 @@
             "type": "boolean",
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
+          },
+          "tomcat.defaultDebugTarget": {
+            "type": "string",
+            "default": "",
+            "description": "Default war to load for debugging"
           }
         }
       }
