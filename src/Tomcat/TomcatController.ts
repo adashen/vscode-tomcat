@@ -180,55 +180,64 @@ export class TomcatController {
         }
     }
 
-    public async debugDefaultOnServer(server?: TomcatServer) {
-        let preLaunchTask: string = vscode.workspace.getConfiguration("tomcat.debug").get("preLaunchTask");
-        let task = (await vscode.tasks.fetchTasks()).find(t => t.name == preLaunchTask)
-        if (task == undefined) {
-            vscode.window.showWarningMessage(`Task ${preLaunchTask} was not found`);
+    public async deployDefaultDebugTarget(server?: TomcatServer) {
+        // get default debug target from configuration
+        console.log("Starting a debug default session");
+        let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("debug.defaultTarget");
+        if (confPath == undefined) {
+            vscode.window.showWarningMessage("Default debug target is missing from configuration");
+            return
+        }
+        console.log("Getting uri from workspace configuration: ${confPath}");
+        let uri = (await vscode.workspace.findFiles(confPath))[0];
+        if (uri == undefined) {
+            vscode.window.showWarningMessage("Could not find target");
+            return
+        }
+        if (!await this.isWebappPathValid(uri.fsPath)) {
+            vscode.window.showWarningMessage("Default debug target is not valid");
+            return;
+        }
+        console.log(`Starting debug with ${uri}`);
+
+
+
+        server = !server ? await this.selectServer(true) : server;
+        if (!server) {
             return;
         }
 
-        let taskExec = await vscode.tasks.executeTask(task);
-        vscode.tasks.onDidEndTask(async e => {
-            if (e.execution === taskExec) {
-                // get default debug target from configuration
-                console.log("Starting a debug default session");
-                let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("debug.defaultTarget");
-                if (confPath == undefined) {
-                    vscode.window.showWarningMessage("Default debug target is missing from configuration");
-                    return
-                }
-                console.log("Getting uri from workspace configuration: ${confPath}");
-                let uri = (await vscode.workspace.findFiles(confPath))[0];
-                if (uri == undefined) {
-                    vscode.window.showWarningMessage("Could not find target");
-                    return
-                }
-                if (!await this.isWebappPathValid(uri.fsPath)) {
-                    vscode.window.showWarningMessage("Default debug target is not valid");
-                    return;
-                }
-                console.log(`Starting debug with ${uri}`);
+        // FIXME This is a workaround for overwriting wars on debug server.
+        // during testing tomcat server sometimes prevented unzipped was folder
+        // from being deleted.
+
+        if (server.isStarted()) {
+            Utility.trackTelemetryStep('stop');
+            await this.stopOrRestartServer(server, false);
+        }
+
+        this.runOrDebugOnServer(uri, true, server);
+    }
 
 
+    public async debugDefaultOnServer(server?: TomcatServer) {
+        let preLaunchTask: string = vscode.workspace.getConfiguration("tomcat.debug").get("preLaunchTask");
 
-                server = !server ? await this.selectServer(true) : server;
-                if (!server) {
-                    return;
-                }
-
-                // FIXME This is a workaround for overwriting wars on debug server.
-                // during testing tomcat server sometimes prevented unzipped was folder
-                // from being deleted.
-                
-                if (server.isStarted()) {
-                    Utility.trackTelemetryStep('stop');
-                    await this.stopOrRestartServer(server, false);
-                }
-
-                this.runOrDebugOnServer(uri, true, server);
+        if (preLaunchTask != undefined) {
+            let task = (await vscode.tasks.fetchTasks()).find(t => t.name == preLaunchTask)
+            if (task == undefined) {
+                vscode.window.showWarningMessage(`Task ${preLaunchTask} was not found`);
+                return;
             }
-        })
+            let taskExec = await vscode.tasks.executeTask(task);
+            vscode.tasks.onDidEndTask(async e => {
+                if (e.execution === taskExec) {
+                    await this.deployDefaultDebugTarget(server);
+                }
+            })
+        } else {
+            await this.deployDefaultDebugTarget(server);
+        }
     }
 
     public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
