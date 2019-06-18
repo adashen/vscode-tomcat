@@ -251,7 +251,7 @@ export class TomcatController {
     public async debugDefaultOnServer(server?: TomcatServer) {
         let preLaunchTask: string = vscode.workspace.getConfiguration("tomcat.debug").get("preLaunchTask");
 
-        if (preLaunchTask != undefined && !(preLaunchTask.match("^\w*"))) {
+        if (preLaunchTask != undefined && preLaunchTask != "") {
             let task = (await vscode.tasks.fetchTasks()).find(t => t.name == preLaunchTask)
             if (task == undefined) {
                 vscode.window.showWarningMessage(`Task ${preLaunchTask} was not found`);
