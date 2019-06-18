@@ -7,7 +7,7 @@
   "aiKey": "174d54c8-21db-4808-8a41-1ddb08d97147",
   "icon": "resources/icon.png",
   "engines": {
-    "vscode": "^1.22.0"
+    "vscode": "^1.31.0"
   },
   "repository": {
     "type": "git",
@@ -63,6 +63,11 @@
           "light": "resources/light/add.svg",
           "dark": "resources/dark/add.svg"
         }
+      },
+      {
+        "command": "tomcat.server.debugDefault",
+        "title": "Debug default war on server",
+        "category": "Tomcat"
       },
       {
         "command": "tomcat.war.run",
@@ -349,6 +354,21 @@
             "type": "boolean",
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
+          },
+          "tomcat.debug.defaultTarget": {
+            "type": "string",
+            "default": "",
+            "description": "Default war to load for debugging"
+          },
+          "tomcat.debug.webAddressToOpen": {
+            "type": "string",
+            "default": "",
+            "description": "If set, will open this webpage in default browser when debugging"
+          },
+          "tomcat.debug.preLaunchTask": {
+            "type": "string",
+            "default": "",
+            "description": "Same as preLaunchTask for debug."
           }
         }
       }
@@ -369,14 +389,14 @@
     "@types/node": "7.0.43",
     "@types/opn": "^5.1.0",
     "@types/xml2js": "^0.4.2",
-    "mocha": "^2.3.3",
+    "mocha": "^6.1.4",
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "5.0.1",
     "typescript": "^2.8.3",
     "vscode": "^1.1.18"
   },
   "dependencies": {
-    "chokidar": "^1.7.0",
+    "chokidar": "^3.0.1",
     "fs-extra": "^4.0.2",
     "lodash": "^4.17.5",
     "opn": "^5.1.0 ",

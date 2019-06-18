@@ -18,6 +18,8 @@ import { Utility } from "../Utility";
 import { TomcatModel } from "./TomcatModel";
 import { TomcatServer } from "./TomcatServer";
 import { WarPackage } from "./WarPackage";
+import { isNull, log } from "util";
+import { O_WRONLY } from "constants";
 
 export class TomcatController {
     private _outputChannel: vscode.OutputChannel;
@@ -178,7 +180,97 @@ export class TomcatController {
         }
     }
 
+    public async deployDefaultDebugTarget(server?: TomcatServer) {
+        // get default debug target from configuration
+        console.info("Starting a debug default session");
+
+        let inConfig = true;
+        let uri: vscode.Uri;
+
+        console.info("Getting uri from workspace configuration: ${confPath}");
+
+        let confPath = vscode.workspace.getConfiguration("tomcat").get<string>("debug.defaultTarget");
+
+        if (confPath == undefined || confPath === "") {
+            inConfig = false;
+            console.info("Workspace configuration does not have target set-up, launching a dialog");
+
+            Utility.trackTelemetryStep('select default debug target');
+
+            const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
+                defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
+                canSelectFiles: true,
+                canSelectFolders: false,
+                openLabel: DialogMessage.selectWarPackage
+            });
+
+            if (_.isEmpty(dialog) || !dialog[0].fsPath) {
+                vscode.window.showErrorMessage("War package could not be found");
+                return;
+            }
+            uri = dialog[0];
+
+            vscode.workspace.getConfiguration("tomcat.debug").update("defaultTarget", uri.fsPath);
+
+        } else {
+            uri = (await vscode.workspace.findFiles(confPath))[0];
+            if (uri == undefined) {
+                uri = vscode.Uri.file(confPath);
+                if (!fse.pathExistsSync(uri.fsPath)) {
+                    vscode.window.showWarningMessage("Could not find target package");
+                    return
+                }
+            }
+        }
+
+        if (!await this.isWebappPathValid(uri.fsPath)) {
+            vscode.window.showWarningMessage("Default debug target is not valid");
+            return;
+        }
+
+        console.log(`Starting debug with ${uri}`);
+
+        server = !server ? await this.selectServer(true) : server;
+        if (!server) {
+            return;
+        }
+
+        // FIXME This is a workaround for overwriting wars on debug server.
+        // during testing tomcat server sometimes prevented unzipped was folder
+        // from being deleted.
+
+        if (server.isStarted()) {
+            Utility.trackTelemetryStep('stop');
+            await this.stopOrRestartServer(server, false);
+        }
+
+        this.runOrDebugOnServer(uri, true, server);
+    }
+
+
+    public async debugDefaultOnServer(server?: TomcatServer) {
+        let preLaunchTask: string = vscode.workspace.getConfiguration("tomcat.debug").get("preLaunchTask");
+
+        if (preLaunchTask != undefined && preLaunchTask != "") {
+            let task = (await vscode.tasks.fetchTasks()).find(t => t.name == preLaunchTask)
+            if (task == undefined) {
+                vscode.window.showWarningMessage(`Task ${preLaunchTask} was not found`);
+                return;
+            }
+            let taskExec = await vscode.tasks.executeTask(task);
+            vscode.tasks.onDidEndTask(async e => {
+                if (e.execution === taskExec) {
+                    await this.deployDefaultDebugTarget(server);
+                }
+            })
+        } else {
+            await this.deployDefaultDebugTarget(server);
+        }
+    }
+
     public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
+
+
         if (!uri) {
             Utility.trackTelemetryStep('select war');
             const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
@@ -216,6 +308,7 @@ export class TomcatController {
             Utility.trackTelemetryStep('start');
             await this.startTomcat(server);
         }
+        console.log("webapp deployed");
     }
 
     public async browseServer(tomcatServer: TomcatServer): Promise<void> {
@@ -401,6 +494,7 @@ export class TomcatController {
         if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
             return;
         }
+
         const config: vscode.DebugConfiguration = {
             type: 'java',
             name: `${Constants.DEBUG_SESSION_NAME}_${server.basePathName}`,
@@ -410,6 +504,14 @@ export class TomcatController {
         };
         Utility.trackTelemetryStep('start debug');
         setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
+
+        let webAddressToOpen: string = vscode.workspace.getConfiguration("tomcat.debug").get("webAddressToOpen");
+        if (webAddressToOpen != undefined && webAddressToOpen != "") {
+            if (webAddressToOpen.search("^.*\:\/\/") != 0)
+                webAddressToOpen = "http://" + webAddressToOpen;
+            let uri = vscode.Uri.parse(webAddressToOpen);
+            vscode.env.openExternal(uri);
+        }
     }
 
     private async startTomcat(serverInfo: TomcatServer): Promise<void> {
