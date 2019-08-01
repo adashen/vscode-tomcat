@@ -14,7 +14,6 @@ import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 
-dotenv.config();
 /* tslint:disable:no-any */
 export namespace Utility {
     let projectEnv = {};
