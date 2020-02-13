@@ -157,7 +157,7 @@ export class TomcatController {
             }
             server.needRestart = restart;
             await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop')));
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getJavaExecutable(), { shell: true }, ...server.jvmOptions.concat('stop')));
         }
     }
 
@@ -450,7 +450,7 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), 'java', { shell: true }, ...startArguments);
+            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getJavaExecutable(), { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
             await javaProcess;

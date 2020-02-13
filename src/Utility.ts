@@ -205,4 +205,13 @@ export namespace Utility {
             });
         });
     }
+
+    export function getJavaExecutable(): string {
+        let javaPath = '';
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('java');
+        if (config) {
+            javaPath = config.get<string>('home');
+        }
+        return javaPath ? javaPath + '/bin/java' : 'java';
+    }
 }
