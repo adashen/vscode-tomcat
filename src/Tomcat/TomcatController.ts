@@ -105,7 +105,7 @@ export class TomcatController {
         await fse.remove(catalinaBasePath);
         Utility.trackTelemetryStep('copy files');
         await Promise.all([
-            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf')),
+            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), {dereference: true}),
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
