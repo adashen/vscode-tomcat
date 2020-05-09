@@ -10,7 +10,6 @@ import { ServerState } from "./Constants";
 import { TomcatModel } from "./Tomcat/TomcatModel";
 import { TomcatServer } from "./Tomcat/TomcatServer";
 import { WarPackage } from "./Tomcat/WarPackage";
-import { Utility } from "./Utility";
 
 export class TomcatSeverTreeProvider implements vscode.TreeDataProvider<TreeItem> {
     public _onDidChangeTreeData: vscode.EventEmitter<TreeItem> = new vscode.EventEmitter<TreeItem>();
