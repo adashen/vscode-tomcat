@@ -277,7 +277,7 @@ export class TomcatController {
             vscode.window.showErrorMessage(DialogMessage.invalidWarFile);
             return false;
         }
-        if (stat.isDirectory() && !await fse.pathExists(path.join(webappPath, 'WEB-INF', 'web.xml'))) {
+        if (stat.isDirectory() && !await fse.pathExists(path.join(webappPath, 'WEB-INF'))) {
             vscode.window.showErrorMessage(DialogMessage.invalidWebappFolder);
             return false;
         }
