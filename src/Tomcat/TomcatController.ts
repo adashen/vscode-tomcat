@@ -11,7 +11,7 @@ import * as portfinder from "portfinder";
 import { URL } from "url";
 import { MessageItem } from "vscode";
 import * as vscode from "vscode";
-import { TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
+import { createUuid, sendOperationError } from "vscode-extension-telemetry-wrapper";
 import * as Constants from "../Constants";
 import { DialogMessage } from '../DialogMessage';
 import { Utility } from "../Utility";
@@ -25,50 +25,47 @@ export class TomcatController {
         this._outputChannel = vscode.window.createOutputChannel('vscode-tomcat');
     }
 
-    public async deleteServer(tomcatServer: TomcatServer): Promise<void> {
-        const server: TomcatServer = await this.precheck(tomcatServer);
+    public async deleteServer(operationId: string, tomcatServer: TomcatServer): Promise<void> {
+        const server: TomcatServer = await this.precheck(operationId, tomcatServer);
         if (server) {
             if (server.isStarted()) {
                 const confirmation: MessageItem = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
                 if (confirmation !== DialogMessage.yes) {
-                    Utility.trackTelemetryStep('cancel');
+                    Utility.infoTelemetryStep(operationId, 'cancel');
                     return;
                 }
-                await this.stopOrRestartServer(server);
+                await this.stopOrRestartServer(operationId, server);
             }
             this._tomcatModel.deleteServer(server);
         }
     }
 
-    public async openServerConfig(tomcatServer: TomcatServer): Promise<void> {
+    public async openServerConfig(operationId: string, tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
             const configFile: string = tomcatServer.getServerConfigPath();
             if (!await fse.pathExists(configFile)) {
-                Utility.trackTelemetryStep('no configuration');
+                Utility.infoTelemetryStep(operationId, 'no configuration');
                 throw new Error(DialogMessage.noServerConfig);
             }
-            Utility.trackTelemetryStep('open configuration');
-            Utility.openFile(configFile);
+            await Utility.trackTelemetryStep(operationId, 'open configuration', () => Utility.openFile(configFile));
         }
     }
 
-    public async browseWarPackage(warPackage: WarPackage): Promise<void> {
+    public async browseWarPackage(operationId: string, warPackage: WarPackage): Promise<void> {
         if (warPackage) {
             const server: TomcatServer = this._tomcatModel.getTomcatServer(warPackage.serverName);
             const httpPort: string = await Utility.getPort(server.getServerConfigPath(), Constants.PortKind.Http);
             if (!server.isStarted()) {
                 const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServer, DialogMessage.yes, DialogMessage.no);
                 if (result === DialogMessage.yes) {
-                    Utility.trackTelemetryStep('start server');
-                    this.startServer(server);
+                    Utility.trackTelemetryStep(operationId, 'start server', () => this.startServer(operationId, server));
                 }
             }
-            Utility.trackTelemetryStep('browse war');
-            opn(new URL(warPackage.label, `${Constants.LOCALHOST}:${httpPort}`).toString());
+            Utility.trackTelemetryStep(operationId, 'browse war', () => opn(new URL(warPackage.label, `${Constants.LOCALHOST}:${httpPort}`).toString()))();
         }
     }
 
-    public async deleteWarPackage(warPackage: WarPackage): Promise<void> {
+    public async deleteWarPackage(_operationId: string, warPackage: WarPackage): Promise<void> {
         if (warPackage) {
             await fse.remove(warPackage.storagePath);
             vscode.commands.executeCommand('tomcat.tree.refresh');
@@ -81,30 +78,28 @@ export class TomcatController {
         }
     }
 
-    public async addServer(): Promise<TomcatServer> {
-        Utility.trackTelemetryStep('select install path');
-        const pathPick: vscode.Uri[] = await vscode.window.showOpenDialog({
+    public async addServer(operationId: string): Promise<TomcatServer> {
+        const pathPick: vscode.Uri[] = await Utility.trackTelemetryStep(operationId, 'select install path', () => vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
             canSelectFiles: false,
             canSelectFolders: true,
             openLabel: DialogMessage.selectDirectory
-        });
+        }));
         if (_.isEmpty(pathPick) || !pathPick[0].fsPath) {
             return;
         }
         const tomcatInstallPath: string = pathPick[0].fsPath;
         if (!await Utility.validateInstallPath(tomcatInstallPath)) {
             vscode.window.showErrorMessage(Constants.INVALID_SERVER_DIRECTORY);
-            Utility.trackTelemetryStep('install path invalid');
+            Utility.infoTelemetryStep(operationId, 'install path invalid');
             return;
         }
-        Utility.trackTelemetryStep('construct server name');
+        Utility.infoTelemetryStep(operationId, 'construct server name');
         const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
         const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames);
         const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
-        Utility.trackTelemetryStep('copy files');
-        await Promise.all([
+        await Utility.trackTelemetryStep(operationId, 'copy files', () => Promise.all([
             fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), {dereference: true}),
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
@@ -112,11 +107,11 @@ export class TomcatController {
             fse.mkdirs(path.join(catalinaBasePath, 'logs')),
             fse.mkdirs(path.join(catalinaBasePath, 'temp')),
             fse.mkdirs(path.join(catalinaBasePath, 'work'))
-        ]);
+        ]));
+
         await Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml'));
         const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
-        Utility.trackTelemetryStep('add server');
-        this._tomcatModel.addServer(tomcatServer);
+        Utility.trackTelemetryStep(operationId, 'add server', () => this._tomcatModel.addServer(tomcatServer));
         return tomcatServer;
     }
 
@@ -129,8 +124,8 @@ export class TomcatController {
         }
     }
 
-    public async renameServer(tomcatServer: TomcatServer): Promise<void> {
-        const server: TomcatServer = await this.precheck(tomcatServer);
+    public async renameServer(operationId: string, tomcatServer: TomcatServer): Promise<void> {
+        const server: TomcatServer = await this.precheck(operationId, tomcatServer);
         if (server) {
             const newName: string = await vscode.window.showInputBox({
                 prompt: 'input a new server name',
@@ -144,49 +139,47 @@ export class TomcatController {
                 }
             });
             if (newName) {
-                Utility.trackTelemetryStep('rename');
-                server.rename(newName);
+                Utility.trackTelemetryStep(operationId, 'rename', () => server.rename(newName));
                 await this._tomcatModel.saveServerList();
             }
         }
     }
 
-    public async stopOrRestartServer(tomcatServer: TomcatServer, restart: boolean = false): Promise<void> {
-        const server: TomcatServer = await this.precheck(tomcatServer);
+    public async stopOrRestartServer(operationId: string, tomcatServer: TomcatServer, restart: boolean = false): Promise<void> {
+        const server: TomcatServer = await this.precheck(operationId, tomcatServer);
         if (server) {
             if (!server.isStarted()) {
                 vscode.window.showInformationMessage(DialogMessage.serverStopped);
                 return;
             }
-            Utility.trackTelemetryStep(restart ? 'restart' : 'stop');
             if (!restart) {
                 server.clearDebugInfo();
             }
             server.needRestart = restart;
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop'));
+            await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
+                Utility.executeCMD(this._outputChannel, server.getName(), 'java', { shell: true }, ...server.jvmOptions.concat('stop')));
         }
     }
 
-    public async startServer(tomcatServer: TomcatServer): Promise<void> {
-        const server: TomcatServer = tomcatServer ? tomcatServer : await this.selectServer(true);
+    public async startServer(operationId: string, tomcatServer: TomcatServer): Promise<void> {
+        const server: TomcatServer = tomcatServer ? tomcatServer : await this.selectServer(operationId, true);
         if (server) {
             if (server.isStarted()) {
                 vscode.window.showInformationMessage(DialogMessage.serverRunning);
                 return;
             }
-            await this.startTomcat(server);
+            await this.startTomcat(operationId, server);
         }
     }
 
-    public async runOrDebugOnServer(uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
+    public async runOrDebugOnServer(operationId: string, uri: vscode.Uri, debug?: boolean, server?: TomcatServer): Promise<void> {
         if (!uri) {
-            Utility.trackTelemetryStep('select war');
-            const dialog: vscode.Uri[] = await vscode.window.showOpenDialog({
+            const dialog: vscode.Uri[] = await Utility.trackTelemetryStep(operationId, 'select war', () => vscode.window.showOpenDialog({
                 defaultUri: vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined,
                 canSelectFiles: true,
                 canSelectFolders: false,
                 openLabel: DialogMessage.selectWarPackage
-            });
+            }));
             if (_.isEmpty(dialog) || !dialog[0].fsPath) {
                 return;
             }
@@ -196,40 +189,40 @@ export class TomcatController {
         if (!await this.isWebappPathValid(uri.fsPath)) {
             return;
         }
-        server = !server ? await this.selectServer(true) : server;
+        server = !server ? await this.selectServer(operationId, true) : server;
         if (!server) {
             return;
         }
-        await this.deployWebapp(server, uri.fsPath);
+        await this.deployWebapp(operationId, server, uri.fsPath);
         if (server.isStarted() && ((!server.isDebugging() && !debug) || server.isDebugging() === debug)) {
             return;
         }
         if (debug) {
-            await this.prepareDebugInfo(server, uri);
+            await this.prepareDebugInfo(operationId, server, uri);
         } else {
             server.clearDebugInfo();
         }
         if (server.isStarted()) {
-            Utility.trackTelemetryStep('restart');
-            await this.stopOrRestartServer(server, true);
+            Utility.infoTelemetryStep(operationId, 'restart');
+            await this.stopOrRestartServer(operationId, server, true);
         } else {
-            Utility.trackTelemetryStep('start');
-            await this.startTomcat(server);
+            Utility.infoTelemetryStep(operationId, 'start');
+            await this.startTomcat(operationId, server);
         }
     }
 
-    public async browseServer(tomcatServer: TomcatServer): Promise<void> {
+    public async browseServer(operationId: string, tomcatServer: TomcatServer): Promise<void> {
         if (tomcatServer) {
             if (!tomcatServer.isStarted()) {
                 const result: MessageItem = await vscode.window.showInformationMessage(DialogMessage.startServer, DialogMessage.yes, DialogMessage.cancel);
                 if (result !== DialogMessage.yes) {
                     return;
                 }
-                this.startServer(tomcatServer);
+                this.startServer(operationId, tomcatServer);
             }
-            Utility.trackTelemetryStep('get http port');
-            const httpPort: string = await Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http);
-            Utility.trackTelemetryStep('browse server');
+            const httpPort: string = await Utility.trackTelemetryStep(operationId, 'get http port', () =>
+                Utility.getPort(tomcatServer.getServerConfigPath(), Constants.PortKind.Http));
+            Utility.infoTelemetryStep(operationId, 'browse server');
             opn(new URL(`${Constants.LOCALHOST}:${httpPort}`).toString());
         }
     }
@@ -261,7 +254,7 @@ export class TomcatController {
     public dispose(): void {
         this._tomcatModel.getServerSet().forEach((element: TomcatServer) => {
             if (element.isStarted()) {
-                this.stopOrRestartServer(element);
+                this.stopOrRestartServer(createUuid(), element);
             }
             this._outputChannel.dispose();
         });
@@ -284,14 +277,14 @@ export class TomcatController {
             vscode.window.showErrorMessage(DialogMessage.invalidWarFile);
             return false;
         }
-        if (stat.isDirectory() && !await fse.pathExists(path.join(webappPath, 'WEB-INF', 'web.xml'))) {
+        if (stat.isDirectory() && !await fse.pathExists(path.join(webappPath, 'WEB-INF'))) {
             vscode.window.showErrorMessage(DialogMessage.invalidWebappFolder);
             return false;
         }
         return true;
     }
 
-    private async prepareDebugInfo(server: TomcatServer, uri: vscode.Uri): Promise<void> {
+    private async prepareDebugInfo(operationId: string, server: TomcatServer, uri: vscode.Uri): Promise<void> {
         if (!server || !uri) {
             return;
         }
@@ -303,22 +296,22 @@ export class TomcatController {
             });
         }
         if (!workspaceFolder) {
-            Utility.trackTelemetryStep('no proper workspace folder');
+            Utility.infoTelemetryStep(operationId, 'no proper workspace folder');
             vscode.window.showErrorMessage(DialogMessage.noPackage);
             return;
         }
-        Utility.trackTelemetryStep('get debug port');
+        Utility.infoTelemetryStep(operationId, 'get debug port');
         const port: number = await portfinder.getPortPromise();
         server.setDebugInfo(port, workspaceFolder);
     }
 
-    private async selectServer(createIfNoneServer: boolean = false): Promise<TomcatServer> {
+    private async selectServer(operationId: string, createIfNoneServer: boolean = false): Promise<TomcatServer> {
         let items: vscode.QuickPickItem[] = this._tomcatModel.getServerSet();
         if (_.isEmpty(items) && !createIfNoneServer) {
             return;
         }
         if (items.length === 1) {
-            Utility.trackTelemetryStep('auto select the only server');
+            Utility.infoTelemetryStep(operationId, 'auto select the only server');
             return <TomcatServer>items[0];
         }
         items = createIfNoneServer ? items.concat({ label: `$(plus) ${DialogMessage.addServer}`, description: '' }) : items;
@@ -329,16 +322,16 @@ export class TomcatController {
 
         if (pick) {
             if (pick instanceof TomcatServer) {
-                Utility.trackTelemetryStep('select server');
+                Utility.infoTelemetryStep(operationId, 'select server');
                 return pick;
             } else {
-                Utility.trackTelemetryStep('add server');
-                return await this.addServer();
+                Utility.infoTelemetryStep(operationId, 'add server');
+                return await this.addServer(operationId);
             }
         }
     }
 
-    private async deployWebapp(server: TomcatServer, webappPath: string): Promise<void> {
+    private async deployWebapp(operationId: string, server: TomcatServer, webappPath: string): Promise<void> {
         if (!server || !await fse.pathExists(webappPath)) {
             return;
         }
@@ -348,10 +341,10 @@ export class TomcatController {
         await fse.remove(appPath);
         await fse.mkdirs(appPath);
         if (this.isWarFile(webappPath)) {
-            Utility.trackTelemetryStep('deploy war');
+            Utility.infoTelemetryStep(operationId, 'deploy war');
             await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, 'xvf', `${webappPath}`);
         } else {
-            Utility.trackTelemetryStep('deploy web app folder');
+            Utility.infoTelemetryStep(operationId, 'deploy web app folder');
             await fse.copy(webappPath, appPath);
         }
         vscode.commands.executeCommand('tomcat.tree.refresh');
@@ -397,7 +390,7 @@ export class TomcatController {
         return replacedSlashes.startsWith('#') ? replacedSlashes.substring(1) : replacedSlashes;
     }
 
-    private startDebugSession(server: TomcatServer): void {
+    private startDebugSession(operationId: string, server: TomcatServer): void {
         if (!server || !server.getDebugPort() || !server.getDebugWorkspace()) {
             return;
         }
@@ -408,11 +401,11 @@ export class TomcatController {
             hostName: 'localhost',
             port: server.getDebugPort()
         };
-        Utility.trackTelemetryStep('start debug');
+        Utility.infoTelemetryStep(operationId, 'start debug');
         setTimeout(() => vscode.debug.startDebugging(server.getDebugWorkspace(), config), 500);
     }
 
-    private async startTomcat(serverInfo: TomcatServer): Promise<void> {
+    private async startTomcat(operationId: string, serverInfo: TomcatServer): Promise<void> {
         const serverName: string = serverInfo.getName();
         let watcher: chokidar.FSWatcher;
         const serverConfig: string = serverInfo.getServerConfigPath();
@@ -425,28 +418,28 @@ export class TomcatController {
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
-                    Utility.trackTelemetryStep('server port changed');
+                    Utility.infoTelemetryStep(operationId, 'server port changed');
                     const result: MessageItem = await vscode.window.showErrorMessage(
                         DialogMessage.getServerPortChangeErrorMessage(serverName, serverPort), DialogMessage.yes, DialogMessage.no, DialogMessage.moreInfo
                     );
 
                     if (result === DialogMessage.yes) {
-                        Utility.trackTelemetryStep('revert');
+                        Utility.infoTelemetryStep(operationId, 'revert');
                         await Utility.setPort(serverConfig, Constants.PortKind.Server, serverPort);
                     } else if (result === DialogMessage.moreInfo) {
-                        Utility.trackTelemetryStep('more info clicked');
+                        Utility.infoTelemetryStep(operationId, 'more info clicked');
                         opn(Constants.UNABLE_SHUTDOWN_URL);
                     }
                 } else if (await Utility.needRestart(httpPort, httpsPort, serverConfig)) {
-                    Utility.trackTelemetryStep('http(s) port changed');
+                    Utility.infoTelemetryStep(operationId, 'http(s) port changed');
                     const item: MessageItem = await vscode.window.showWarningMessage(
                         DialogMessage.getConfigChangedMessage(serverName), DialogMessage.yes, DialogMessage.no, DialogMessage.never
                     );
 
                     if (item === DialogMessage.yes) {
-                        await this.stopOrRestartServer(serverInfo, true);
+                        await this.stopOrRestartServer(operationId, serverInfo, true);
                     } else if (item === DialogMessage.never) {
-                        Utility.trackTelemetryStep('disable auto restart');
+                        Utility.infoTelemetryStep(operationId, 'disable auto restart');
                         Utility.disableAutoRestart();
                     }
                 }
@@ -459,26 +452,26 @@ export class TomcatController {
             startArguments.push('start');
             const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), 'java', { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
-            this.startDebugSession(serverInfo);
+            this.startDebugSession(operationId, serverInfo);
             await javaProcess;
             serverInfo.setStarted(false);
             watcher.close();
             if (serverInfo.needRestart) {
                 serverInfo.needRestart = false;
-                await this.startTomcat(serverInfo);
+                await this.startTomcat(operationId, serverInfo);
             }
         } catch (err) {
             serverInfo.setStarted(false);
             if (watcher) { watcher.close(); }
-            TelemetryWrapper.error(err);
+            sendOperationError(operationId, 'startTomcat', err);
             vscode.window.showErrorMessage(err.toString());
         }
     }
-    private async precheck(tomcatServer: TomcatServer): Promise<TomcatServer> {
+    private async precheck(operationId: string, tomcatServer: TomcatServer): Promise<TomcatServer> {
         if (_.isEmpty(this._tomcatModel.getServerSet())) {
             vscode.window.showInformationMessage(DialogMessage.noServer);
             return;
         }
-        return tomcatServer ? tomcatServer : await this.selectServer();
+        return tomcatServer ? tomcatServer : await this.selectServer(operationId);
     }
 }
