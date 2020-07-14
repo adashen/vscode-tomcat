@@ -28,12 +28,12 @@ export class TomcatController {
     public async deleteServer(operationId: string, tomcatServer: TomcatServer): Promise<void> {
         const server: TomcatServer = await this.precheck(operationId, tomcatServer);
         if (server) {
+            const confirmation: MessageItem = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
+            if (confirmation !== DialogMessage.yes) {
+                Utility.infoTelemetryStep(operationId, 'cancel');
+                return;
+            }
             if (server.isStarted()) {
-                const confirmation: MessageItem = await vscode.window.showWarningMessage(DialogMessage.deleteConfirm, DialogMessage.yes, DialogMessage.cancel);
-                if (confirmation !== DialogMessage.yes) {
-                    Utility.infoTelemetryStep(operationId, 'cancel');
-                    return;
-                }
                 await this.stopOrRestartServer(operationId, server);
             }
             this._tomcatModel.deleteServer(server);
