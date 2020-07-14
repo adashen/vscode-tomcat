@@ -33,7 +33,9 @@ export class TomcatController {
                 Utility.infoTelemetryStep(operationId, 'cancel');
                 return;
             }
-            await this.stopOrRestartServer(operationId, server);
+            if (server.isStarted()) {
+                await this.stopOrRestartServer(operationId, server);
+            }
             this._tomcatModel.deleteServer(server);
         }
     }
