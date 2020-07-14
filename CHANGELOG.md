@@ -3,8 +3,8 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 
 # 0.11.3
 ### Changed
-* Fix linux tomcat server adding [issue](https://github.com/adashen/vscode-tomcat/issues/226)
-* Fix Can't select different JVM to run Tomcat instance [issue](https://github.com/adashen/vscode-tomcat/issues/239)
+* Fixed [#226](https://github.com/adashen/vscode-tomcat/issues/226): Can't add Tomcat server on Linux
+* Fixed [#239](https://github.com/adashen/vscode-tomcat/issues/239): Can't select different JVM to run Tomcat instance
 
 # 0.11.2
 ### Changed
