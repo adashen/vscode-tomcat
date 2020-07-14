@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+# 0.11.3
+### Changed
+* Fix linux tomcat server adding [issue](https://github.com/adashen/vscode-tomcat/issues/226)
+* Fix Can't select different JVM to run Tomcat instance [issue](https://github.com/adashen/vscode-tomcat/issues/239)
+
 # 0.11.2
 ### Changed
 * Update the `vscode-extension-telemetry-wrapper` to `0.8.0`.
@@ -113,7 +118,7 @@ All notable changes to the "vscode-tomcat" extension will be documented in this 
 * Force stop Tomcat when closing Visual Studio Code [#6](https://github.com/adashen/vscode-tomcat/issues/6)
 
 ## 0.2.1
-* Fix Overview page issue 
+* Fix Overview page issue
 
 ## 0.2.0
 ### Added
