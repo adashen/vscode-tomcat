@@ -356,11 +356,21 @@ export class TomcatController {
 
     /* tslint:disable:no-any */
     private async determineAppName(webappPath: string, server: TomcatServer): Promise<string> {
-        const defaultName: string = path.basename(webappPath, path.extname(webappPath));
-        let appName: string = defaultName;
+        const isWarFile: boolean = this.isWarFile(webappPath);
+
+        let appName: string = isWarFile
+            ? path.basename(webappPath, path.extname(webappPath))
+            : path.basename(webappPath);
+
+        // remove version information from app name if any
+        const versionIndex: number = appName.search(/\-[0-9]+\.[0-9]+/gi);
+        if (versionIndex > -1) {
+            appName = appName.substr(0, versionIndex);
+        }
+
         let folderLocation: string;
-        if (this.isWarFile(webappPath)) {
-            folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
+        if (isWarFile) {
+            folderLocation = path.join(this._tomcatModel.defaultStoragePath, appName);
             await fse.remove(folderLocation);
             await fse.mkdir(folderLocation);
             await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
