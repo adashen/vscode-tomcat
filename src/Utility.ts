@@ -212,6 +212,6 @@ export namespace Utility {
         if (config) {
             javaPath = config.get<string>('home');
         }
-        return javaPath ? javaPath + '/bin/java' : 'java';
+        return javaPath ? "\"" + javaPath + '/bin/java' + "\"" : 'java';
     }
 }
