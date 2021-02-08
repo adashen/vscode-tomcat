@@ -214,4 +214,26 @@ export namespace Utility {
         }
         return javaPath ? javaPath + '/bin/java' : 'java';
     }
+
+    export function getJavaEnvironment(options?: child_process.SpawnOptions): child_process.SpawnOptions {
+        const tomcatConfig = vscode.workspace.getConfiguration('tomcat');
+        const config = tomcatConfig && tomcatConfig.get<Array<{ environmentVariable: string, value: string}>>('java.customEnv') || [];
+        if (!config.length) {
+            return options || {};
+        }
+
+        const { env = { ...process.env } } = options || {};
+        const customEnv: { [key: string]: string } =
+            config.reduce((acc: { [key: string]: string}, envConfig: { environmentVariable: string, value: string}) => {
+                const { environmentVariable = '', value = '' } = envConfig || {};
+                if (environmentVariable) {
+                    acc[environmentVariable] = value;
+                }
+                return acc;
+            }, { ...env });
+        return {
+            ...options,
+            env: customEnv,
+        };
+    }
 }

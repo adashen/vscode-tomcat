@@ -349,6 +349,31 @@
             "type": "boolean",
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
+          },
+          "tomcat.java.customEnv": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "title": "environment setting",
+              "required": [
+                "environmentVariable",
+                "value"
+              ],
+              "properties": {
+                "environmentVariable": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Name of the environment variable to set."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "Value of the environment variable to set."
+                }
+              }
+            },
+            "default": [],
+            "description": "Specifies an array of environment variable names and values. These environment variable values will be passed to java when tomcat starts.",
+            "scope": "resource"
           }
         }
       }
