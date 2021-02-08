@@ -4,7 +4,6 @@ import * as child_process from "child_process";
 import * as fse from "fs-extra";
 import * as os from "os";
 import * as path from "path";
-import { stringify } from "querystring";
 import * as readline from "readline";
 import * as vscode from "vscode";
 import { instrumentOperationStep, sendInfo } from "vscode-extension-telemetry-wrapper";
