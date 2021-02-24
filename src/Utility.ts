@@ -43,7 +43,7 @@ export namespace Utility {
 
     export function setEnv(workdir: string): void {
         projectEnv = {};
-        let fpath = workdir+'/.env';
+        let fpath = path.join(workdir, '.env');
         if (!fse.pathExistsSync(fpath)) return;
         const envConfig = dotenv.parse(fse.readFileSync(fpath))
         for (let k in envConfig) {
