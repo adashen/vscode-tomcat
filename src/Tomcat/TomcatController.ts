@@ -412,7 +412,9 @@ export class TomcatController {
         const serverPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Server);
         const httpPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Http);
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
-
+        if (vscode.workspace.workspaceFolders.length > 0) {
+            Utility.setEnv(vscode.workspace.workspaceFolders[0].uri.path);
+        }
         try {
             await this._tomcatModel.updateJVMOptions(serverName);
             watcher = chokidar.watch(serverConfig);

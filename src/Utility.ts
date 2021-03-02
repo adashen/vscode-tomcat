@@ -4,6 +4,7 @@ import * as child_process from "child_process";
 import * as fse from "fs-extra";
 import * as os from "os";
 import * as path from "path";
+import * as dotenv from "dotenv";
 import * as readline from "readline";
 import * as vscode from "vscode";
 import { instrumentOperationStep, sendInfo } from "vscode-extension-telemetry-wrapper";
@@ -14,10 +15,13 @@ import { localize } from './localize';
 
 /* tslint:disable:no-any */
 export namespace Utility {
+    let projectEnv = {};
+
     export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
         await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
+            options.env = {...options.env, ...projectEnv};
             const p: child_process.ChildProcess = child_process.spawn(command, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
@@ -35,6 +39,16 @@ export namespace Utility {
                 resolve();
             });
         });
+    }
+
+    export function setEnv(workdir: string): void {
+        projectEnv = {};
+        let fpath = path.join(workdir, '.env');
+        if (!fse.pathExistsSync(fpath)) return;
+        const envConfig = dotenv.parse(fse.readFileSync(fpath))
+        for (let k in envConfig) {
+            projectEnv[k] = envConfig[k]
+        }
     }
 
     export async function openFile(file: string): Promise<void> {

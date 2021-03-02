@@ -377,6 +377,7 @@
   },
   "dependencies": {
     "chokidar": "^1.7.0",
+    "dotenv": "^8.0.0",
     "fs-extra": "^4.0.2",
     "lodash": "^4.17.15",
     "opn": "^5.1.0 ",
