@@ -2,13 +2,12 @@
 
 import * as child_process from "child_process";
 import * as fse from "fs-extra";
-import * as net from "net";
 import * as os from "os";
 import * as path from "path";
 import * as dotenv from "dotenv";
 import * as readline from "readline";
 import * as vscode from "vscode";
-import { Session, TelemetryWrapper } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperationStep, sendInfo } from "vscode-extension-telemetry-wrapper";
 import * as xml2js from "xml2js";
 import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
@@ -44,7 +43,7 @@ export namespace Utility {
 
     export function setEnv(workdir: string): void {
         projectEnv = {};
-        let fpath = workdir+'/.env';
+        let fpath = path.join(workdir, '.env');
         if (!fse.pathExistsSync(fpath)) return;
         const envConfig = dotenv.parse(fse.readFileSync(fpath))
         for (let k in envConfig) {
@@ -58,15 +57,13 @@ export namespace Utility {
         }
         vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false });
     }
-    export function trackTelemetryStep(step: string): void {
-        const session: Session = TelemetryWrapper.currentSession();
-        if (session && session.extraProperties) { session.extraProperties.finishedSteps.push(step); }
-        TelemetryWrapper.info(step);
+
+    export function trackTelemetryStep(operationId: string, step: string, callback: (...args: any[]) => any): any {
+        return instrumentOperationStep(operationId, step, callback)();
     }
 
-    export function initTelemetrySteps(): void {
-        const session: Session = TelemetryWrapper.currentSession();
-        if (session && session.extraProperties) { session.extraProperties.finishedSteps = []; }
+    export function infoTelemetryStep(operationId: string, step: string): void {
+        sendInfo(operationId, { finishedStep: step });
     }
 
     export function disableAutoRestart(): void {
@@ -221,5 +218,14 @@ export namespace Utility {
                 return resolve(res);
             });
         });
+    }
+
+    export function getJavaExecutable(): string {
+        let javaPath = '';
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('java');
+        if (config) {
+            javaPath = config.get<string>('home');
+        }
+        return javaPath ? javaPath + '/bin/java' : 'java';
     }
 }
