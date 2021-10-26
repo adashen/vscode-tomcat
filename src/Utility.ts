@@ -15,13 +15,19 @@ import { localize } from './localize';
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
 
+interface IEnv {
+    environmentVariable: string;
+    value: string
+}
+
 /* tslint:disable:no-any */
 export namespace Utility {
     export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
-        await new Promise((resolve: () => void, reject: (e: Error) => void): void => {
+        await new Promise<void>((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
-            const p: child_process.ChildProcess = child_process.spawn(command, args, options);
+            options.env = {...(options.env ?? {}), ...Utility.getCustomEnv()};
+            const p: child_process.ChildProcess = child_process.spawn(`"${command}"`, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
@@ -114,7 +120,7 @@ export namespace Utility {
 
     export async function readFileLineByLine(file: string, filterFunction?: (value: string) => boolean): Promise<string[]> {
         let result: string[] = [];
-        await new Promise((resolve: () => void): void => {
+        await new Promise<void>((resolve) => {
             const lineReader: readline.ReadLine = readline.createInterface({
                 input: fse.createReadStream(file),
                 crlfDelay: Infinity
@@ -210,11 +216,29 @@ export namespace Utility {
     }
 
     export function getJavaExecutable(): string {
-        let javaPath = '';
-        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('java');
-        if (config) {
-            javaPath = config.get<string>('home');
+        const customEnv: { [key: string]: string } = getCustomEnv();
+        let javaPath = customEnv["JAVA_HOME"];
+
+        if (!javaPath) {
+            // fallback to read java.home from redhat.java extension
+            const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('java');
+            if (config) {
+                javaPath = config.get<string>('home');
+            }
         }
+
         return javaPath ? path.join(javaPath, 'bin', JAVA_FILENAME) : JAVA_FILENAME;
+    }
+
+    export function getCustomEnv(): { [key: string]: string } {
+        const tomcatConfig = vscode.workspace.getConfiguration('tomcat');
+        const config = tomcatConfig?.get<IEnv[]>('customEnv') ?? [];
+
+        const customEnv: { [key: string]: string } = {};
+        config.forEach((env: IEnv) => {
+            customEnv[env.environmentVariable] = env.value;
+        });
+        
+        return {...process.env, ...customEnv};
     }
 }
