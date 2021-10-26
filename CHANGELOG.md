@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+# 0.12.0
+### Added
+* New setting `tomcat.customEnv` to specify custom environment variables. Now it is allowed to launch Tomcat servers with a different Java runtime by specifying a `JAVA_HOME` env. [#318](https://github.com/adashen/vscode-tomcat/pull/318)
+
+### Changed
+* Always ask for confirmation when deleting a Tomcat server. [#306](https://github.com/adashen/vscode-tomcat/pull/306)
+
 # 0.11.3
 ### Changed
 * Fixed [#226](https://github.com/adashen/vscode-tomcat/issues/226): Can't add Tomcat server on Linux
