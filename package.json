@@ -350,7 +350,7 @@
             "default": true,
             "description": "Restart Tomcat Server or not when http(s) port changes"
           },
-          "tomcat.java.customEnv": {
+          "tomcat.customEnv": {
             "type": "array",
             "items": {
               "type": "object",
@@ -372,8 +372,8 @@
               }
             },
             "default": [],
-            "description": "Specifies an array of environment variable names and values. These environment variable values will be passed to java when tomcat starts.",
-            "scope": "resource"
+            "description": "Specifies an array of environment variable names and values. These environment variable values will be passed when tomcat starts.",
+            "scope": "window"
           }
         }
       }
@@ -397,7 +397,7 @@
     "mocha": "^9.1.2",
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "5.0.1",
-    "typescript": "^2.8.3",
+    "typescript": "^4.4.4",
     "vscode": "^0.9.9"
   },
   "dependencies": {

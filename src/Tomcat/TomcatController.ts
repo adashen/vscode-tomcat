@@ -157,7 +157,7 @@ export class TomcatController {
             }
             server.needRestart = restart;
             await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getJavaExecutable(), Utility.getJavaEnvironment({ shell: true }), ...server.jvmOptions.concat('stop')));
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getJavaExecutable(), { shell: true }, ...server.jvmOptions.concat('stop')));
         }
     }
 
@@ -245,7 +245,7 @@ export class TomcatController {
                 });
             }
             await Promise.all(items.map((i: vscode.QuickPickItem) => {
-                return Utility.executeCMD(this._outputChannel, undefined, 'jar', Utility.getJavaEnvironment({ cwd: i.description, shell: true }), 'cvf', ...[`"${i.label}.war"`, '*']);
+                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, 'cvf', ...[`"${i.label}.war"`, '*']);
             }));
             vscode.window.showInformationMessage(DialogMessage.getWarGeneratedInfo(items.length));
         }
@@ -342,7 +342,7 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         if (this.isWarFile(webappPath)) {
             Utility.infoTelemetryStep(operationId, 'deploy war');
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', Utility.getJavaEnvironment({ cwd: appPath }), 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, 'xvf', `${webappPath}`);
         } else {
             Utility.infoTelemetryStep(operationId, 'deploy web app folder');
             await fse.copy(webappPath, appPath);
@@ -363,7 +363,7 @@ export class TomcatController {
             folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
             await fse.remove(folderLocation);
             await fse.mkdir(folderLocation);
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', Utility.getJavaEnvironment({ cwd: folderLocation }), 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
         } else {
             folderLocation = webappPath;
         }
@@ -450,7 +450,7 @@ export class TomcatController {
                 startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
             }
             startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getJavaExecutable(), Utility.getJavaEnvironment({ shell: true }), ...startArguments);
+            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getJavaExecutable(), { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
             await javaProcess;
