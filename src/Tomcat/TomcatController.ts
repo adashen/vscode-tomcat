@@ -371,10 +371,14 @@ export class TomcatController {
             const xml: string = fs.readFileSync(path.join(folderLocation, 'META-INF', 'context.xml'), 'utf8');
             const jsonFromXml: any = await Utility.parseXml(xml);
             if (jsonFromXml) {
-                if (jsonFromXml.Context && jsonFromXml.Context.$ && jsonFromXml.Context.$.path) {
-                    appName = this.parseContextPathToFolderName(jsonFromXml.Context.$.path);
-                } else if (jsonFromXml.context && jsonFromXml.context.$ && jsonFromXml.context.$.path) {
-                    appName = this.parseContextPathToFolderName(jsonFromXml.context.$.path);
+                if (jsonFromXml.Context && jsonFromXml.Context.$) { 
+                    if (jsonFromXml.Context.$.path != null) {
+                        appName = this.parseContextPathToFolderName(jsonFromXml.Context.$.path);
+                    }
+                } else if (jsonFromXml.context && jsonFromXml.context.$) {
+                    if (jsonFromXml.context.$.path != null) {
+                        appName = this.parseContextPathToFolderName(jsonFromXml.context.$.path);
+                    }
                 }
             }
         }
