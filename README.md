@@ -25,7 +25,7 @@
 * [Apache Tomcat](http://tomcat.apache.org/)
 * [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) (for debuging war package)
 
-If you are a Windows user, you should add the bin subdirectory of your JDK installation to your user-level or system PATH environment variable.
+If you are a Windows user, you should add the bin subdirectory of your JDK installation to your PATH environment variable (User or System) and restart VS Code. This is required to debug/run war packages from the VS Code context menu.
 
 ## Contributing
 
