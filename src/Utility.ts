@@ -12,6 +12,9 @@ import * as Constants from "./Constants";
 import { DialogMessage } from "./DialogMessage";
 import { localize } from './localize';
 
+const isWindows = process.platform.indexOf('win') === 0;
+const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
+
 /* tslint:disable:no-any */
 export namespace Utility {
     export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
@@ -212,7 +215,7 @@ export namespace Utility {
         if (config) {
             javaPath = config.get<string>('home');
         }
-        return javaPath ? javaPath + '/bin/java' : 'java';
+        return javaPath ? path.join(javaPath, 'bin', JAVA_FILENAME) : JAVA_FILENAME;
     }
 
     export function getJavaEnvironment(options?: child_process.SpawnOptions): child_process.SpawnOptions {

@@ -16,7 +16,7 @@ export namespace DialogMessage {
     export const noServerConfig: string = localize('tomcatExt.noServerConfig', 'The Tomcat Server is broken. It does not have server.xml');
     export const selectWarPackage: string = localize('tomcatExt.selectWarPackage', 'Select War Package');
     export const selectDirectory: string = localize('tomcatExt.selectDirectory', 'Select Tomcat Directory');
-    export const deleteConfirm: string = localize('tomcatExt.deleteConfirm', 'This Tomcat Server is running, are you sure you want to delete it?');
+    export const deleteConfirm: string = localize('tomcatExt.deleteConfirm', 'Are you sure you want to delete this server?');
     export const serverRunning: string = localize('tomcatExt.serverRunning', 'This Tomcat Server is already started.');
     export const serverStopped: string = localize('tomcatExt.serverStopped', 'This Tomcat Server was stopped.');
     export const startServer: string = localize('tomcatExt.startServer', 'The Tomcat server needs to be started before browsing. Would you like to start it now?');
