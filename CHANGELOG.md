@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to the "vscode-tomcat" extension will be documented in this file.
 
+# 0.12.1
+
+### Fixed
+* Regression issue: failed to debug a WAR package. [#329](https://github.com/adashen/vscode-tomcat/issues/329)
+* Empty string in META-INF/context.xml was not handled well. [#234](https://github.com/adashen/vscode-tomcat/issues/234)
+
 # 0.12.0
 ### Added
 * New setting `tomcat.customEnv` to specify custom environment variables. Now it is allowed to launch Tomcat servers with a different Java runtime by specifying a `JAVA_HOME` env. [#318](https://github.com/adashen/vscode-tomcat/pull/318)
