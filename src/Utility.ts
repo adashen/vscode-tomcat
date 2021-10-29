@@ -27,7 +27,8 @@ export namespace Utility {
             outputPane.show();
             let stderr: string = '';
             options.env = {...(options.env ?? {}), ...Utility.getCustomEnv()};
-            const p: child_process.ChildProcess = child_process.spawn(`"${command}"`, args, options);
+            const commandToSpawn = command.includes(" ") ? `"${command}"` : command; // workaround for path containing whitespace.
+            const p: child_process.ChildProcess = child_process.spawn(commandToSpawn, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
