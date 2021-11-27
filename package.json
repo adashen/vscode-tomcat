@@ -374,6 +374,11 @@
             "default": [],
             "description": "Specifies an array of environment variable names and values. These environment variable values will be passed when tomcat starts.",
             "scope": "window"
+          },
+          "tomcat.runInPlace": {
+            "type": "boolean",
+            "default": false,
+            "description": "When unchecked, newly added servers will have parts of their folder structure copied to a separate workspace (specified by the 'Tomcat Servers workspace' setting). When this setting is checked, newly added servers are managed and run in their original location."
           }
         }
       }

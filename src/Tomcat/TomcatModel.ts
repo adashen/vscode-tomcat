@@ -33,7 +33,7 @@ export class TomcatModel {
     public async saveServerList(): Promise<void> {
         try {
             await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath(), _runInPlace: s.isRunInPlace() };
             }));
             vscode.commands.executeCommand('tomcat.tree.refresh');
         } catch (err) {
@@ -86,7 +86,9 @@ export class TomcatModel {
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (!_.isEmpty(oldServer)) {
-                fse.remove(tomcatServer.getStoragePath());
+                if (!tomcatServer.isRunInPlace()) {
+                    fse.remove(tomcatServer.getStoragePath());
+                }
                 this.saveServerList();
                 return true;
             }
@@ -120,8 +122,8 @@ export class TomcatModel {
                 const objArray: {}[] = fse.readJsonSync(this._serversJsonFile);
                 if (!_.isEmpty(objArray)) {
                     this._serverList = this._serverList.concat(objArray.map(
-                        (obj: { _name: string, _installPath: string, _storagePath: string }) => {
-                            return new TomcatServer(obj._name, obj._installPath, obj._storagePath);
+                        (obj: { _name: string, _installPath: string, _storagePath: string, _runInPlace: boolean }) => {
+                            return new TomcatServer(obj._name, obj._installPath, obj._storagePath, obj._runInPlace || false);
                         }));
                 }
             }
