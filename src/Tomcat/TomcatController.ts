@@ -94,16 +94,13 @@ export class TomcatController {
             Utility.infoTelemetryStep(operationId, 'install path invalid');
             return;
         }
-        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
-        if (config) {
-            const runInPlace: boolean = config.get<boolean>('runInPlace');
-            if (runInPlace) {
-                if (this._tomcatModel.getServerSet().map(server => server.getStoragePath()).indexOf(tomcatInstallPath) > -1) {
-                    vscode.window.showErrorMessage(DialogMessage.serverAlreadyAdded);
-                    return;
-                }
-                return await this.addInPlaceServer(operationId, tomcatInstallPath, runInPlace);
+        const runInPlace: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_RUN_IN_PLACE);
+        if (runInPlace) {
+            if (this._tomcatModel.getServerSet().map(server => server.getStoragePath()).indexOf(tomcatInstallPath) > -1) {
+                vscode.window.showErrorMessage(DialogMessage.serverAlreadyAdded);
+                return;
             }
+            return await this.addInPlaceServer(operationId, tomcatInstallPath, runInPlace);
         }
         return await this.addServerToWorkspace(operationId, tomcatInstallPath, false);
     }
@@ -149,8 +146,13 @@ export class TomcatController {
                 server.clearDebugInfo();
             }
             server.needRestart = restart;
+            const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+            let jvmOpts = server.jvmOptions.slice();
+            if (!useStartupScripts) {
+                jvmOpts.push('stop');
+            }
             await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getJavaExecutable(), { shell: true }, ...server.jvmOptions.concat('stop')));
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { shell: true }, ...jvmOpts));
         }
     }
 
@@ -438,7 +440,7 @@ export class TomcatController {
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
-            await this._tomcatModel.updateJVMOptions(serverName);
+            await this._tomcatModel.updateJVMOptions(serverInfo);
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
@@ -469,15 +471,16 @@ export class TomcatController {
                 }
             });
 
+            const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             let startArguments: string[] = serverInfo.jvmOptions.slice();
-            if (serverInfo.getDebugPort()) {
-                startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
+            let process: Promise<void>;
+            if (useStartupScripts) {
+                startArguments.push('start');
             }
-            startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getJavaExecutable(), { shell: true }, ...startArguments);
+            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { shell: true }, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
-            await javaProcess;
+            await process;
             serverInfo.setStarted(false);
             watcher.close();
             if (serverInfo.needRestart) {

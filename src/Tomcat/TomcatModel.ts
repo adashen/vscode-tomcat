@@ -41,23 +41,38 @@ export class TomcatModel {
         }
     }
 
-    public async updateJVMOptions(serverName: string) : Promise<void> {
-        const server: TomcatServer = this.getTomcatServer(serverName);
+    public async updateJVMOptions(server: TomcatServer) : Promise<void> {
+        const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        let result: string[] = [];
+        if (!useStartupScripts) {
+            result = await this.createJVMClasspathOptions(server);
+        }
+        if (server.getDebugPort()) {
+            result.push(`${Constants.DEBUG_ARGUMENT_KEY}${server.getDebugPort()}`);
+        }
+        if (await fse.pathExists(server.jvmOptionFile)) {
+            result = result.concat(await this.loadJVMOptionsFileArgs(server));
+        }
+        if (!useStartupScripts) {
+            result = await this.concatBootstrapFileJVMOpt(result);
+        }
+        server.jvmOptions = result;
+    }
+
+    private async createJVMClasspathOptions(server: TomcatServer): Promise<string[]> {
         const installPath: string = server.getInstallPath();
         const catalinaBase: string = server.getStoragePath();
         const bootStrap: string = path.join(installPath, 'bin', 'bootstrap.jar');
         const tomcat: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
-        let result: string[] = [
+        return [
             `${Constants.CLASS_PATH_KEY} "${[bootStrap, tomcat].join(path.delimiter)}"`,
             `${Constants.CATALINA_BASE_KEY}="${catalinaBase}"`,
             `${Constants.CATALINA_HOME_KEY}="${installPath}"`,
             `${Constants.ENCODING}`
         ];
+    }
 
-        if (!await fse.pathExists(server.jvmOptionFile)) {
-            server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
-            return;
-        }
+    private async loadJVMOptionsFileArgs(server: TomcatServer): Promise<string[]> {
         const filterFunction: (para: string) => boolean = (para: string): boolean => {
             if (!para.startsWith('-')) {
                 return false;
@@ -71,14 +86,18 @@ export class TomcatModel {
             });
             return valid;
         };
-        result = result.concat(await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction));
+        let result = await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction);
         const tmpDirConfiguration: string = result.find((element: string) => {
             return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
         });
         if (!tmpDirConfiguration) {
-            result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(catalinaBase, 'temp')}"`);
+            result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(server.getStoragePath(), 'temp')}"`);
         }
-        server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+        return result;
+    }
+
+    private async concatBootstrapFileJVMOpt(jvmOptions: string[]) : Promise<string[]> {
+        return jvmOptions.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
@@ -109,7 +128,7 @@ export class TomcatModel {
     public saveServerListSync(): void {
         try {
             fse.outputJsonSync(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath(), _runInPlace: s.isRunInPlace() };
             }));
         } catch (err) {
             console.error(err.toString());

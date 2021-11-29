@@ -14,6 +14,7 @@ import { localize } from './localize';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
+const SCRIPT_EXTENSION = isWindows ? '.bat' : '.sh';
 
 interface IEnv {
     environmentVariable: string;
@@ -111,11 +112,7 @@ export namespace Utility {
     export async function needRestart(httpPort: string, httpsPort: string, serverConfog: string): Promise<boolean> {
         const newHttpPort: string = await getPort(serverConfog, Constants.PortKind.Http);
         const newHttpsPort: string = await getPort(serverConfog, Constants.PortKind.Https);
-        let restartConfig: boolean = false;
-        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
-        if (config) {
-            restartConfig = config.get<boolean>(Constants.RESTART_CONFIG_ID);
-        }
+        let restartConfig: boolean = Utility.getVSCodeConfigBoolean(Constants.RESTART_CONFIG_ID);
         return restartConfig && (httpPort !== newHttpPort || httpsPort !== newHttpsPort);
     }
 
@@ -216,6 +213,26 @@ export namespace Utility {
         });
     }
 
+    export function getStartExecutable(tomcatInstallPath: string): string {
+        const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        if (useStartupScripts) {
+            return path.join(tomcatInstallPath, Constants.TOMCAT_STARTUP_SCRIPT_NAME + SCRIPT_EXTENSION);
+        }
+        else {
+            return this.getJavaExecutable();
+        }
+    }
+
+    export function getShutdownExecutable(tomcatInstallPath: string): string {
+        const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        if (useStartupScripts) {
+            return path.join(tomcatInstallPath, Constants.TOMCAT_SHUTDOWN_SCRIPT_NAME + SCRIPT_EXTENSION);
+        }
+        else {
+            return this.getJavaExecutable();
+        }
+    }
+
     export function getJavaExecutable(): string {
         const customEnv: { [key: string]: string } = getCustomEnv();
         let javaPath = customEnv["JAVA_HOME"];
@@ -241,5 +258,15 @@ export namespace Utility {
         });
         
         return {...process.env, ...customEnv};
+    }
+
+    export function getVSCodeConfigBoolean(key: string): boolean {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            return config.get<boolean>(key);
+        }
+        else {
+            return false;
+        }
     }
 }

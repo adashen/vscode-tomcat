@@ -11,6 +11,10 @@ export const UNABLE_SHUTDOWN_URL: string = 'https://stackoverflow.com/questions/
 
 export const RESTART_CONFIG_ID: string = 'restart_when_http(s)_port_change';
 
+export const CONF_RUN_IN_PLACE: string = 'runInPlace';
+
+export const CONF_USE_STARTUP_SCRIPTS: string = 'useTomcatStartupScripts';
+
 // tslint:disable-next-line:no-http-string
 export const LOCALHOST: string = 'http://localhost';
 
@@ -31,6 +35,10 @@ export const ENCODING: string = '-Dfile.encoding=UTF8';
 export const BOOTSTRAP_FILE: string = 'org.apache.catalina.startup.Bootstrap';
 
 export const WAR_FILE_EXTENSION: string = '.war';
+
+export const TOMCAT_STARTUP_SCRIPT_NAME: string = 'startup';
+
+export const TOMCAT_SHUTDOWN_SCRIPT_NAME: string = 'shutdown';
 
 export const DEBUG_SESSION_NAME: string = 'Tomcat Debug (Attach)';
 
