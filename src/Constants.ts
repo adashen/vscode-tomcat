@@ -36,7 +36,7 @@ export const BOOTSTRAP_FILE: string = 'org.apache.catalina.startup.Bootstrap';
 
 export const WAR_FILE_EXTENSION: string = '.war';
 
-export const TOMCAT_STARTUP_SCRIPT_NAME: string = 'startup';
+export const TOMCAT_STARTUP_SCRIPT_NAME: string = 'catalina';
 
 export const TOMCAT_SHUTDOWN_SCRIPT_NAME: string = 'shutdown';
 

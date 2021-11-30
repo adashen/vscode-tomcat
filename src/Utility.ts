@@ -23,14 +23,14 @@ interface IEnv {
 
 /* tslint:disable:no-any */
 export namespace Utility {
-    export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, isStartupOrShutdown: boolean, ...args: string[]): Promise<void> {
         await new Promise<void>((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
-            options.env = {...(options.env ?? {}), ...Utility.getCustomEnv()};
+            options.env = {...Utility.getCustomEnv(), ...(options.env ?? {})};
             const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             const commandToSpawn = command.includes(" ") ? `"${command}"` : command; // workaround for path containing whitespace.
-            const p: child_process.ChildProcess = (useStartupScripts && isWindows) ? spawnWindowsScript(commandToSpawn, args, options) : child_process.spawn(commandToSpawn, args, options);
+            const p: child_process.ChildProcess = (isStartupOrShutdown && useStartupScripts && isWindows) ? spawnWindowsScript(commandToSpawn, args, options) : child_process.spawn(commandToSpawn, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
@@ -48,8 +48,9 @@ export namespace Utility {
             });
         });
 
-        function spawnWindowsScript(command: string, args: string[], options: child_process.SpawnOptions): child_process.ChildProcess {
-            args.unshift(command);
+        function spawnWindowsScript(scriptFile: string, args: string[], options: child_process.SpawnOptions): child_process.ChildProcess {
+            args.unshift(args.pop()); //we'll need to switch the order and bring this to the front
+            args.unshift(scriptFile);
             const quotedArgs: string = '"'.concat(args.reduce((accumulator: string, currentVal: string) => accumulator.concat(" ", currentVal), ""), '"');
             return child_process.spawn(Constants.WINDOWS_CMD, ['/c', quotedArgs], options);
         }

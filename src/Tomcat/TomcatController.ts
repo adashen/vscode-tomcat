@@ -152,7 +152,7 @@ export class TomcatController {
                 jvmOpts.push('stop');
             }
             await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { shell: true }, ...jvmOpts));
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { env: {"CATALINA_BASE": server.getStoragePath()}, shell: true }, true, ...jvmOpts));
         }
     }
 
@@ -240,7 +240,7 @@ export class TomcatController {
                 });
             }
             await Promise.all(items.map((i: vscode.QuickPickItem) => {
-                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, 'cvf', ...[`"${i.label}.war"`, '*']);
+                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, false, 'cvf', ...[`"${i.label}.war"`, '*']);
             }));
             vscode.window.showInformationMessage(DialogMessage.getWarGeneratedInfo(items.length));
         }
@@ -368,7 +368,7 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         if (this.isWarFile(webappPath)) {
             Utility.infoTelemetryStep(operationId, 'deploy war');
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, false, 'xvf', `${webappPath}`);
         } else {
             Utility.infoTelemetryStep(operationId, 'deploy web app folder');
             await fse.copy(webappPath, appPath);
@@ -389,7 +389,7 @@ export class TomcatController {
             folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
             await fse.remove(folderLocation);
             await fse.mkdir(folderLocation);
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, false, 'xvf', `${webappPath}`);
         } else {
             folderLocation = webappPath;
         }
@@ -474,10 +474,16 @@ export class TomcatController {
             const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             let startArguments: string[] = serverInfo.jvmOptions.slice();
             let process: Promise<void>;
-            if (!useStartupScripts) {
+            if (useStartupScripts) {
+                if (serverInfo.isDebugging()) {
+                    startArguments.push('debug');
+                }
+                startArguments.push('run');
+            }
+            else {
                 startArguments.push('start');
             }
-            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { shell: true }, ...startArguments);
+            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { env: {"CATALINA_BASE": serverInfo.getStoragePath()}, shell: true }, true, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
             await process;
