@@ -44,8 +44,11 @@ export class TomcatModel {
     public async updateJVMOptions(server: TomcatServer) : Promise<void> {
         const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
         let result: string[] = [];
-        if (!useStartupScripts) {
-            result = await this.createJVMClasspathOptions(server);
+        if (useStartupScripts) {
+            // result = await this.createBaseJVMOpts(server);
+        }
+        else {
+            result = await this.createJVMClasspathOption(server);
         }
         if (server.getDebugPort()) {
             result.push(`${Constants.DEBUG_ARGUMENT_KEY}${server.getDebugPort()}`);
@@ -59,7 +62,17 @@ export class TomcatModel {
         server.jvmOptions = result;
     }
 
-    private async createJVMClasspathOptions(server: TomcatServer): Promise<string[]> {
+    private async createBaseJVMOpts(server: TomcatServer): Promise<string[]> {
+        const installPath: string = server.getInstallPath();
+        const catalinaBase: string = server.getStoragePath();
+        return [
+            `${Constants.CATALINA_BASE_KEY}="${catalinaBase}"`,
+            `${Constants.CATALINA_HOME_KEY}="${installPath}"`,
+            `${Constants.ENCODING}`
+        ];
+    }
+
+    private async createJVMClasspathOption(server: TomcatServer): Promise<string[]> {
         const installPath: string = server.getInstallPath();
         const catalinaBase: string = server.getStoragePath();
         const bootStrap: string = path.join(installPath, 'bin', 'bootstrap.jar');

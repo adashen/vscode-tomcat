@@ -474,7 +474,7 @@ export class TomcatController {
             const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             let startArguments: string[] = serverInfo.jvmOptions.slice();
             let process: Promise<void>;
-            if (useStartupScripts) {
+            if (!useStartupScripts) {
                 startArguments.push('start');
             }
             process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { shell: true }, ...startArguments);

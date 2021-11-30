@@ -28,8 +28,9 @@ export namespace Utility {
             outputPane.show();
             let stderr: string = '';
             options.env = {...(options.env ?? {}), ...Utility.getCustomEnv()};
+            const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             const commandToSpawn = command.includes(" ") ? `"${command}"` : command; // workaround for path containing whitespace.
-            const p: child_process.ChildProcess = child_process.spawn(commandToSpawn, args, options);
+            const p: child_process.ChildProcess = (useStartupScripts && isWindows) ? spawnWindowsScript(commandToSpawn, args, options) : child_process.spawn(commandToSpawn, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
@@ -46,6 +47,12 @@ export namespace Utility {
                 resolve();
             });
         });
+
+        function spawnWindowsScript(command: string, args: string[], options: child_process.SpawnOptions): child_process.ChildProcess {
+            args.unshift(command);
+            const quotedArgs: string = '"'.concat(args.reduce((accumulator: string, currentVal: string) => accumulator.concat(" ", currentVal), ""), '"');
+            return child_process.spawn(Constants.WINDOWS_CMD, ['/c', quotedArgs], options);
+        }
     }
 
     export async function openFile(file: string): Promise<void> {
@@ -216,7 +223,7 @@ export namespace Utility {
     export function getStartExecutable(tomcatInstallPath: string): string {
         const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
         if (useStartupScripts) {
-            return path.join(tomcatInstallPath, Constants.TOMCAT_STARTUP_SCRIPT_NAME + SCRIPT_EXTENSION);
+            return path.join(tomcatInstallPath, 'bin', Constants.TOMCAT_STARTUP_SCRIPT_NAME + SCRIPT_EXTENSION);
         }
         else {
             return this.getJavaExecutable();
@@ -226,7 +233,7 @@ export namespace Utility {
     export function getShutdownExecutable(tomcatInstallPath: string): string {
         const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
         if (useStartupScripts) {
-            return path.join(tomcatInstallPath, Constants.TOMCAT_SHUTDOWN_SCRIPT_NAME + SCRIPT_EXTENSION);
+            return path.join(tomcatInstallPath, 'bin', Constants.TOMCAT_SHUTDOWN_SCRIPT_NAME + SCRIPT_EXTENSION);
         }
         else {
             return this.getJavaExecutable();

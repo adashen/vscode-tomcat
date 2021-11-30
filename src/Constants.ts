@@ -40,6 +40,8 @@ export const TOMCAT_STARTUP_SCRIPT_NAME: string = 'startup';
 
 export const TOMCAT_SHUTDOWN_SCRIPT_NAME: string = 'shutdown';
 
+export const WINDOWS_CMD: string = 'cmd.exe';
+
 export const DEBUG_SESSION_NAME: string = 'Tomcat Debug (Attach)';
 
 export const JVM_DEFAULT_OPTIONS_KEYS: string[] = [CLASS_PATH_KEY, CATALINA_BASE_KEY, CATALINA_HOME_KEY];
