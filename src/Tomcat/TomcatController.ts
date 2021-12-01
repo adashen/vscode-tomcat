@@ -151,8 +151,8 @@ export class TomcatController {
             if (!useStartupScripts) {
                 jvmOpts.push('stop');
             }
-            await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { env: {"CATALINA_BASE": server.getStoragePath()}, shell: true }, true, ...jvmOpts));
+            await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', async () =>
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { env: await this._tomcatModel.getEnvironmentVars(server, false), shell: true }, true, ...jvmOpts));
         }
     }
 
@@ -475,15 +475,15 @@ export class TomcatController {
             let startArguments: string[] = serverInfo.jvmOptions.slice();
             let process: Promise<void>;
             if (useStartupScripts) {
+                startArguments.unshift('run');
                 if (serverInfo.isDebugging()) {
-                    startArguments.push('debug');
+                    startArguments.unshift('jpda');
                 }
-                startArguments.push('run');
             }
             else {
                 startArguments.push('start');
             }
-            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { env: {"CATALINA_BASE": serverInfo.getStoragePath()}, shell: true }, true, ...startArguments);
+            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { env: await this._tomcatModel.getEnvironmentVars(serverInfo, true), shell: true }, true, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
             await process;

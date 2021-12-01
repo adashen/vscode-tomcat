@@ -49,7 +49,6 @@ export namespace Utility {
         });
 
         function spawnWindowsScript(scriptFile: string, args: string[], options: child_process.SpawnOptions): child_process.ChildProcess {
-            args.unshift(args.pop()); //we'll need to switch the order and bring this to the front
             args.unshift(scriptFile);
             const quotedArgs: string = '"'.concat(args.reduce((accumulator: string, currentVal: string) => accumulator.concat(" ", currentVal), ""), '"');
             return child_process.spawn(Constants.WINDOWS_CMD, ['/c', quotedArgs], options);

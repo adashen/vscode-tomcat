@@ -25,7 +25,7 @@
 * [Apache Tomcat](http://tomcat.apache.org/)
 * [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) (for debuging war package)
 * Environment management
-    * Set your CATALINA_HOME and JAVA_HOME system environment variables
+    * Set your JAVA_HOME system environment variables
     * (Windows users) You should add the bin subdirectory of your JDK installation to your PATH environment variable (User or System). This is required to debug/run war packages from the VS Code context menu.
     * Restart VS Code after changing any of these ^.
 

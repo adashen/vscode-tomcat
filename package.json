@@ -383,7 +383,7 @@
           "tomcat.useTomcatStartupScripts": {
             "type": "boolean",
             "default": false,
-            "description": "When unchecked, the extension will manually run Java and load the necessary tomcat jar files into the classpath. When this setting is checked, the extension will attempt to execute the startup.(bat|sh) file that comes with fresh tomcat installations."
+            "description": "When unchecked, the extension will manually run Java and load the necessary tomcat jar files into the classpath. When this setting is checked, the extension will attempt to execute the .bat/.sh files that come with fresh tomcat installations."
           }
         }
       }

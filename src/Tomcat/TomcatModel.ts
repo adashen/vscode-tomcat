@@ -48,7 +48,7 @@ export class TomcatModel {
             result = await this.createJVMClasspathOption(server);
         }
         if (server.getDebugPort()) {
-            result.push(`${Constants.DEBUG_ARGUMENT_KEY}${server.getDebugPort()}`);
+            result.push(await this.getJPDAOpts(server));
         }
         if (await fse.pathExists(server.jvmOptionFile)) {
             result = result.concat(await this.loadJVMOptionsFileArgs(server));
@@ -70,6 +70,10 @@ export class TomcatModel {
             `${Constants.CATALINA_HOME_KEY}="${installPath}"`,
             `${Constants.ENCODING}`
         ];
+    }
+
+    public async getJPDAOpts(server: TomcatServer): Promise<string> {
+        return `${Constants.DEBUG_ARGUMENT_KEY}${server.getDebugPort()}`;
     }
 
     private async loadJVMOptionsFileArgs(server: TomcatServer): Promise<string[]> {
@@ -98,6 +102,18 @@ export class TomcatModel {
 
     private async concatBootstrapFileJVMOpt(jvmOptions: string[]) : Promise<string[]> {
         return jvmOptions.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+    }
+
+    public async getEnvironmentVars(server: TomcatServer, isStarting: boolean): Promise<{}> {
+        const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        let env = {
+            "CATALINA_HOME": server.getInstallPath(),
+            "CATALINA_BASE": server.getStoragePath()
+        };
+        if (isStarting && server.isDebugging()) {
+            env['JPDA_OPTS'] = await this.getJPDAOpts(server);
+        }
+        return env;
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
