@@ -1,3 +1,9 @@
+**❗DEPRECATED❗**
+
+This extension has been deprecated in favor of the [Community Server Connectors](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-community-server-connector) extension.
+
+---
+
 # Tomcat for Visual Studio Code
 [![Build Status](https://travis-ci.org/adashen/vscode-tomcat.svg?branch=master)](https://travis-ci.org/adashen/vscode-tomcat)
 
