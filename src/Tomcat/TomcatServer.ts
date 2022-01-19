@@ -4,7 +4,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as Constants from "../Constants";
 import { ServerState } from "../Constants";
-import { Utility } from "../Utility";
 
 export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickItem {
     public needRestart: boolean = false;
@@ -18,13 +17,15 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
     private _debugPort: number;
     private _debugWorkspace: vscode.WorkspaceFolder;
     private _configurationPath: string;
+    private _runInPlace: boolean;
 
-    constructor(private _name: string, private _installPath: string, private _storagePath: string) {
+    constructor(private _name: string, private _installPath: string, private _storagePath: string, private runInPlace: boolean) {
         super(_name);
         this.label = _name;
         this.jvmOptionFile = path.join(_storagePath, Constants.JVM_OPTION_FILE);
         this._configurationPath = path.join(_storagePath, 'conf', 'server.xml');
         this.basePathName = path.basename(_storagePath);
+        this._runInPlace = runInPlace;
     }
 
     public setDebugInfo(port: number, workspace: vscode.WorkspaceFolder): void {
@@ -83,5 +84,9 @@ export class TomcatServer extends vscode.TreeItem implements vscode.QuickPickIte
 
     public getStoragePath(): string {
         return this._storagePath;
+    }
+
+    public isRunInPlace(): boolean {
+        return this._runInPlace;
     }
 }

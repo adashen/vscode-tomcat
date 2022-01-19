@@ -30,8 +30,10 @@ This extension has been deprecated in favor of the [Community Server Connectors]
 ## Prerequisites
 * [Apache Tomcat](http://tomcat.apache.org/)
 * [Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug) (for debuging war package)
-
-If you are a Windows user, you should add the bin subdirectory of your JDK installation to your PATH environment variable (User or System) and restart VS Code. This is required to debug/run war packages from the VS Code context menu.
+* Environment management
+    * Set your JAVA_HOME system environment variables
+    * (Windows users) You should add the bin subdirectory of your JDK installation to your PATH environment variable (User or System). This is required to debug/run war packages from the VS Code context menu.
+    * Restart VS Code after changing any of these ^.
 
 ## Contributing
 

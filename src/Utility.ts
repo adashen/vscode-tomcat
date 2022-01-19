@@ -14,6 +14,7 @@ import { localize } from './localize';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
+const SCRIPT_EXTENSION = isWindows ? '.bat' : '.sh';
 
 interface IEnv {
     environmentVariable: string;
@@ -22,13 +23,14 @@ interface IEnv {
 
 /* tslint:disable:no-any */
 export namespace Utility {
-    export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, ...args: string[]): Promise<void> {
+    export async function executeCMD(outputPane: vscode.OutputChannel, serverName: string, command: string, options: child_process.SpawnOptions, isStartupOrShutdown: boolean, ...args: string[]): Promise<void> {
         await new Promise<void>((resolve: () => void, reject: (e: Error) => void): void => {
             outputPane.show();
             let stderr: string = '';
-            options.env = {...(options.env ?? {}), ...Utility.getCustomEnv()};
+            options.env = {...Utility.getCustomEnv(), ...(options.env ?? {})};
+            const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             const commandToSpawn = command.includes(" ") ? `"${command}"` : command; // workaround for path containing whitespace.
-            const p: child_process.ChildProcess = child_process.spawn(commandToSpawn, args, options);
+            const p: child_process.ChildProcess = (isStartupOrShutdown && useStartupScripts && isWindows) ? spawnWindowsScript(commandToSpawn, args, options) : child_process.spawn(commandToSpawn, args, options);
             p.stdout.on('data', (data: string | Buffer): void =>
                 outputPane.append(serverName ? `[${serverName}]: ${data.toString()}` : data.toString()));
             p.stderr.on('data', (data: string | Buffer) => {
@@ -45,6 +47,12 @@ export namespace Utility {
                 resolve();
             });
         });
+
+        function spawnWindowsScript(scriptFile: string, args: string[], options: child_process.SpawnOptions): child_process.ChildProcess {
+            args.unshift(scriptFile);
+            const quotedArgs: string = '"'.concat(args.reduce((accumulator: string, currentVal: string) => accumulator.concat(" ", currentVal), ""), '"');
+            return child_process.spawn(Constants.WINDOWS_CMD, ['/c', quotedArgs], options);
+        }
     }
 
     export async function openFile(file: string): Promise<void> {
@@ -73,10 +81,10 @@ export namespace Utility {
         return path.join(await getWorkspace(defaultStoragePath), serverName);
     }
 
-    export async function getServerName(installPath: string, defaultStoragePath: string, existingServerNames: string[]): Promise<string> {
+    export async function getServerName(installPath: string, defaultStoragePath: string, existingServerNames: string[], runInPlace: boolean): Promise<string> {
         const workspace: string = await getWorkspace(defaultStoragePath);
         await fse.ensureDir(workspace);
-        const fileNames: string[] = await fse.readdir(workspace);
+        const fileNames: string[] = runInPlace ? [] : await fse.readdir(workspace);
         let serverName: string = path.basename(installPath);
         let index: number = 1;
         while (fileNames.indexOf(serverName) >= 0 || existingServerNames.indexOf(serverName) >= 0) {
@@ -111,11 +119,7 @@ export namespace Utility {
     export async function needRestart(httpPort: string, httpsPort: string, serverConfog: string): Promise<boolean> {
         const newHttpPort: string = await getPort(serverConfog, Constants.PortKind.Http);
         const newHttpsPort: string = await getPort(serverConfog, Constants.PortKind.Https);
-        let restartConfig: boolean = false;
-        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
-        if (config) {
-            restartConfig = config.get<boolean>(Constants.RESTART_CONFIG_ID);
-        }
+        let restartConfig: boolean = Utility.getVSCodeConfigBoolean(Constants.RESTART_CONFIG_ID);
         return restartConfig && (httpPort !== newHttpPort || httpsPort !== newHttpsPort);
     }
 
@@ -216,6 +220,26 @@ export namespace Utility {
         });
     }
 
+    export function getStartExecutable(tomcatInstallPath: string): string {
+        const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        if (useStartupScripts) {
+            return path.join(tomcatInstallPath, 'bin', Constants.TOMCAT_STARTUP_SCRIPT_NAME + SCRIPT_EXTENSION);
+        }
+        else {
+            return this.getJavaExecutable();
+        }
+    }
+
+    export function getShutdownExecutable(tomcatInstallPath: string): string {
+        const useStartupScripts: boolean = this.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        if (useStartupScripts) {
+            return path.join(tomcatInstallPath, 'bin', Constants.TOMCAT_SHUTDOWN_SCRIPT_NAME + SCRIPT_EXTENSION);
+        }
+        else {
+            return this.getJavaExecutable();
+        }
+    }
+
     export function getJavaExecutable(): string {
         const customEnv: { [key: string]: string } = getCustomEnv();
         let javaPath = customEnv["JAVA_HOME"];
@@ -241,5 +265,15 @@ export namespace Utility {
         });
         
         return {...process.env, ...customEnv};
+    }
+
+    export function getVSCodeConfigBoolean(key: string): boolean {
+        const config: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('tomcat');
+        if (config) {
+            return config.get<boolean>(key);
+        }
+        else {
+            return false;
+        }
     }
 }

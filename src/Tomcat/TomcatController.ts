@@ -94,25 +94,15 @@ export class TomcatController {
             Utility.infoTelemetryStep(operationId, 'install path invalid');
             return;
         }
-        Utility.infoTelemetryStep(operationId, 'construct server name');
-        const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
-        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames);
-        const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
-        await fse.remove(catalinaBasePath);
-        await Utility.trackTelemetryStep(operationId, 'copy files', () => Promise.all([
-            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), {dereference: true}),
-            fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
-            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
-            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
-            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
-            fse.mkdirs(path.join(catalinaBasePath, 'work'))
-        ]));
-
-        await Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml'));
-        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath);
-        Utility.trackTelemetryStep(operationId, 'add server', () => this._tomcatModel.addServer(tomcatServer));
-        return tomcatServer;
+        const runInPlace: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_RUN_IN_PLACE);
+        if (runInPlace) {
+            if (this._tomcatModel.getServerSet().map(server => server.getStoragePath()).indexOf(tomcatInstallPath) > -1) {
+                vscode.window.showErrorMessage(DialogMessage.serverAlreadyAdded);
+                return;
+            }
+            return await this.addInPlaceServer(operationId, tomcatInstallPath, runInPlace);
+        }
+        return await this.addServerToWorkspace(operationId, tomcatInstallPath, false);
     }
 
     public async customizeJVMOptions(tomcatServer: TomcatServer): Promise<void> {
@@ -156,8 +146,13 @@ export class TomcatController {
                 server.clearDebugInfo();
             }
             server.needRestart = restart;
-            await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', () =>
-                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getJavaExecutable(), { shell: true }, ...server.jvmOptions.concat('stop')));
+            const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+            let jvmOpts = server.jvmOptions.slice();
+            if (!useStartupScripts) {
+                jvmOpts.push('stop');
+            }
+            await Utility.trackTelemetryStep(operationId, restart ? 'restart' : 'stop', async () =>
+                Utility.executeCMD(this._outputChannel, server.getName(), Utility.getShutdownExecutable(server.getInstallPath()), { env: await this._tomcatModel.getEnvironmentVars(server, false), shell: true }, true, ...jvmOpts));
         }
     }
 
@@ -245,7 +240,7 @@ export class TomcatController {
                 });
             }
             await Promise.all(items.map((i: vscode.QuickPickItem) => {
-                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, 'cvf', ...[`"${i.label}.war"`, '*']);
+                return Utility.executeCMD(this._outputChannel, undefined, 'jar', { cwd: i.description, shell: true }, false, 'cvf', ...[`"${i.label}.war"`, '*']);
             }));
             vscode.window.showInformationMessage(DialogMessage.getWarGeneratedInfo(items.length));
         }
@@ -305,6 +300,37 @@ export class TomcatController {
         server.setDebugInfo(port, workspaceFolder);
     }
 
+    private async addServerToWorkspace(operationId: string, tomcatInstallPath: string, runInPlace: boolean) : Promise<TomcatServer> {
+        Utility.infoTelemetryStep(operationId, 'construct server name');
+        const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames, runInPlace);
+        const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
+        await fse.remove(catalinaBasePath);
+        await Utility.trackTelemetryStep(operationId, 'copy files', () => Promise.all([
+            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), {dereference: true}),
+            fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
+            fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
+            fse.mkdirs(path.join(catalinaBasePath, 'logs')),
+            fse.mkdirs(path.join(catalinaBasePath, 'temp')),
+            fse.mkdirs(path.join(catalinaBasePath, 'work'))
+        ]));
+
+        await Utility.copyServerConfig(path.join(tomcatInstallPath, 'conf', 'server.xml'), path.join(catalinaBasePath, 'conf', 'server.xml'));
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, catalinaBasePath, runInPlace);
+        Utility.trackTelemetryStep(operationId, 'add server', () => this._tomcatModel.addServer(tomcatServer));
+        return tomcatServer;
+    }
+
+    private async addInPlaceServer(operationId: string, tomcatInstallPath: string, runInPlace: boolean) : Promise<TomcatServer> {
+        Utility.infoTelemetryStep(operationId, 'construct server name');
+        const existingServerNames: string[] = this._tomcatModel.getServerSet().map((item: TomcatServer) => { return item.getName(); });
+        const serverName: string = await Utility.getServerName(tomcatInstallPath, this._tomcatModel.defaultStoragePath, existingServerNames, runInPlace);
+        const tomcatServer: TomcatServer = new TomcatServer(serverName, tomcatInstallPath, tomcatInstallPath, runInPlace);
+        Utility.trackTelemetryStep(operationId, 'add server', () => this._tomcatModel.addServer(tomcatServer));
+        return tomcatServer;
+    }
+
     private async selectServer(operationId: string, createIfNoneServer: boolean = false): Promise<TomcatServer> {
         let items: vscode.QuickPickItem[] = this._tomcatModel.getServerSet();
         if (_.isEmpty(items) && !createIfNoneServer) {
@@ -342,7 +368,7 @@ export class TomcatController {
         await fse.mkdirs(appPath);
         if (this.isWarFile(webappPath)) {
             Utility.infoTelemetryStep(operationId, 'deploy war');
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: appPath }, false, 'xvf', `${webappPath}`);
         } else {
             Utility.infoTelemetryStep(operationId, 'deploy web app folder');
             await fse.copy(webappPath, appPath);
@@ -363,7 +389,7 @@ export class TomcatController {
             folderLocation = path.join(this._tomcatModel.defaultStoragePath, defaultName);
             await fse.remove(folderLocation);
             await fse.mkdir(folderLocation);
-            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, 'xvf', `${webappPath}`);
+            await Utility.executeCMD(this._outputChannel, server.getName(), 'jar', { cwd: folderLocation }, false, 'xvf', `${webappPath}`);
         } else {
             folderLocation = webappPath;
         }
@@ -414,7 +440,7 @@ export class TomcatController {
         const httpsPort: string = await Utility.getPort(serverConfig, Constants.PortKind.Https);
 
         try {
-            await this._tomcatModel.updateJVMOptions(serverName);
+            await this._tomcatModel.updateJVMOptions(serverInfo);
             watcher = chokidar.watch(serverConfig);
             watcher.on('change', async () => {
                 if (serverPort !== await Utility.getPort(serverConfig, Constants.PortKind.Server)) {
@@ -445,15 +471,22 @@ export class TomcatController {
                 }
             });
 
+            const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
             let startArguments: string[] = serverInfo.jvmOptions.slice();
-            if (serverInfo.getDebugPort()) {
-                startArguments = [`${Constants.DEBUG_ARGUMENT_KEY}${serverInfo.getDebugPort()}`].concat(startArguments);
+            let process: Promise<void>;
+            if (useStartupScripts) {
+                startArguments.unshift('run');
+                if (serverInfo.isDebugging()) {
+                    startArguments.unshift('jpda');
+                }
             }
-            startArguments.push('start');
-            const javaProcess: Promise<void> = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getJavaExecutable(), { shell: true }, ...startArguments);
+            else {
+                startArguments.push('start');
+            }
+            process = Utility.executeCMD(this._outputChannel, serverInfo.getName(), Utility.getStartExecutable(serverInfo.getInstallPath()), { env: await this._tomcatModel.getEnvironmentVars(serverInfo, true), shell: true }, true, ...startArguments);
             serverInfo.setStarted(true);
             this.startDebugSession(operationId, serverInfo);
-            await javaProcess;
+            await process;
             serverInfo.setStarted(false);
             watcher.close();
             if (serverInfo.needRestart) {

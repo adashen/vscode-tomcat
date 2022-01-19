@@ -33,7 +33,7 @@ export class TomcatModel {
     public async saveServerList(): Promise<void> {
         try {
             await fse.outputJson(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath(), _runInPlace: s.isRunInPlace() };
             }));
             vscode.commands.executeCommand('tomcat.tree.refresh');
         } catch (err) {
@@ -41,23 +41,42 @@ export class TomcatModel {
         }
     }
 
-    public async updateJVMOptions(serverName: string) : Promise<void> {
-        const server: TomcatServer = this.getTomcatServer(serverName);
+    public async updateJVMOptions(server: TomcatServer) : Promise<void> {
+        const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        let result: string[] = [];
+        if (!useStartupScripts) {
+            result = await this.createJVMClasspathOption(server);
+        }
+        if (server.getDebugPort()) {
+            result.push(await this.getJPDAOpts(server));
+        }
+        if (await fse.pathExists(server.jvmOptionFile)) {
+            result = result.concat(await this.loadJVMOptionsFileArgs(server));
+        }
+        if (!useStartupScripts) {
+            result = await this.concatBootstrapFileJVMOpt(result);
+        }
+        server.jvmOptions = result;
+    }
+
+    private async createJVMClasspathOption(server: TomcatServer): Promise<string[]> {
         const installPath: string = server.getInstallPath();
         const catalinaBase: string = server.getStoragePath();
         const bootStrap: string = path.join(installPath, 'bin', 'bootstrap.jar');
         const tomcat: string = path.join(installPath, 'bin', 'tomcat-juli.jar');
-        let result: string[] = [
+        return [
             `${Constants.CLASS_PATH_KEY} "${[bootStrap, tomcat].join(path.delimiter)}"`,
             `${Constants.CATALINA_BASE_KEY}="${catalinaBase}"`,
             `${Constants.CATALINA_HOME_KEY}="${installPath}"`,
             `${Constants.ENCODING}`
         ];
+    }
 
-        if (!await fse.pathExists(server.jvmOptionFile)) {
-            server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
-            return;
-        }
+    public async getJPDAOpts(server: TomcatServer): Promise<string> {
+        return `${Constants.DEBUG_ARGUMENT_KEY}${server.getDebugPort()}`;
+    }
+
+    private async loadJVMOptionsFileArgs(server: TomcatServer): Promise<string[]> {
         const filterFunction: (para: string) => boolean = (para: string): boolean => {
             if (!para.startsWith('-')) {
                 return false;
@@ -71,14 +90,30 @@ export class TomcatModel {
             });
             return valid;
         };
-        result = result.concat(await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction));
+        let result = await Utility.readFileLineByLine(server.jvmOptionFile, filterFunction);
         const tmpDirConfiguration: string = result.find((element: string) => {
             return element.indexOf(Constants.JAVA_IO_TEMP_DIR_KEY) >= 0;
         });
         if (!tmpDirConfiguration) {
-            result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(catalinaBase, 'temp')}"`);
+            result = result.concat(`${Constants.JAVA_IO_TEMP_DIR_KEY}="${path.join(server.getStoragePath(), 'temp')}"`);
         }
-        server.jvmOptions = result.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+        return result;
+    }
+
+    private async concatBootstrapFileJVMOpt(jvmOptions: string[]) : Promise<string[]> {
+        return jvmOptions.concat([Constants.BOOTSTRAP_FILE, '"$@"']);
+    }
+
+    public async getEnvironmentVars(server: TomcatServer, isStarting: boolean): Promise<{}> {
+        const useStartupScripts: boolean = await Utility.getVSCodeConfigBoolean(Constants.CONF_USE_STARTUP_SCRIPTS);
+        let env = {
+            "CATALINA_HOME": server.getInstallPath(),
+            "CATALINA_BASE": server.getStoragePath()
+        };
+        if (isStarting && server.isDebugging()) {
+            env['JPDA_OPTS'] = await this.getJPDAOpts(server);
+        }
+        return env;
     }
 
     public deleteServer(tomcatServer: TomcatServer): boolean {
@@ -86,7 +121,9 @@ export class TomcatModel {
         if (index > -1) {
             const oldServer: TomcatServer[] = this._serverList.splice(index, 1);
             if (!_.isEmpty(oldServer)) {
-                fse.remove(tomcatServer.getStoragePath());
+                if (!tomcatServer.isRunInPlace()) {
+                    fse.remove(tomcatServer.getStoragePath());
+                }
                 this.saveServerList();
                 return true;
             }
@@ -107,7 +144,7 @@ export class TomcatModel {
     public saveServerListSync(): void {
         try {
             fse.outputJsonSync(this._serversJsonFile, this._serverList.map((s: TomcatServer) => {
-                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath() };
+                return { _name: s.getName(), _installPath: s.getInstallPath(), _storagePath: s.getStoragePath(), _runInPlace: s.isRunInPlace() };
             }));
         } catch (err) {
             console.error(err.toString());
@@ -120,8 +157,8 @@ export class TomcatModel {
                 const objArray: {}[] = fse.readJsonSync(this._serversJsonFile);
                 if (!_.isEmpty(objArray)) {
                     this._serverList = this._serverList.concat(objArray.map(
-                        (obj: { _name: string, _installPath: string, _storagePath: string }) => {
-                            return new TomcatServer(obj._name, obj._installPath, obj._storagePath);
+                        (obj: { _name: string, _installPath: string, _storagePath: string, _runInPlace: boolean }) => {
+                            return new TomcatServer(obj._name, obj._installPath, obj._storagePath, obj._runInPlace || false);
                         }));
                 }
             }
