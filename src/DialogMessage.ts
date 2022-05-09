@@ -13,6 +13,7 @@ export namespace DialogMessage {
     export const addServer: string = localize('tomcatExt.addServer', 'Add New Server');
     export const noServer: string = localize('tomcatExt.noServer', 'There are no Tomcat Servers.');
     export const noPackage: string = localize('tomcatExt.noPackage', 'The selected package is not under current workspace.');
+    export const noTargetFolder: string = localize('tomcatExt.noTargetFolder', 'The selected package does not contain a valid build (war).');
     export const noServerConfig: string = localize('tomcatExt.noServerConfig', 'The Tomcat Server is broken. It does not have server.xml');
     export const selectWarPackage: string = localize('tomcatExt.selectWarPackage', 'Select War Package');
     export const selectDirectory: string = localize('tomcatExt.selectDirectory', 'Select Tomcat Directory');

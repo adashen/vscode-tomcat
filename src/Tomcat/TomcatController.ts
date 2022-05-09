@@ -100,7 +100,7 @@ export class TomcatController {
         const catalinaBasePath: string = await Utility.getServerStoragePath(this._tomcatModel.defaultStoragePath, serverName);
         await fse.remove(catalinaBasePath);
         await Utility.trackTelemetryStep(operationId, 'copy files', () => Promise.all([
-            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), {dereference: true}),
+            fse.copy(path.join(tomcatInstallPath, 'conf'), path.join(catalinaBasePath, 'conf'), { dereference: true }),
             fse.copy(path.join(this._extensionPath, 'resources', 'jvm.options'), path.join(catalinaBasePath, 'jvm.options')),
             fse.copy(path.join(this._extensionPath, 'resources', 'index.jsp'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'index.jsp')),
             fse.copy(path.join(this._extensionPath, 'resources', 'icon.png'), path.join(catalinaBasePath, 'webapps', 'ROOT', 'icon.png')),
@@ -185,10 +185,17 @@ export class TomcatController {
             }
             uri = dialog[0];
         }
+        if (!await this.isMavenJavaWeb(uri.fsPath)) {
+            return;
+        }
+        else {
+            uri = await this.getWarMavenJavaWeb(uri.fsPath);
+        }
 
         if (!await this.isWebappPathValid(uri.fsPath)) {
             return;
         }
+
         server = !server ? await this.selectServer(operationId, true) : server;
         if (!server) {
             return;
@@ -284,6 +291,39 @@ export class TomcatController {
         return true;
     }
 
+    private async isMavenJavaWeb(mavenJavaProjectPath: string): Promise<boolean> {
+        let pom = path.join(mavenJavaProjectPath, 'pom.xml');
+        if (!await fse.pathExists(pom)) {
+            return false;
+        }
+        const stat: fs.Stats = await new Promise((resolve: (r: fs.Stats) => void, reject: (E: Error) => void): void => {
+            fs.lstat(pom, (err: Error, res: fs.Stats) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(res);
+            });
+        });
+
+        if (stat.isFile() && !this.isPomFile(pom)) {
+            return false;
+        }
+        return true;
+    }
+
+    private async getWarMavenJavaWeb(mavenJavaProjectPath: string): Promise<vscode.Uri> {
+        let target = path.join(mavenJavaProjectPath, 'target');
+        if (!await fse.pathExists(target)) {
+            vscode.window.showErrorMessage(DialogMessage.noTargetFolder);
+            return;
+        }
+        const files = fs.readdirSync(target);
+        let file = files.find(file => this.isWarFile(path.join(target, file.toLowerCase())));
+        if (!file)
+            vscode.window.showErrorMessage(DialogMessage.noTargetFolder);
+        return vscode.Uri.file(path.join(target, file));
+    }
+
     private async prepareDebugInfo(operationId: string, server: TomcatServer, uri: vscode.Uri): Promise<void> {
         if (!server || !uri) {
             return;
@@ -352,6 +392,10 @@ export class TomcatController {
 
     private isWarFile(filePath: string): boolean {
         return path.extname(filePath).toLocaleLowerCase() === '.war';
+    }
+
+    private isPomFile(filePath: string): boolean {
+        return path.basename(filePath).toLocaleLowerCase() === 'pom.xml';
     }
 
     /* tslint:disable:no-any */
