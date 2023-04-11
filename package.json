@@ -394,7 +394,7 @@
     "@types/opn": "^5.1.0",
     "@types/vscode": "^1.22.0",
     "@types/xml2js": "^0.4.2",
-    "mocha": "^9.1.2",
+    "mocha": "^9.2.2",
     "tslint": "^5.10.0",
     "tslint-microsoft-contrib": "5.0.1",
     "typescript": "^4.4.4",
